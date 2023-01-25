@@ -714,7 +714,7 @@ if(layer==1)
         //std::cout<<(G2L*GD)(0)<<" LGD "<<(G2L*GD)(1)<<"  "<<(G2L*GD)(2)<<"  \n";
 
         int verid=ver->GetVID();
-        fprintf(IncFile,  "%5d%5d%5d%8.3f%8.3f%8.3f\n",i,intypeid,verid,GD(0),GD(1),GD(2));
+        fprintf(IncFile,  "%12d%12d%12d%8.3f%8.3f%8.3f\n",i,intypeid,verid,GD(0),GD(1),GD(2));
         i++;
     }
    }

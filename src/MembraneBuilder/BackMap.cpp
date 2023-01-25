@@ -216,7 +216,7 @@ BackMap::BackMap(Argument *pArgu)
 
     }
 
-    //== Place the inclusions
+    //== Place the inclusions;
 
     for ( std::map<int,ProteinList>::iterator it1 = m_TotalProteinList.begin(); it1 != m_TotalProteinList.end(); it1++ )
     {
@@ -227,6 +227,8 @@ BackMap::BackMap(Argument *pArgu)
         {
 
             int id = (*it)->GetTypeID();
+            //std::cout<<plistid<<" NOTE: this is for test and will be deleted afterward  "<<id<<"\n";
+
             if(plistid==id)
             {
 
@@ -239,10 +241,12 @@ BackMap::BackMap(Argument *pArgu)
             Vec3D Pos = Up_p1->GetPos();
             Vec3D T1 =   Up_p1->GetP1();
             Vec3D T2 =   Up_p1->GetP2();
+                std::cout<<plistid<<"   "<<pointid<<" NOTE: this is for test and will be deleted afterward  "<<id<<"\n";
+
                 if (m_MoleculesType.count(ptype) == 0)
                     std::cout << "Error:-----> molecule name " <<ptype<<" does not exist in the attached gro files \n";
                 
-                
+
             GenProtein(m_MoleculesType.at(ptype), id, Pos, N, Dir, T1,T2);
                 
 
@@ -549,10 +553,6 @@ void BackMap::GenLipid(MolType moltype, int listid, Vec3D Pos, Vec3D Normal, Vec
 void BackMap::GenProtein(MolType moltype, int listid, Vec3D Pos, Vec3D Normal, Vec3D Dir,Vec3D t1,Vec3D t2)
 {
     //
-    
-
-        
-
         Tensor2 LG = TransferMatLG(Normal, t1, t2);
         Tensor2 GL = LG.Transpose(LG);
     
