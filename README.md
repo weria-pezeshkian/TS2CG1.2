@@ -1,7 +1,4 @@
-# TS2CG version 1.1
-
-Groningen Biomolecular Sciences and Biotechnology Institute and Zernike Institute for Advanced Materials,
-University of Groningen, Groningen, The Netherlands.
+# TS2CG version 1.2
 
 NOTE: this version is under development and might be associated with errors and bugs.
 Please use the previous version if you are not in direct contact with the developers.
