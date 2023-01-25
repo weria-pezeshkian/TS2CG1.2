@@ -1,0 +1,22 @@
+
+
+; lipidnname ratio_up ratio_down  APL
+[Lipids List]
+Domain 0
+POPC 1  1  0.64
+End
+ [Shape Data]
+ShapeType  Cylinder
+Box 40 40 40
+Density 2
+Thickness  4
+WallDensity  1 1
+Radius     12
+End
+
+
+
+
+
+
+

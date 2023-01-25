@@ -1,0 +1,234 @@
+
+
+#include <stdio.h>
+#include "GenerateUnitCells.h"
+#include "Nfunction.h"
+//#include "links.h"
+GenerateUnitCells::GenerateUnitCells(std::vector< bead* > bead,Argument *pArgu,Vec3D *pBox)
+{
+	m_pBox=pBox;
+    m_pAllBead=bead;
+    m_pArgu=pArgu;
+     m_CNTSize=m_pArgu->GetCutoff();
+
+}
+
+
+GenerateUnitCells::~GenerateUnitCells()
+{
+    
+}
+
+int GenerateUnitCells::IDFromIndex(int i,int j,int k)
+{
+
+int n=i+m_Nx*m_Ny*k+m_Nx*j;
+
+return n;
+}
+
+void GenerateUnitCells::Generate()
+{
+  
+    m_pAllCNTCells.clear();
+    m_AllCNTCells.clear();
+    m_CNTCellSize.clear();
+    m_CNTCellNo.clear();
+    
+    
+    
+    
+    //==================
+    //====
+    //==================
+    Nfunction f;
+    std::vector <double> Box;
+    Box.push_back((*m_pBox)(0));
+    Box.push_back((*m_pBox)(1));
+    Box.push_back((*m_pBox)(2));
+    
+    double CNTSize=m_CNTSize;
+    
+    
+    
+    /// The CNT cell should not be smaller then one; for dynamic box we should be carefull
+    
+    m_Nx=int(Box.at(0)/CNTSize);
+    m_Ny=int(Box.at(1)/CNTSize);
+    m_Nz=int(Box.at(2)/CNTSize);
+    
+
+
+    if(Box.at(0)/double(m_Nx)==CNTSize)
+    {
+        
+    }
+    else
+    {
+        //m_Nx=m_Nx+1; this is wrong it makes the box smaller 
+        std::string A="CNT cell in x direction has the size of "+f.Int_to_String(Box.at(0)/double(m_Nx));
+       // std::cout<<A<<"\n";
+
+    }
+    
+    if(Box.at(1)/double(m_Ny)==CNTSize)
+    {
+        
+    }
+    else
+    {
+       // m_Ny=m_Ny+1;
+        std::string A="CNT cell in y direction has the size of "+f.Int_to_String(Box.at(1)/double(m_Ny));
+      //  std::cout<<A<<"\n";
+    }
+    if(Box.at(2)/double(m_Nz)==CNTSize)
+    {
+        
+    }
+    else
+    {
+      //  m_Nz=m_Nz+1;
+        std::string A="CNT cell in z direction has the size of "+f.Int_to_String(Box.at(2)/double(m_Nz));
+       // std::cout<<A<<"\n";
+    }
+    
+    
+    
+    
+    m_CNTCellSize.push_back(Box.at(0)/double(m_Nx));
+    m_CNTCellSize.push_back(Box.at(1)/double(m_Ny));
+    m_CNTCellSize.push_back(Box.at(2)/double(m_Nz));
+    m_CNTCellNo.push_back(m_Nx);
+    m_CNTCellNo.push_back(m_Ny);
+    m_CNTCellNo.push_back(m_Nz);
+    
+    
+    
+    
+    
+    int m=0;    // id of the CNT cell
+   
+    //======================================
+    //====== Generate CNT
+    //=======================================
+    for (int i=0;i<m_Nz;i++)
+    {
+        for (int j=0;j<m_Ny;j++)
+        {
+            for (int k=0;k<m_Nx;k++)
+            {
+                UnitCell T(m,k,j,i);
+                Vec3D Ss(k*(m_CNTCellSize.at(0)),j*(m_CNTCellSize.at(1)),i*(m_CNTCellSize.at(2)));
+                Vec3D Sb((k+1)*(m_CNTCellSize.at(0)),(j+1)*(m_CNTCellSize.at(1)),(i+1)*(m_CNTCellSize.at(2)));
+                T.UpdateCNTSidemin(Ss);
+                T.UpdateCNTSidemax(Sb);
+                m_AllCNTCells.push_back(T);
+                m++;
+            }
+      	 }
+    }
+    
+    
+    //======================================
+    //====== Adding Neighbour CNT Cell
+    //=======================================
+    m=0;
+    for (int i=0;i<m_Nz;i++)
+    {
+        for (int j=0;j<m_Ny;j++)
+        {
+            for (int k=0;k<m_Nx;k++)
+            {
+                
+                
+                int id=0;
+                
+                int p=0;
+                
+                
+                for (int sz=-1;sz<2;sz++)
+                {
+                    for (int sy=-1;sy<2;sy++)
+                    {
+                        for (int sx=-1;sx<2;sx++)
+                        {
+                            p++;
+                            if(sz==0 && sx==0 &&sy==0)
+                            {
+                                
+                            }
+                            else
+                            {
+                                id=IDFromIndex((m_Nx+k+sx)%m_Nx,(m_Ny+j+sy)%m_Ny,(m_Nz+i+sz)%m_Nz);
+                                (m_AllCNTCells.at(m)).AddtoNeighbourUnitCell(&(m_AllCNTCells.at(id)));
+                            }
+                        }
+                    }
+                }
+                
+                
+                
+                
+                m++;
+            }
+            
+        }
+    }
+    
+    //======================================
+    //====== Adding beads to CNT
+    //=======================================
+    
+    
+    
+    
+    for (std::vector<bead *>::iterator it = m_pAllBead.begin() ; it != m_pAllBead.end(); ++it)
+    {
+        
+        double x=(*it)->GetXPos();
+        double y=(*it)->GetYPos();
+        double z=(*it)->GetZPos();
+        
+        int nx=int(x/m_CNTCellSize.at(0));
+        int ny=int(y/m_CNTCellSize.at(1));
+        int nz=int(z/m_CNTCellSize.at(2));
+        int id=IDFromIndex(nx,ny,nz);
+        
+        if(id>=m_AllCNTCells.size())
+        {
+            
+            std::string A=" ERROR: particle with coordinate "+f.Int_to_String(x)+"  "+f.Int_to_String(y)+"  "+f.Int_to_String(z)+"  "+"   is out of the box. ";
+            std::cout<<A<<"\n";
+            std::cout<<" This should not happen \n";
+
+        }
+        else
+        {
+            (m_AllCNTCells.at(id)).AddtoVertexList(*it);
+            (*it)->UpdateBeadUnitCell(&(m_AllCNTCells.at(id)));
+        }
+        
+    }
+    
+    
+    for (std::vector<UnitCell>::iterator it = m_AllCNTCells.begin() ; it != m_AllCNTCells.end(); ++it)
+    {
+        
+        m_pAllCNTCells.push_back(&(*it));
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+}
+
+
+
