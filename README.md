@@ -8,3 +8,5 @@ It also works as a backmapping algorithm from dynamically triangulated surfaces 
 to take electron microscopy tomography data and build structures for molecular dynamics simulations.
 
 TS2CG is implemented in C++ and includes two separate scripts. Pointillism (PLM) and CG Membrane Builder (PCG).
+
+https://github.com/weria-pezeshkian/TS2CG1.2/wiki/About-TS2CG
