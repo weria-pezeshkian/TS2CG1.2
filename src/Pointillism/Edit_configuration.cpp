@@ -65,7 +65,6 @@ Edit_configuration::Edit_configuration( std::vector <std::string> Arguments)
     std::ofstream log;
     log.open("plm.log");
     
-
     
     for (long i=0;i<Arguments.size();i++)
     {
@@ -441,6 +440,7 @@ else if(file.at(file.size()-1)=='i' && file.at(file.size()-2)=='s' && file.at(fi
         m_pHalfLinks2=TSI.GetMHalfLinks();
         m_pInc=TSI.GetInclusion();
         m_pExc=TSI.GetExclusion();
+    
 }
 else
 {
@@ -460,7 +460,8 @@ std::cout<<" error: Unknown TS File Format "<<file<<"\n";
           Vec3D X ((*it1)->GetVXPos(),(*it1)->GetVYPos(),(*it1)->GetVZPos());
           CM = CM+X*(1.0/m_pAllV.size());
       }
-      
+      std::cout<<" we are here 1 \n";
+
       // Finding the max distance from the CMG
       Vec3D MaxB(0,0,0);
       for (std::vector<vertex *>::iterator it = m_pAllV.begin() ; it != m_pAllV.end(); ++it)
@@ -478,6 +479,7 @@ std::cout<<" error: Unknown TS File Format "<<file<<"\n";
                   MaxB(2)=fabs(dz);
 
       }
+
       Vec3D DB ((6+H)/m_Zoom(0),(6+H)/m_Zoom(1),(6+H)/m_Zoom(2));
       (*m_pBox) = MaxB*2+DB;
       for (std::vector<vertex *>::iterator it1 = m_pAllV.begin() ; it1 != m_pAllV.end(); ++it1)
@@ -504,6 +506,8 @@ std::cout<<" error: Unknown TS File Format "<<file<<"\n";
 
     
     UpdateGeometry();
+    
+
     if(m_Iteration==-1 )
     {
             double LargeZoom = m_Zoom(0);
@@ -522,10 +526,10 @@ std::cout<<" error: Unknown TS File Format "<<file<<"\n";
             else
             std::cout<<"The requested rescaling requires  4^"<<m_Iteration<<" points, this may take some time to finish \n";
     }
-    
+
 Rescaling(m_Zoom);
 UpdateGeometry();
-    
+
     for (std::vector<vertex *>::iterator it = m_pAllV.begin() ; it != m_pAllV.end(); ++it)
     {
         double x = (*it)->GetVXPos();
@@ -541,7 +545,7 @@ UpdateGeometry();
         (*it)->UpdateVZPos(z);
         
     }
-    
+
     UpdateGeometry();
 #if BACKMAP == Enabled
 
@@ -551,10 +555,15 @@ UpdateGeometry();
     {
         Surface_Mosaicing  MOS(m_MosAlType,m_smooth);
         Vmos.push_back(MOS);
+
     }
     for (int j=0;j<m_Iteration;j++)
     {
+        //std::cout<<" we are here 10 \n";
+        // Here will cause error when
         (Vmos.at(j)).PerformMosaicing(m_pBox,  m_pAllV ,  m_pAllT , m_pHalfLinks1, m_pInc,m_Iteration-j);
+        //std::cout<<" we are here 11 \n";
+
         m_pAllV.clear();
         m_pAllT.clear();
         m_pAllLinks.clear();

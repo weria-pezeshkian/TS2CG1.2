@@ -40,7 +40,13 @@ In_OR_Out::In_OR_Out(std::string filename)
         m_pBox=&m_Box;
         Initialize(filename);   // read this TS file
 
-        
+        /// make the box size good; Find box size function create one
+        ///
+        /// 2) create a function to put the trinagles inside a CNT cells
+        ///
+        /// 3) One line from the point to the box edge should give you what you need (only checking a few boxes )
+        ///
+        ///
         
         while(true)
         {
