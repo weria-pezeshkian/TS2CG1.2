@@ -172,6 +172,12 @@ Edit_configuration::Edit_configuration( std::vector <std::string> Arguments)
           Minimize(file);
           
       }
+      else if(edittype=="vertexinfo" && health == true)
+      {
+          // a new feature in TS2CG1.2 and above. Finding geometric info on a vertex
+          VertexInfo(file);
+          
+      }
       else if(edittype=="add_pbc" && health == true)
       {
           MakePBCTS mpbc(file);
@@ -868,7 +874,123 @@ bool Edit_configuration::check(std::string file){
     return true;
     
 }
+void Edit_configuration::VertexInfo(std::string file){
+    
+    Trajectory  TrajClass(m_pBox);
+    double lm = 0.1;
+    double lmax =1000;
+    double mina = 0;
+    Topology S(m_pBox, &mina, &lm, &lmax);
+    Traj_XXX TSI(m_pBox);
+    bool OK;
+    if(file.at(file.size()-1)=='t' && file.at(file.size()-2)=='a' && file.at(file.size()-3)=='d')
+    {
+        m_pAllV.clear();
+        m_pInc.clear();
+        m_pAllT.clear();
+        m_pAllLinks.clear();
+        m_pHalfLinks1.clear();
+        m_pHalfLinks2.clear();
+        
+        TrajClass.Read(file,m_FindnewBox);
+        m_pAllV=TrajClass.GetVertex();
+        m_pAllT=TrajClass.GetTriangle();
+        m_pAllLinks=TrajClass.GetLinks();
+        m_pHalfLinks1=TrajClass.GetHalfLinks();
+        m_pHalfLinks2=TrajClass.GetMHalfLinks();
+        m_pInc=TrajClass.GetInclusion();
+    }
+    else if(file.at(file.size()-1)=='q' && file.at(file.size()-2)=='.' )
+    {
 
+        S.FastReadQFile(file);
+        bool topohealth= S.GetTopologyHealth();
+        if(topohealth==false)
+        {
+            std::cout<<" error: Provided TS file is bad \n";
+        }
+        m_pAllV.clear();
+        m_pInc.clear();
+        m_pAllT.clear();
+        m_pAllLinks.clear();
+        m_pHalfLinks1.clear();
+        m_pHalfLinks2.clear();
+        m_pAllV=S.GetVertex();
+        m_pAllT=S.GetTriangle();
+        m_pAllLinks=S.GetLinks();
+        m_pHalfLinks1=S.GetHalfLinks();
+        m_pHalfLinks2=S.GetMHalfLinks();
+        
+    }
+    else if(file.at(file.size()-1)=='i' && file.at(file.size()-2)=='s' && file.at(file.size()-3)=='t')
+    {
+        m_pAllV.clear();
+        m_pInc.clear();
+        m_pAllT.clear();
+        m_pAllLinks.clear();
+        m_pHalfLinks1.clear();
+        m_pHalfLinks2.clear();
+        
+        TSI.ReadTSI(file);
+        m_pAllV=TSI.GetVertex();
+        m_pAllT=TSI.GetTriangle();
+        m_pAllLinks=TSI.GetLinks();
+        m_pHalfLinks1=TSI.GetHalfLinks();
+        m_pHalfLinks2=TSI.GetMHalfLinks();
+        m_pInc=TSI.GetInclusion();
+    }
+    else
+    {
+        std::cout<<" error: TS Unknown File Format "<<file<<"\n";
+        OK=false;
+    }
+
+    if(OK==true)
+    {
+        UpdateGeometry();
+        int index;
+        std::cout<<" Please provide the index of the vertex (note, it will start from zero): \n";
+        std::cin>>index;
+        
+        if(index<0 || index>m_pAllV.size())
+        {
+            std::cout<<" ---> error:the index number is invalid \n";
+            exit(0);
+        }
+        vertex *pv = m_pAllV.at(index);
+        
+
+        double x = pv->GetVXPos();
+        double y = pv->GetVYPos();
+        double z = pv->GetVZPos();
+        double A = pv->GetArea();
+        Tensor2  L2GT = pv->GetL2GTransferMatrix();
+        Tensor2  G2LT = pv->GetG2LTransferMatrix();
+        Vec3D normal  = pv->GetNormalVector();
+        std::vector <double> C = pv->GetCurvature();
+        
+        std::cout<<" vertex position is "<<x<<"  "<<y<<"  "<<z<<" \n ";
+        std::cout<<" vertex area is "<<A<<" \n ";
+        std::cout<<" vertex normal is "<<normal(0)<<"  "<<normal(1)<<"  "<<normal(2)<<" \n ";
+
+        Vec3D t1(1,0,0);
+        Vec3D t2(0,1,0);
+        Vec3D n(0,0,1);
+        
+        Vec3D T1 = L2GT*t1;
+        Vec3D T2 = L2GT*t2;
+        Vec3D N = L2GT*n;
+        std::cout<<" first direction "<<T1(0)<<"  "<<T1(1)<<"  "<<T1(2)<<" \n ";
+        std::cout<<" second direction "<<T2(0)<<"  "<<T2(1)<<"  "<<T2(2)<<" \n ";
+        std::cout<<" normal "<<N(0)<<"  "<<N(1)<<"  "<<N(2)<<" \n ";
+
+
+
+
+    }
+
+    
+}
 void Edit_configuration::MakeFlatMonolayer(int layer , std::string file, double H)
 {
 

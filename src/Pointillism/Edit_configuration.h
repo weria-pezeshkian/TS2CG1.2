@@ -45,6 +45,8 @@ Vec3D *m_pBox;
     void BackMapOneLayer(int layer , std::string file, double);
     void MakeFlatMonolayer(int layer , std::string file, double);
     bool check(std::string file);     // a function to check how the ts file looklike and do nothing
+    void VertexInfo(std::string file);     // gives info about a vertex 
+
     void Minimize(std::string file);   // may not work well, needs optimization
     
     double  PPBCM_Cluster(double , std::vector <double>);
