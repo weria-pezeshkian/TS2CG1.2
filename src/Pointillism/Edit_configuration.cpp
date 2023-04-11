@@ -882,7 +882,7 @@ void Edit_configuration::VertexInfo(std::string file){
     double mina = 0;
     Topology S(m_pBox, &mina, &lm, &lmax);
     Traj_XXX TSI(m_pBox);
-    bool OK;
+    bool OK=true;
     if(file.at(file.size()-1)=='t' && file.at(file.size()-2)=='a' && file.at(file.size()-3)=='d')
     {
         m_pAllV.clear();
