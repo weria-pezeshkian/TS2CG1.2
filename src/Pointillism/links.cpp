@@ -111,6 +111,18 @@ void links::UpdateNormal()
     m_mirorlink->PutNormal(m_Normal);
     
     }
+    else
+    {
+        Vec3D v1=m_T1->GetNormalVector();
+        m_Normal=v1;
+        
+
+
+        
+        double norm=m_Normal.norm();
+        m_Normal=m_Normal*(1.0/norm);
+
+    }
 
 }
 void links::PutNormal(Vec3D n)
@@ -133,8 +145,7 @@ void links::UpdateShapeOperator(Vec3D *pBox)
 {
 
 Vec3D Box=(*pBox);
-   if(this->GetMirrorFlag()==true)
-   {
+
     double x1=m_V1->GetVXPos();
     double y1=m_V1->GetVYPos();
     double z1=m_V1->GetVZPos();
@@ -198,92 +209,52 @@ Vec3D Box=(*pBox);
      std::cout<<" Error: There is an problem it should be resolved \n";    
     }
     Be=Be*size;
-    
-    
-    Vec3D Nf1=(m_mirorlink->GetTriangle())->GetNormalVector();
-    Vec3D Nf2=m_T1->GetNormalVector();
-
-
-//==================
-/*
-    double  si=Re.dot(Nf1*Nf2,Re);
-    if(si<0)
+    if(Be(0)==0 && Be(1)==0 && Be(2)==0)
     {
-        si=-1;
+        std::cout<<" Error: "<<size<<" be size \n";
     }
-    else if(si>0)
-    {
-        si=1;
-    }
-    else
-    {
-        si=0;
-    }
-    
-
-    double ta=Re.dot(Nf1,Nf2);
-    if(ta>1 && ta<1.01)
-    {
-	m_Dihedral=PI;
-    }
-    else if(ta>1.01)
-    {
-	std::cout<<"ERROR: somthing wrong with this link \n";
-    }
-    else
-    {
-    m_Dihedral=si*acos(ta)+PI;    //  This can be optiemzed
-    }
-    double He1=cos(m_Dihedral/2.0)*renorm;  *///He=2*cos(m_Dihedral/2.0)*renorm;
-       
-     
-//=======================================================
-//============= a fast way to caluclate He
-//============================================================
-       
+if(this->GetMirrorFlag()==true)
+{
+        Vec3D Nf1=(m_mirorlink->GetTriangle())->GetNormalVector();
+        Vec3D Nf2=m_T1->GetNormalVector();
        
     double sign=Re.dot(Nf1*Nf2,Re);
     double tangle=Re.dot(Nf1,Nf2);
     double He=0;
 
- if(tangle<1)
- { 
-    if(sign>0   )
-    {
-       He=-renorm*sqrt(0.5*(1.0-tangle));
-    }
-    else if(sign<0)
-    {
-        He=renorm*sqrt(0.5*(1.0-tangle));  //He=2*cos(m_Dihedral/2.0)*renorm;
-    }
-    else
-    {
-        He=0;
-    }
- }
- else if(tangle>=1 && tangle<1.01)
-  {
-	He=0;
+            if(tangle<1)
+            {
+                if(sign>0   )
+                {
+                    He=-renorm*sqrt(0.5*(1.0-tangle));
+                }
+                else if(sign<0)
+                {
+                    He=renorm*sqrt(0.5*(1.0-tangle));  //He=2*cos(m_Dihedral/2.0)*renorm;
+                }
+                else
+                {
+                    He=0;
+                }
+            }
+        else if(tangle>=1 && tangle<1.01)
+        {
+            He=0;
    
-  }
-  else if(tangle>1.01)
-  {
-	std::cout<<"ERROR: somthing wrong with this link \n";
-  }    
-	
-       m_Be=Be;
-       m_He=He;
-
-    
-
-    
-
-
-
-    m_mirorlink->PutShapeOperator(m_Be,m_He);
-
-
-  }
+        }
+        else if(tangle>1.01)
+        {
+                std::cout<<"ERROR: somthing wrong with this link \n";
+        }
+        m_Be=Be;
+        m_He=He;
+        m_mirorlink->PutShapeOperator(m_Be,m_He);
+}
+else
+{
+    m_Be=Be;
+    m_He=0;
+}
 
 
 }

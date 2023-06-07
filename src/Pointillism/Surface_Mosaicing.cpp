@@ -63,7 +63,6 @@ void Surface_Mosaicing::MosaicOneRound()
     m_TMT.clear();
     m_TML.clear();
     
-    
 //=========================================
 //===== First we copy the old vertex
 //=========================================
@@ -83,34 +82,30 @@ void Surface_Mosaicing::MosaicOneRound()
         v.UpdateBox(m_pBox);
         m_TMV.push_back(v);
     }
+
 //=========================================
     //===== for each link, generate a mid vertex
 //=========================================
     int id=m_TMV.size();
     for (std::vector<links *>::iterator it = m_pLinks.begin() ; it != m_pLinks.end(); ++it)
     {
-
-        double x,y,z;
+            double x,y,z;
+            BestEstimateOfMidPointPossition((*it), &x, &y,&z);
         
-        BestEstimateOfMidPointPossition((*it), &x, &y,&z);
-        
-
-        
-        vertex v(id,x,y,z);
-        v.UpdateBox(m_pBox);
+        if(isnan(x))
+        std::cout<<x<<"  "<<y<<"  "<<z<<"\n";
+            vertex v(id,x,y,z);
+            v.UpdateBox(m_pBox);
         //==== for version 1.1 and above
-        int dom1 = ((*it)->GetV1())->GetDomainID();
-        int dom2 = ((*it)->GetV2())->GetDomainID();
-
-        
-        
-
-        
-        double domain = 0;
-        if (dom1==dom2)
-        domain = dom1;
-        else
-        {
+            int dom1 = ((*it)->GetV1())->GetDomainID();
+            int dom2 = ((*it)->GetV2())->GetDomainID();
+            double domain = 0;
+            if (dom1==dom2)
+            {
+                domain = dom1;
+            }
+            else
+            {
            // std::cout<<"HEERE  "<<dom1<<"  "<<dom2<<"\n";
             v.UpdateIsFullDomain(false);
             bool dtype1 =  ((*it)->GetV1())->GetIsFullDomain();
@@ -121,23 +116,21 @@ void Surface_Mosaicing::MosaicOneRound()
             domain = dom2;
             else
             domain = dom1;
-        }
-        v.UpdateDomainID(domain);
-        //==
-        
-        
-        
-        m_TMV.push_back(v);
-        
-        
-        
+            }
+            v.UpdateDomainID(domain);
+            m_TMV.push_back(v);
         id++;
     }
     id=m_pVers.size();
+
     for (std::vector<links *>::iterator it = m_pLinks.begin() ; it != m_pLinks.end(); ++it)
     {
+
         (*it)->UpdateV0(&(m_TMV.at(id)));
+        if((*it)->GetMirrorFlag()==true)
+        {
         ((*it)->GetMirrorLink())->UpdateV0(&(m_TMV.at(id)));
+        }
         id++;
     }
 //=========================================
@@ -156,39 +149,37 @@ void Surface_Mosaicing::MosaicOneRound()
         itn++;
         
     }
+
 //=========================================
 //===== now update nighbour vertex of the new vertex
 //=========================================
     for (std::vector<links *>::iterator it = m_pLinks.begin() ; it != m_pLinks.end(); ++it)
     {
         vertex *pv=(*it)->GetV0();
-
-        links * ml=(*it)->GetMirrorLink();
         links * l1 = (*it)->GetNeighborLink1();
         links * l2 = (*it)->GetNeighborLink2();
-        links * l3 = ml->GetNeighborLink1();
-        links * l4 = ml->GetNeighborLink2();
-        
         vertex *pv1=l1->GetV0();
         pv->AddtoNeighbourVertex(pv1);
-        
         vertex *pv2=l2->GetV0();
         pv->AddtoNeighbourVertex(pv2);
-        
-        vertex *pv3=l3->GetV0();
-        pv->AddtoNeighbourVertex(pv3);
-        
-        vertex *pv4=l4->GetV0();
-        pv->AddtoNeighbourVertex(pv4);
-        
         int id1=((*it)->GetV1())->GetVID();
         int id2=((*it)->GetV2())->GetVID();
-        
-        
         pv->AddtoNeighbourVertex(&(m_TMV.at(id1)));
         pv->AddtoNeighbourVertex(&(m_TMV.at(id2)));
+        
+        if((*it)->GetMirrorFlag()==true)
+        {
+            links * ml=(*it)->GetMirrorLink();
+            links * l3 = ml->GetNeighborLink1();
+            links * l4 = ml->GetNeighborLink2();
+            vertex *pv3=l3->GetV0();
+            pv->AddtoNeighbourVertex(pv3);
+            vertex *pv4=l4->GetV0();
+            pv->AddtoNeighbourVertex(pv4);
+        }
 
     }
+
 //=========================================
 //===== generate new triangles
 //=========================================
@@ -220,6 +211,8 @@ void Surface_Mosaicing::MosaicOneRound()
             m_TMT.push_back(T4);
             t1->UpdateGotMashed(true);
         }
+   /* if((*it)->GetMirrorFlag()==true)
+    {
         links * lm=(*it)->GetMirrorLink();
         triangle *t2=lm->GetTriangle();
 
@@ -247,8 +240,10 @@ void Surface_Mosaicing::MosaicOneRound()
             m_TMT.push_back(T4);
             t2->UpdateGotMashed(true);
         }
+    }*/
         
     }
+
 //=================================
 //=== add neighbour triangles to vertex
 //==========================================
@@ -264,7 +259,7 @@ void Surface_Mosaicing::MosaicOneRound()
 
 
     }
-    
+
 //=================================
 //=== generate new link list
 //==========================================
@@ -293,7 +288,7 @@ void Surface_Mosaicing::MosaicOneRound()
 
         
     }
-    
+
     lid=0;
     for (std::vector<triangle >::iterator it = m_TMT.begin() ; it != m_TMT.end(); ++it)
     {
@@ -325,6 +320,7 @@ void Surface_Mosaicing::MosaicOneRound()
         v3->AddtoLinkList(l3);
         
     }
+
     //=============================
     //=====  temprory: copy the links and triangles into pointers
     //=============================================
@@ -340,7 +336,7 @@ void Surface_Mosaicing::MosaicOneRound()
     {
         m_pFL.push_back(&(*it));
     }
-    
+
 //====================================================================
 //========================== Adding mieror links
 //============================================================================
@@ -415,6 +411,7 @@ void Surface_Mosaicing::MosaicOneRound()
     }*/
 //=====
     
+    std::cout<<" here 5 \n";
 
 }
 
@@ -472,6 +469,9 @@ void Surface_Mosaicing::BestEstimateOfMidPointPossition(links *l, double *X, dou
 
 
     
+
+
+    
      Vec3D Lo_geoV1=(pv1->GetG2LTransferMatrix())*geodesic_dir;
      Lo_geoV1(2)=0;
      Lo_geoV1=Lo_geoV1*(1/(Lo_geoV1.norm()));
@@ -483,6 +483,13 @@ void Surface_Mosaicing::BestEstimateOfMidPointPossition(links *l, double *X, dou
     Vec3D Glo_geoV2=(pv2->GetL2GTransferMatrix())*Lo_geoV2;
 
 
+    
+   /* if(isnan((pv1->GetG2LTransferMatrix())(0,0)))
+    {
+        std::cout<<" here happens "<<Lo_geoV1(0)<<"\n";
+    exit(0);
+    }*/
+    
     
     Tensor2 Hous = NormalCoord(geodesic_dir);
 

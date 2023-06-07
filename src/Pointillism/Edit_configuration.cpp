@@ -365,7 +365,7 @@ void  Edit_configuration::UpdateGeometry()
     
     for (std::vector<triangle *>::iterator it = m_pAllT.begin() ; it != m_pAllT.end(); ++it)
         (*it)->UpdateNormal_Area(m_pBox);
-    for (std::vector<links *>::iterator it = m_pHalfLinks1.begin() ; it != m_pHalfLinks1.end(); ++it)
+    for (std::vector<links *>::iterator it = m_pAllLinks.begin() ; it != m_pAllLinks.end(); ++it)
     {
         (*it)->UpdateNormal();
         (*it)->UpdateShapeOperator(m_pBox);
@@ -567,7 +567,7 @@ UpdateGeometry();
     {
         //std::cout<<" we are here 10 \n";
         // Here will cause error when
-        (Vmos.at(j)).PerformMosaicing(m_pBox,  m_pAllV ,  m_pAllT , m_pHalfLinks1, m_pInc,m_Iteration-j);
+        (Vmos.at(j)).PerformMosaicing(m_pBox,  m_pAllV ,  m_pAllT , m_pAllLinks, m_pInc,m_Iteration-j);
         //std::cout<<" we are here 11 \n";
 
         m_pAllV.clear();

@@ -78,7 +78,7 @@ Curvature::Curvature(vertex * pvertex)
 
     for (std::vector<links *>::iterator it = NLinks.begin() ; it != NLinks.end(); ++it)
     {
-       if((*it)->GetMirrorFlag()==true)
+       //if((*it)->GetMirrorFlag()==true)
 	   {
         Vec3D ve=(*it)->GetNormal();
         double we=ve.dot(Normal,ve);
@@ -101,30 +101,24 @@ Curvature::Curvature(vertex * pvertex)
             Se(1)=Se(1)+P(1,n)*Be(n);
             Se(2)=Se(2)+P(2,n)*Be(n);
         }
-        
         double ff=Se.norm();
-        
-        
         if(ff==0)
         {
-            std::cout<<"projection is zero error"<<"\n";
+            std::cout<<" warning----> projection is zero "<<"\n";
+            std::cout<<Be(0)<<"  "<<Be(1)<<"  "<<Be(2)<<"  \n";
         }
         else
-        {
             Se=Se*(1.0/ff);
-        }
         
         Tensor2 Q=P.makeTen(Se);
         
         SV=SV+(Q)*(we*he);
-        
-        
 	}
-
-        
-        
     }
 
+    
+
+    
     /*  std::cout<<LSV(0,0)<<" "<<LSV(0,1)<<" "<<LSV(0,2)<<" "<<"\n";
      std::cout<<LSV(1,0)<<" "<<LSV(1,1)<<" "<<LSV(1,2)<<" "<<"\n";
      std::cout<<LSV(2,0)<<" "<<LSV(2,1)<<" "<<LSV(2,2)<<" "<<"\n";
@@ -191,14 +185,45 @@ Curvature::Curvature(vertex * pvertex)
 
 
     double size=sqrt(q*q+(c1-p)*(c1-p));                   // The Eigenvectors can be calculated using this equation LSV*R=c1*R
-    EigenvMat(0,0)=q/size;                                  // only one of them needs to be calculated, one is normal vector and the other is perpendicular to first one
-    EigenvMat(1,0)=(c1-p)/size;
-    EigenvMat(0,1)=-EigenvMat(1,0);
-    EigenvMat(1,1)=EigenvMat(0,0);
-    EigenvMat(2,2)=1;
+    
+        if(size!=0)
+        {
+            EigenvMat(0,0)=q/size;                                  // only one of them needs to be calculated, one is normal vector and the other is perpendicular to first one
         
-
-
+            EigenvMat(1,0)=(c1-p)/size;
+            EigenvMat(0,1)=-EigenvMat(1,0);
+            EigenvMat(1,1)=EigenvMat(0,0);
+            EigenvMat(2,2)=1;
+        }
+        else
+        {
+            EigenvMat(0,0)=1;                                  // only one of them needs to be calculated, one is normal vector and the other is perpendicular to first one
+        
+            EigenvMat(1,0)=1;
+            EigenvMat(0,1)=-EigenvMat(1,0);
+            EigenvMat(1,1)=EigenvMat(0,0);
+            EigenvMat(2,2)=1;
+        }
+/*
+        if(isnan(EigenvMat(0,0))||size==0)
+          {
+              std::cout<<" here happens "<<EigenvMat(0,0)<<"  "<<size<<"\n";
+              std::cout<<q<<"  "<<c1<<"  "<<p<<"\n";
+              
+              std::cout<<LSV(0,0)<<" "<<LSV(0,1)<<" "<<LSV(0,2)<<" "<<"\n";
+                std::cout<<LSV(1,0)<<" "<<LSV(1,1)<<" "<<LSV(1,2)<<" "<<"\n";
+                std::cout<<LSV(2,0)<<" "<<LSV(2,1)<<" "<<LSV(2,2)<<" "<<"\n";
+                std::cout<<"\n";
+              
+              std::cout<<SV(0,0)<<" "<<SV(0,1)<<" "<<SV(0,2)<<" "<<"\n";
+                std::cout<<SV(1,0)<<" "<<SV(1,1)<<" "<<SV(1,2)<<" "<<"\n";
+                std::cout<<SV(2,0)<<" "<<SV(2,1)<<" "<<SV(2,2)<<" "<<"\n";
+                std::cout<<"\n";
+              
+              std::cout<<" n link size "<<NLinks.size()<<"  "<<"\n";
+              std::cout<<" n trinagle size "<< Ntr.size()<<"  "<<"\n";
+          }
+*/
         // std::cout<<(Hous*Normal)(0)<<"   "<<(Hous*Normal)(1)<<"   "<<(Hous*Normal)(2)<<"   \n";
 
  // Tensor2 TransferMatGL=EigenvMat*Hous;   /// This matrix transfers vectors from Global coordinate to local coordinate//
@@ -210,6 +235,8 @@ Curvature::Curvature(vertex * pvertex)
      Tensor2 TransferMatLG=Hous*EigenvMat;   /// This matrix transfers vectors from local coordinate to global coordinate
         
 
+
+        
         
      Tensor2 TransferMatGL=TransferMatLG.Transpose(TransferMatLG);   /// This matrix transfers vectors from Global coordinate to local coordinate
         
