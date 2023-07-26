@@ -1,0 +1,18 @@
+include P1.gro
+include P2.gro
+; lipidnname ratio_up ratio_down  APL
+[Lipids List]
+Domain 0
+POPC 1  1  0.64
+End
+[Protein List]
+P1     1     0.1     0     0     -3.7
+P2     2     0.1     0     0     -2.4
+End Protein
+ [Shape Data]
+ShapeType  Flat
+Box 20 20 20
+Density 2 1
+Thickness  4
+WallRange 0 1 0 1
+End

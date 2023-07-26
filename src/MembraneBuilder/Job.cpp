@@ -38,7 +38,7 @@ if(a.GetHealth()==true )
     {
         if( L3 == 'P' && L2 == 'C' && L1 == 'G')
         {
-            if(function=="backmap")
+            if(function=="backmap" || function=="analytical_shape")
             BackMap B(&a);
             else if(function=="1dsin")
             Shape_1DSinBuilder B(&a);

@@ -21,6 +21,7 @@
 #include "inclusion.h"
 #include "GenerateMolType.h"
 #include "Tensor2.h"
+#include "ReadDTSFolder.h"
 
 struct ProteinList {
     std::string ProteinName;
@@ -66,6 +67,7 @@ private:
     std::vector<ExcludedVolumeBeads>  m_ExcludeBeads;
     double m_Iter;
     std::string m_InclusionDirectionType;
+    std::vector<exclusion*>  m_pExc;
 
 private:
     double dist2between2Points(Vec3D X1,Vec3D X2);
@@ -89,7 +91,7 @@ private:
     void GenProtein(MolType moltype, int , Vec3D Pos, Vec3D Normal, Vec3D Dir,Vec3D t1,Vec3D t2);
     void GenLipid(MolType moltype, int , Vec3D Pos, Vec3D Normal, Vec3D Dir,Vec3D t1,Vec3D t2);
 
-
+    std::string functiontype(std::string filename);
 };
 
 

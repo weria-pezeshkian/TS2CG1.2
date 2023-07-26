@@ -5,12 +5,14 @@
 #include <math.h>
 #include "BackMap.h"
 #include "GroFile.h"
-#include "ReadDTSFolder.h"
 #include "GenerateUnitCells.h"
 #include "Def.h"
 #include "PDBFile.h"
 #include "GenDomains.h"
-
+#include "FlatPointMaker.h"
+#include "Sphere.h"
+#include "Cylinder.h"
+#include "SHGeneric1DPBCPointMaker.h"
 
 /*
  
@@ -68,31 +70,130 @@ BackMap::BackMap(Argument *pArgu)
     }
 
     //================== Reading DTS folder to get the points ====================================================
-    ReadDTSFolder ReadDTSFile(dtsfolder);
-
-    std::vector<inclusion*>  m_pInc = ReadDTSFile.GetInclusion();
-    std::vector<exclusion*>  m_pExc = ReadDTSFile.GetExclusion();
-
-    m_point1 = ReadDTSFile.GetUpperPoints();
-    m_point2 = ReadDTSFile.GetInnerPoints();
     
+    
+    std::string function = pArgu->GetFunction();
+    std::vector<point>  point1;
+    std::vector<point>  point2;
+    std::vector<point>  wpoint1;
+    std::vector<point>  wpoint2;
+    if(function=="analytical_shape")
+    {
+        std::string ifilename = pArgu->GetStructureFileName();
+        std::string ftype= functiontype(ifilename);
+        Nfunction f;      // In this class there are some useful function and we can use it.
+        
+
+        if(ftype == "Flat")
+        {
+            std::cout<<"Flat bilayer will be made \n";
+            FlatPointMaker  Fu(pArgu);
+            point1 = Fu.GetUpPoint();
+            point2 = Fu.GetInPoint();
+            wpoint1  = Fu.GetWallPoint1();
+            wpoint2  = Fu.GetWallPoint2();
+            m_Box=Fu.GetBox();
+            m_pBox =&m_Box;
+        }
+        else if(ftype == "1D_PBC_Fourier")
+        {
+            std::cout<<"shape from 1D_PBC_Fourier will be made \n";
+            SHGeneric1DPBCPointMaker  Fu(pArgu);
+            point1 = Fu.GetUpPoint();
+            point2 = Fu.GetInPoint();
+            wpoint1  = Fu.GetWallPoint1();
+            wpoint2  = Fu.GetWallPoint2();
+            m_Box=Fu.GetBox();
+            m_pBox =&m_Box;
+        }
+        else if(ftype == "Sphere")
+        {
+            std::cout<<"vesicle will be made \n";
+            Sphere  Fu(pArgu);
+            point1 = Fu.GetUpPoint();
+            point2 = Fu.GetInPoint();
+            wpoint1  = Fu.GetWallPoint1();
+            wpoint2  = Fu.GetWallPoint2();
+            m_Box=Fu.GetBox();
+            m_pBox =&m_Box;
+        }
+        else if(ftype == "Cylinder")
+        {
+            std::cout<<"vesicle will be made \n";
+            Cylinder  Fu(pArgu);
+            point1 = Fu.GetUpPoint();
+            point2 = Fu.GetInPoint();
+            wpoint1  = Fu.GetWallPoint1();
+            wpoint2  = Fu.GetWallPoint2();
+            m_Box=Fu.GetBox();
+            m_pBox =&m_Box;
+        }
+        else
+        {
+            std::cout<<"-> aborted! ---> the shape defined in the str file is unknown :) \n";
+            std::exit(0);
+        }
+        
+        for ( std::vector<point>::iterator it = point1.begin(); it != point1.end(); it++ )
+            m_point1.push_back(&(*it));
+        
+        for ( std::vector<point>::iterator it = point2.begin(); it != point2.end(); it++ )
+            m_point2.push_back(&(*it));
+        
+    }
+    else
+    {
+        ReadDTSFolder ReadDTSFile(dtsfolder);
+
+        m_pInc = ReadDTSFile.GetInclusion();
+        m_pExc = ReadDTSFile.GetExclusion();
+
+        m_point1 = ReadDTSFile.GetUpperPoints();
+        m_point2 = ReadDTSFile.GetInnerPoints();
+        
+        Vec3D *pBox= ReadDTSFile.GetBox();
+        m_Box (0)=(*pBox)(0);     m_Box (1)=(*pBox)(1);     m_Box (2)=(*pBox)(2);
+        m_pBox = pBox;
+    }
+    
+    //=============
 
     
     if(m_point2.size()==0)
     m_monolayer = true;
 
-    Vec3D *pBox= ReadDTSFile.GetBox();
-    m_Box (0)=(*pBox)(0);     m_Box (1)=(*pBox)(1);     m_Box (2)=(*pBox)(2);
-    m_pBox = pBox;
+
 
     
     
     //=============== make wall; Wall info and data
+
     Wall CWall = pArgu->GetWall();
-    CWall.UpdateBox(pBox);
-    CWall.CreateWall(m_point1,m_point2);
+    CWall.UpdateBox(m_pBox);
+    
+    if(function=="analytical_shape")
+    {
+        std::vector<point*> pp1,pp2;
+        for (std::vector<point >::iterator it = wpoint1.begin() ; it != wpoint1.end(); ++it)
+            pp1.push_back(&(*it));
+        for (std::vector<point >::iterator it = wpoint2.begin() ; it != wpoint2.end(); ++it)
+            pp2.push_back(&(*it));
+    
+    CWall.CreateWall(pp1,pp2);
+    }
+    else
+    {
+        CWall.CreateWall(m_point1,m_point2);
+    }
+
     std::vector<bead> WB = CWall.GetWallBead();
     std::vector<point*> WPoint = CWall.GetWallPoint();
+    
+    
+    
+    //
+    //std::vector<point>  wpoint1;
+    //std::vector<point>  wpoint2;
     //==========  We write the wall at the end
 
     
@@ -265,7 +366,7 @@ BackMap::BackMap(Argument *pArgu)
     for ( std::vector<bead>::iterator it = temprobeads.begin(); it != temprobeads.end(); it++ )
         tempropbeads.push_back(&(*it));
     
-        GenerateUnitCells GCNT(tempropbeads, pBox,RCutOff,1.0);
+        GenerateUnitCells GCNT(tempropbeads, m_pBox,RCutOff,1.0);
     
         GCNT.Generate();
     
@@ -1006,7 +1107,64 @@ Tensor2  BackMap::TransferMatLG(Vec3D Normal, Vec3D t1, Vec3D t2)
     return LG;
     
 }
+std::string BackMap::functiontype(std::string filename)
+{
+    std::string ftype;
+    bool OK=true;
+    Nfunction f;
+    std::ifstream file;
+    file.open(filename.c_str());
+    bool flag = false;
+    std::string str;
+    
+    while (true)
+    {
+        std::getline (file,str);
+        if(file.eof())
+            break;
+        
+        std::cout<<str<<"\n";
+        std::vector<std::string> Line = f.split(str);
+        if(Line.size()!=0 && (Line.at(0)).at(0)!=';')
+        {
+            if((Line.at(0)).at(0)=='[' && flag==false)
+            {
+                str = f.trim(str);
+                str.erase(std::remove(str.begin(), str.end(), '['), str.end());
+                str.erase(std::remove(str.begin(), str.end(), ']'), str.end());
+                str.erase(std::remove(str.begin(), str.end(), ' '), str.end());
+                
+                if(str=="ShapeData")
+                    flag = true;
+            }
+            else if((Line.at(0))=="End" && flag==true)
+            {
+                flag=false;
+            }
+            else if(flag==true && Line.at(0)=="ShapeType")
+            {
 
+                    if(Line.size()<2)
+                        std::cout<<" Error: ShapeType information in the str file is not correct \n";
+                    else
+                    ftype = Line.at(1);
+                
+                break;
+
+            }
+            
+            
+        }
+        
+        
+    }
+    
+    
+    file.close();
+    
+
+    return ftype;
+}
 
 
 
