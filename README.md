@@ -7,6 +7,8 @@
 
 NOTE: this version is under development and might be associated with errors and bugs.
 Please use the previous version if you are not in direct contact with the developers.
+Previous version can be found 
+https://github.com/marrink-lab/TS2CG1.1
 
 TS2CG converts triangulated surfaces (TS) to coarse-grained membrane models for molecular simulation.
 It also works as a backmapping algorithm from dynamically triangulated surfaces simulations to CG molecular dynamics simulations or 
