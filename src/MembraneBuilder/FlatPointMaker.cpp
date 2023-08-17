@@ -81,7 +81,7 @@ std::vector<point> FlatPointMaker::CalculateArea_MakePoints(int layer, double AP
         {
             double y = dy*double(j);
 
-            Vec3D X (x,y,layer*H);
+            Vec3D X (x,y,((*m_pBox)(2)/2)+layer*H);
             V1.push_back(X);
             Vec3D T1(double(1+layer)/2,double(1-layer)/2,0);
             Vec3D T2(double(1-layer)/2,double(1+layer)/2,0);

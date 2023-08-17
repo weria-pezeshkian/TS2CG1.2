@@ -790,7 +790,7 @@ void BackMap::CreateRandomInclusion()
 {
     int totinc = 0;
     int totcreated = 0;
-    
+    //==== reading input file to find number of requested proteins
     if(m_TotalProteinList.size()!=0)
     {
         std::cout<<m_TotalProteinList.size()<<" According to the data and area we generate  proteins \n";
@@ -808,10 +808,11 @@ void BackMap::CreateRandomInclusion()
         std::cout<<" We will try to generate  "<<neededno<<"  "<<type<<" protein \n" ;
 
     }
-    
+    //==== end of reading inout file (str) to find number of proteins
 
     int id=0;
     int s=0;
+    //=== checking finding random position for proteins without overlapping. overlapping between proteins not with lipids
     while (totcreated<totinc && s<(m_point1.size()))
     {
         s++;
