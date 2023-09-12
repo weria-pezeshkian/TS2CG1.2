@@ -5,68 +5,90 @@
 #include "Nfunction.h"
 #include "VMDOutput.h"
 #include "WriteFiles.h"
-#include "Trajectory.h"
 #include "Curvature.h"
+
 Surface_Mosaicing::Surface_Mosaicing(std::string altype, bool smooth)
 {
         m_AlgorithmType = altype;
         m_smooth = smooth;
+
 }Surface_Mosaicing::Surface_Mosaicing()
 {
     m_AlgorithmType = "Type1";
     m_smooth = false;
 }
-void Surface_Mosaicing::PerformMosaicing(Vec3D * pBox, std::vector<vertex* > verm , std::vector<triangle* > ptri, std::vector<links* > plinks, std::vector<inclusion* > inc, int iteration)
+void Surface_Mosaicing::PerformMosaicing(MESH * pMesh)
 {
-
-    m_Inc = inc;
-    iteration=iteration-1;
-m_Box=*pBox;
-m_pBox = pBox;
-m_pTri =ptri;
-m_pVers = verm;
-m_pLinks = plinks;
-
-
-    MosaicOneRound();
-    UpdateGeometry();
-
-   /* if(iteration ==0)
-    {
-    std::string tfile="Mosaic.dat";
-    Trajectory T(pBox);
-    T.Write(-1,tfile,m_pFV,m_pFT,m_pFL,inc);
-    
-    std::string file="Mosaic.vtu";
-    std::string file2="orginal.vtu";
-    WriteFiles VTU(pBox);
-    VTU.Writevtu(m_pFV, m_pFT,  m_pFL, file);
-  //  VTU.Writevtu(m_pVers, m_pTri,  m_pLinks, file2);
-
-   VMDOutput VMD(m_Box,m_pFV, m_pTMLH1, file);
-   VMD.WriteGro();
-    }*/
-    
-    
-
-    
+    m_pBox = pMesh->m_pBox;
+    m_Mesh.m_Box = *m_pBox;
+    m_Mesh.m_pBox = &(m_Mesh.m_Box);
+    MosaicOneRound(pMesh);
+    UpdateGeometry(m_pMesh);
 }
-
 Surface_Mosaicing::~Surface_Mosaicing()
 {
     
 }
-void Surface_Mosaicing::MosaicOneRound()
+void  Surface_Mosaicing::GenerateMidVForAllLinks(std::vector<links *> vlink)
 {
-    
-    m_TMV.clear();
-    m_TMT.clear();
-    m_TML.clear();
-    
-//=========================================
-//===== First we copy the old vertex
-//=========================================
-    for (std::vector<vertex *>::iterator it = m_pVers.begin() ; it != m_pVers.end(); ++it)
+    //=========================================
+        //===== for each link, generate a mid vertex
+    //=========================================
+        int inisize = (m_Mesh.m_Vertex).size();
+        int id=inisize;
+        for (std::vector<links *>::iterator it = vlink.begin() ; it != vlink.end(); ++it)
+        {
+                double x,y,z;
+                BestEstimateOfMidPointPossition((*it), &x, &y,&z);
+                if(isnan(x))
+                {
+                    std::cout<<"error---> estimate of the mid point is bad "<<x<<"  "<<y<<"  "<<z<<"\n";
+                    exit(0);
+                }
+                vertex v(id,x,y,z);
+                v.UpdateBox(m_pBox);
+            //==== for version 1.1 and above
+                int dom1 = ((*it)->GetV1())->GetDomainID();
+                int dom2 = ((*it)->GetV2())->GetDomainID();
+                double domain = 0;
+                if (dom1==dom2)
+                {
+                    domain = dom1;
+                }
+                else
+                {
+                    v.UpdateIsFullDomain(false);
+                    bool dtype1 =  ((*it)->GetV1())->GetIsFullDomain();
+                    bool dtype2 =  ((*it)->GetV2())->GetIsFullDomain();
+                    if(dtype2==false)
+                        domain = dom1;
+                    else if(dtype1==false)
+                        domain = dom2;
+                    else
+                        domain = dom1;
+                }
+                v.UpdateDomainID(domain);
+            (m_Mesh.m_Vertex).push_back(v);
+            id++;
+        }
+    // note, we should first find all the link mid point and then copy them
+    id=inisize;
+    for (std::vector<links *>::iterator it = vlink.begin() ; it != vlink.end(); ++it)
+    {
+
+        (*it)->UpdateV0(&((m_Mesh.m_Vertex)[id]));
+        if((*it)->GetMirrorFlag()==true)
+        {
+        ((*it)->GetMirrorLink())->UpdateV0(&((m_Mesh.m_Vertex)[id]));
+        }
+        id++;
+    }
+}
+void Surface_Mosaicing::MosaicOneRound(MESH * pMesh)
+{    ///
+//---> First we copy the old vertices into the new vertices only the position, box and incs
+    m_Mesh.m_Inclusion = pMesh->m_Inclusion;
+    for (std::vector<vertex *>::iterator it = (pMesh->m_pActiveV).begin() ; it != (pMesh->m_pActiveV).end(); ++it)
     {
         double x=(*it)->GetVXPos();
         double y=(*it)->GetVYPos();
@@ -76,238 +98,117 @@ void Surface_Mosaicing::MosaicOneRound()
         if((*it)->VertexOwnInclusion()==true)
         {
             v.UpdateOwnInclusion(true);
-            v.UpdateInclusion((*it)->GetInclusion());
+            int incid = ((*it)->GetInclusion())->GetID();
+            v.UpdateInclusion(&((m_Mesh.m_Inclusion)[incid]));
         }
         v.UpdateDomainID((*it)->GetDomainID());
         v.UpdateBox(m_pBox);
-        m_TMV.push_back(v);
+        (m_Mesh.m_Vertex).push_back(v);
     }
 
-//=========================================
-    //===== for each link, generate a mid vertex
-//=========================================
-    int id=m_TMV.size();
-    for (std::vector<links *>::iterator it = m_pLinks.begin() ; it != m_pLinks.end(); ++it)
+//------> finding the mid point
+    std::vector<links *> vlink = pMesh->m_pHL;
+    std::vector<links *> elink = pMesh->m_pEdgeL;
+    vlink.insert(vlink.end(), elink.begin(), elink.end());
+    GenerateMidVForAllLinks(vlink);
+//-------> Now we have all the vertices
+//-------> we can give the inclusions a vertex
+    for (std::vector<inclusion>::iterator it = (m_Mesh.m_Inclusion).begin() ; it != (m_Mesh.m_Inclusion).end(); ++it)
     {
-            double x,y,z;
-            BestEstimateOfMidPointPossition((*it), &x, &y,&z);
-        
-        if(isnan(x))
-        std::cout<<x<<"  "<<y<<"  "<<z<<"\n";
-            vertex v(id,x,y,z);
-            v.UpdateBox(m_pBox);
-        //==== for version 1.1 and above
-            int dom1 = ((*it)->GetV1())->GetDomainID();
-            int dom2 = ((*it)->GetV2())->GetDomainID();
-            double domain = 0;
-            if (dom1==dom2)
+        int vid = (it->Getvertex())->GetVID();
+        if(vid>=(m_Mesh.m_Vertex).size())
+            std::cout<<"error 3234---> should not happen \n";
+        it->Updatevertex(&((m_Mesh.m_Vertex)[vid]));
+        (m_Mesh.m_pInclusion).push_back(&(*it));
+
+    }
+
+//----> generate new triangles
+    
+        int tid=0;
+        for (std::vector<links *>::iterator it = (pMesh->m_pActiveL).begin() ; it != (pMesh->m_pActiveL).end(); ++it)
+        {
+            triangle *t1=(*it)->GetTriangle();
+            if(t1->GetGotMashed()==false)
             {
-                domain = dom1;
+                links * l1 = (*it)->GetNeighborLink1();
+                links * l2 = (*it)->GetNeighborLink2();
+                vertex *V1=&((m_Mesh.m_Vertex)[(((*it)->GetV1())->GetVID())]);
+                vertex *V2=&((m_Mesh.m_Vertex)[(((*it)->GetV2())->GetVID())]);
+                vertex *V3=&((m_Mesh.m_Vertex)[(((*it)->GetV3())->GetVID())]);
+                vertex *VM0=(*it)->GetV0();
+                vertex *VM1=l1->GetV0();
+                vertex *VM2=l2->GetV0();
+                triangle T1(tid,V1,VM0,VM2);
+                tid++;
+                triangle T2(tid,VM0,V2,VM1);
+                tid++;
+                triangle T3(tid,VM0,VM1,VM2);
+                tid++;
+                triangle T4(tid,VM2,VM1,V3);
+                tid++;
+                (m_Mesh.m_Triangle).push_back(T1);
+                (m_Mesh.m_Triangle).push_back(T2);
+                (m_Mesh.m_Triangle).push_back(T3);
+                (m_Mesh.m_Triangle).push_back(T4);
+                t1->UpdateGotMashed(true);
             }
-            else
-            {
-           // std::cout<<"HEERE  "<<dom1<<"  "<<dom2<<"\n";
-            v.UpdateIsFullDomain(false);
-            bool dtype1 =  ((*it)->GetV1())->GetIsFullDomain();
-            bool dtype2 =  ((*it)->GetV2())->GetIsFullDomain();
-            if(dtype2==false)
-            domain = dom1;
-            else if(dtype1==false)
-            domain = dom2;
-            else
-            domain = dom1;
-            }
-            v.UpdateDomainID(domain);
-            m_TMV.push_back(v);
-        id++;
-    }
-    id=m_pVers.size();
-
-    for (std::vector<links *>::iterator it = m_pLinks.begin() ; it != m_pLinks.end(); ++it)
-    {
-
-        (*it)->UpdateV0(&(m_TMV.at(id)));
-        if((*it)->GetMirrorFlag()==true)
-        {
-        ((*it)->GetMirrorLink())->UpdateV0(&(m_TMV.at(id)));
         }
-        id++;
+    //===
+    for (std::vector<vertex >::iterator it = (m_Mesh.m_Vertex).begin() ; it != (m_Mesh.m_Vertex).end(); ++it)
+    {
+        (m_Mesh.m_pActiveV).push_back(&(*it));
     }
-//=========================================
-//===== now update nighbour vertex of the copied old vertex
-//=========================================
-    std::vector<vertex >::iterator itn = m_TMV.begin();
-    for (std::vector<vertex *>::iterator it = m_pVers.begin() ; it != m_pVers.end(); ++it)
+    for (std::vector<triangle >::iterator it = (m_Mesh.m_Triangle).begin() ; it != (m_Mesh.m_Triangle).end(); ++it)
     {
-        std::vector<links* > LN=(*it)->GetVLinkList();
-        for (std::vector<links *>::iterator it2 = LN.begin() ; it2 != LN.end(); ++it2)
-        {
-            vertex *pv=(*it2)->GetV0();
-            (*itn).AddtoNeighbourVertex(pv);
-        }
-        
-        itn++;
-        
+        (m_Mesh.m_pActiveT).push_back(&(*it));
     }
-
-//=========================================
-//===== now update nighbour vertex of the new vertex
-//=========================================
-    for (std::vector<links *>::iterator it = m_pLinks.begin() ; it != m_pLinks.end(); ++it)
+    
+    
+    int li=-1;
+    
+    for (std::vector<triangle*>::iterator it = (m_Mesh.m_pActiveT).begin() ; it != (m_Mesh.m_pActiveT).end(); ++it)
     {
-        vertex *pv=(*it)->GetV0();
-        links * l1 = (*it)->GetNeighborLink1();
-        links * l2 = (*it)->GetNeighborLink2();
-        vertex *pv1=l1->GetV0();
-        pv->AddtoNeighbourVertex(pv1);
-        vertex *pv2=l2->GetV0();
-        pv->AddtoNeighbourVertex(pv2);
-        int id1=((*it)->GetV1())->GetVID();
-        int id2=((*it)->GetV2())->GetVID();
-        pv->AddtoNeighbourVertex(&(m_TMV.at(id1)));
-        pv->AddtoNeighbourVertex(&(m_TMV.at(id2)));
+        ((*it)->GetV1())->AddtoTraingleList((*it));
+        ((*it)->GetV1())->AddtoNeighbourVertex(((*it)->GetV2()));
+        ((*it)->GetV2())->AddtoTraingleList((*it));
+        ((*it)->GetV2())->AddtoNeighbourVertex(((*it)->GetV3()));
+        ((*it)->GetV3())->AddtoTraingleList((*it));
+        ((*it)->GetV3())->AddtoNeighbourVertex(((*it)->GetV1()));
         
-        if((*it)->GetMirrorFlag()==true)
-        {
-            links * ml=(*it)->GetMirrorLink();
-            links * l3 = ml->GetNeighborLink1();
-            links * l4 = ml->GetNeighborLink2();
-            vertex *pv3=l3->GetV0();
-            pv->AddtoNeighbourVertex(pv3);
-            vertex *pv4=l4->GetV0();
-            pv->AddtoNeighbourVertex(pv4);
-        }
-
-    }
-
-//=========================================
-//===== generate new triangles
-//=========================================
-    int tid=0;
-    for (std::vector<links *>::iterator it = m_pLinks.begin() ; it != m_pLinks.end(); ++it)
-    {
-        triangle *t1=(*it)->GetTriangle();
-        if(t1->GetGotMashed()==false)
-        {
-            links * l1 = (*it)->GetNeighborLink1();
-            links * l2 = (*it)->GetNeighborLink2();
-            vertex *V1=&(m_TMV.at(((*it)->GetV1())->GetVID()));
-            vertex *V2=&(m_TMV.at(((*it)->GetV2())->GetVID()));
-            vertex *V3=&(m_TMV.at(((*it)->GetV3())->GetVID()));
-            vertex *VM0=(*it)->GetV0();
-            vertex *VM1=l1->GetV0();
-            vertex *VM2=l2->GetV0();
-            triangle T1(tid,V1,VM0,VM2);
-            tid++;
-            triangle T2(tid,VM0,V2,VM1);
-            tid++;
-            triangle T3(tid,VM0,VM1,VM2);
-            tid++;
-            triangle T4(tid,VM2,VM1,V3);
-            tid++;
-            m_TMT.push_back(T1);
-            m_TMT.push_back(T2);
-            m_TMT.push_back(T3);
-            m_TMT.push_back(T4);
-            t1->UpdateGotMashed(true);
-        }
-   /* if((*it)->GetMirrorFlag()==true)
-    {
-        links * lm=(*it)->GetMirrorLink();
-        triangle *t2=lm->GetTriangle();
-
-        if(t2->GetGotMashed()==false)
-        {
-            links * l1 = (lm)->GetNeighborLink1();
-            links * l2 = (lm)->GetNeighborLink2();
-            vertex *V1=&(m_TMV.at(((lm)->GetV1())->GetVID()));
-            vertex *V2=&(m_TMV.at(((lm)->GetV2())->GetVID()));
-            vertex *V3=&(m_TMV.at(((lm)->GetV3())->GetVID()));
-            vertex *VM0=(lm)->GetV0();
-            vertex *VM1=l1->GetV0();
-            vertex *VM2=l2->GetV0();
-            triangle T1(tid,V1,VM0,VM2);
-            tid++;
-            triangle T2(tid,VM0,V2,VM1);
-            tid++;
-            triangle T3(tid,VM0,VM1,VM2);
-            tid++;
-            triangle T4(tid,VM2,VM1,V3);
-            tid++;
-            m_TMT.push_back(T1);
-            m_TMT.push_back(T2);
-            m_TMT.push_back(T3);
-            m_TMT.push_back(T4);
-            t2->UpdateGotMashed(true);
-        }
-    }*/
+        /// create links
+        li++;
+        int id1=li;
+        li++;
+        int id2=li;
+        li++;
+        int id3=li;
+        
+        links l1(id1,(*it)->GetV1(),(*it)->GetV2(),(*it));
+        l1.UpdateV3((*it)->GetV3());
+        
+        links l2(id2,(*it)->GetV2(),(*it)->GetV3(),(*it));
+        l2.UpdateV3((*it)->GetV1());
+        
+        links l3(id3,(*it)->GetV3(),(*it)->GetV1(),(*it));
+        l3.UpdateV3((*it)->GetV2());
+        (m_Mesh.m_Links).push_back(l1);
+        (m_Mesh.m_Links).push_back(l2);
+        (m_Mesh.m_Links).push_back(l3);
         
     }
-
-//=================================
-//=== add neighbour triangles to vertex
-//==========================================
-    for (std::vector<triangle >::iterator it = m_TMT.begin() ; it != m_TMT.end(); ++it)
+    li=-1;
+    for (std::vector<triangle*>::iterator it = (m_Mesh.m_pActiveT).begin() ; it != (m_Mesh.m_pActiveT).end(); ++it)
     {
-        vertex *v1 = (*it).GetV1();
-        vertex *v2 = (*it).GetV2();
-        vertex *v3 = (*it).GetV3();
-        
-        v1->AddtoTraingleList(&(*it));
-        v2->AddtoTraingleList(&(*it));
-        v3->AddtoTraingleList(&(*it));
-
-
-    }
-
-//=================================
-//=== generate new link list
-//==========================================
-    int lid=0;
-    for (std::vector<triangle >::iterator it = m_TMT.begin() ; it != m_TMT.end(); ++it)
-    {
-        vertex* v1=(*it).GetV1();
-        vertex* v2=(*it).GetV2();
-        vertex* v3=(*it).GetV3();
-        
-        links l1(lid,v1,v2,&(*it));
-        l1.UpdateV3(v3);
-        
-        lid++;
-        links l2(lid,v2,v3,&(*it));
-        l2.UpdateV3(v1);
-        
-        lid++;
-        links l3(lid,v3,v1,&(*it));
-        l3.UpdateV3(v2);
-        m_TML.push_back(l1);
-        m_TML.push_back(l2);
-        m_TML.push_back(l3);
-        
-        lid++;
-
-        
-    }
-
-    lid=0;
-    for (std::vector<triangle >::iterator it = m_TMT.begin() ; it != m_TMT.end(); ++it)
-    {
-        vertex* v1=(*it).GetV1();
-        vertex* v2=(*it).GetV2();
-        vertex* v3=(*it).GetV3();
-        
-        
-        int id1=lid;
-        lid++;
-        int id2=lid;
-
-        lid++;
-        int id3=lid;
-        lid++;
-
-        links * l1=&(m_TML.at(id1));
-        links * l2=&(m_TML.at(id2));
-        links * l3=&(m_TML.at(id3));
+        li++;
+        int id1=li;
+        li++;
+        int id2=li;
+        li++;
+        int id3=li;
+        links * l1=&((m_Mesh.m_Links).at(id1));
+        links * l2=&((m_Mesh.m_Links).at(id2));
+        links * l3=&((m_Mesh.m_Links).at(id3));
         l1->UpdateNeighborLink1(l2);
         l1->UpdateNeighborLink2(l3);
         l2->UpdateNeighborLink1(l3);
@@ -315,104 +216,62 @@ void Surface_Mosaicing::MosaicOneRound()
         l3->UpdateNeighborLink1(l1);
         l3->UpdateNeighborLink2(l2);
         
-        v1->AddtoLinkList(l1);
-        v2->AddtoLinkList(l2);
-        v3->AddtoLinkList(l3);
+        
+        ((*it)->GetV1())->AddtoLinkList(l1);
+        ((*it)->GetV2())->AddtoLinkList(l2);
+        ((*it)->GetV3())->AddtoLinkList(l3);
         
     }
-
-    //=============================
-    //=====  temprory: copy the links and triangles into pointers
-    //=============================================
-    for (std::vector<vertex >::iterator it = m_TMV.begin() ; it != m_TMV.end(); ++it)
+    for (std::vector<links>::iterator it = (m_Mesh.m_Links).begin() ; it != (m_Mesh.m_Links).end(); ++it)
     {
-        m_pFV.push_back(&(*it));
+        (m_Mesh.m_pActiveL).push_back(&(*it));
     }
-    for (std::vector<triangle >::iterator it = m_TMT.begin() ; it != m_TMT.end(); ++it)
+    for (std::vector<links>::iterator it = (m_Mesh.m_Links).begin() ; it != (m_Mesh.m_Links).end(); ++it)
     {
-        m_pFT.push_back(&(*it));
-    }
-    for (std::vector<links >::iterator it = m_TML.begin() ; it != m_TML.end(); ++it)
-    {
-        m_pFL.push_back(&(*it));
-    }
-
-//====================================================================
-//========================== Adding mieror links
-//============================================================================
-    for (std::vector<vertex* >::iterator it = m_pFV.begin() ; it != m_pFV.end(); ++it)
-    {
-        
-        std::vector<links*> nvl=(*it)->GetVLinkList();
-        
-
-        for (std::vector<links*>::iterator it2 =nvl.begin() ; it2 != nvl.end(); ++it2)
+        bool foundM=false;
+        if((it)->GetMirrorFlag()==true)
         {
-
-            if((*it2)->GetMirrorFlag()==false)
+            (m_Mesh.m_pMHL).push_back(it->GetMirrorLink());
+            (m_Mesh.m_pHL).push_back(&(*it));
+            foundM = true;
+        }
+        else
+        {
+            vertex *v1=it->GetV1();
+            vertex *v2=it->GetV2();
+            
+            std::vector<links*>  lList = v2->GetVLinkList();
+            for (std::vector<links*>::iterator it2 = lList.begin() ; it2 != lList.end(); ++it2)
             {
-
-                vertex * v2=(*it2)->GetV2();
-
-                std::vector<links*> nvl2=v2->GetVLinkList();
-                for (std::vector<links*>::iterator it3 =nvl2.begin() ; it3 != nvl2.end(); ++it3)
+                if(((*it2)->GetV2())->GetVID()==v1->GetVID())
                 {
-                    if(((*it2)->GetV1())->GetVID()==((*it3)->GetV2())->GetVID() && ((*it2)->GetV2())->GetVID()==((*it3)->GetV1())->GetVID() )
-                    {
-                        if((*it2)->GetID()!=(*it3)->GetID())
-                        {
-                            (*it3)->UpdateMirrorLink((*it2));
-                            (*it2)->UpdateMirrorLink((*it3));
-                            (*it3)->UpdateMirrorFlag(true);
-                            (*it2)->UpdateMirrorFlag(true);
-                            
-                            m_pTMLH1.push_back((*it2));
-                            m_pTMLH2.push_back((*it3));
-                        }
-                        else
-                        {
-                            std::cout<<"Error: this should not happen "<<std::endl;
-                        }
-                        
-                        
-                        
-                    }
-                    
+                    it->UpdateMirrorLink((*it2));
+                    (*it2)->UpdateMirrorLink(&(*it));
+                    it->UpdateMirrorFlag(true);
+                    (*it2)->UpdateMirrorFlag(true);
+                    foundM = true;
+                    break;
                 }
             }
-            
-            
         }
-        
-    }
-    
- /*   for (std::vector<links*>::iterator it = m_pFL.begin() ; it != m_pFL.end(); ++it)
-    {
-        
-       if((*it)->GetMirrorFlag()==false)
-        for (std::vector<links*>::iterator it2 =it+1 ; it2 != m_pFL.end(); ++it2)
+        if(foundM == false)
         {
-            
-            if(((*it2)->GetV1())->GetVID()==((*it)->GetV2())->GetVID() && ((*it2)->GetV2())->GetVID()==((*it)->GetV1())->GetVID() && (*it2)->GetID()!=(*it)->GetID())
-            {
-                
-                
-                (*it)->UpdateMirrorLink((*it2));
-                (*it2)->UpdateMirrorLink((*it));
-                (*it)->UpdateMirrorFlag(true);
-                (*it2)->UpdateMirrorFlag(true);
-                
-                m_pTMLH1.push_back((*it2));
-                m_pTMLH2.push_back((*it));
-  
-            }
+            (m_Mesh.m_pEdgeL).push_back(&(*it));
+            it->m_LinkType = 1;
         }
-        
-    }*/
-//=====
-    
-    std::cout<<" here 5 \n";
-
+    }
+    for (std::vector<vertex*>::iterator it = (m_Mesh.m_pActiveV).begin() ; it != (m_Mesh.m_pActiveV).end(); ++it)
+    {
+        bool isedge = false;
+        for (std::vector<vertex*>::iterator it2 = (m_Mesh.m_pEdgeV).begin() ; it2 != (m_Mesh.m_pEdgeV).end(); ++it2)
+        {
+            if((*it2)->GetVID()==(*it)->GetVID())
+                isedge = true;
+        }
+        if(isedge==false)
+        (m_Mesh.m_pSurfV).push_back(*it);
+    }
+    m_pMesh = &m_Mesh;
 }
 
 void Surface_Mosaicing::BestEstimateOfMidPointPossition(links *l, double *X, double *Y,double *Z)
@@ -422,6 +281,7 @@ void Surface_Mosaicing::BestEstimateOfMidPointPossition(links *l, double *X, dou
     double z=0;
     vertex * pv1=l->GetV1();
     vertex * pv2=l->GetV2();
+
     Vec3D *pBox=pv1->GetBox();
     double x1=pv1->GetVXPos();
     double y1=pv1->GetVYPos();
@@ -434,7 +294,7 @@ void Surface_Mosaicing::BestEstimateOfMidPointPossition(links *l, double *X, dou
     double xmid=(x1+x2)/2.0;
     double ymid=(y1+y2)/2.0;
     double zmid=(z1+z2)/2.0;
-    
+
 
         if(fabs(x1-x2)>(*pBox)(0)/2)
                 xmid=xmid+(*pBox)(0)/2;
@@ -443,16 +303,7 @@ void Surface_Mosaicing::BestEstimateOfMidPointPossition(links *l, double *X, dou
         if(fabs(z1-z2)>(*pBox)(2)/2)
             zmid=zmid+(*pBox)(2)/2;
 
-
-    
-
-
-
      Vec3D geodesic_dir(x2-x1,y2-y1,z2-z1);
-
-
-    
-    
      for (int i=0;i<3;i++)
      {
          if(fabs(geodesic_dir(i))>(*pBox)(i)/2)
@@ -467,11 +318,6 @@ void Surface_Mosaicing::BestEstimateOfMidPointPossition(links *l, double *X, dou
     double Linklenght= geodesic_dir.norm();
     geodesic_dir = geodesic_dir*(1/geodesic_dir.norm());
 
-
-    
-
-
-    
      Vec3D Lo_geoV1=(pv1->GetG2LTransferMatrix())*geodesic_dir;
      Lo_geoV1(2)=0;
      Lo_geoV1=Lo_geoV1*(1/(Lo_geoV1.norm()));
@@ -482,36 +328,12 @@ void Surface_Mosaicing::BestEstimateOfMidPointPossition(links *l, double *X, dou
     Lo_geoV2=Lo_geoV2*(1/(Lo_geoV2.norm()));
     Vec3D Glo_geoV2=(pv2->GetL2GTransferMatrix())*Lo_geoV2;
 
-
-    
-   /* if(isnan((pv1->GetG2LTransferMatrix())(0,0)))
-    {
-        std::cout<<" here happens "<<Lo_geoV1(0)<<"\n";
-    exit(0);
-    }*/
-    
     
     Tensor2 Hous = NormalCoord(geodesic_dir);
 
     Vec3D t_2=Hous*Glo_geoV2;
     Vec3D t_1=Hous*Glo_geoV1;
-#if TEST_MODE == Enabled
-    if(isnan(t_2(0)) || isnan(t_2(1)) || isnan(t_2(2)))
-    {
-        std::cout<<"errorGGGG.... "<<(geodesic_dir(0))<<"  "<<(geodesic_dir(1))<<"   "<<(geodesic_dir(2))<<"   \n";
-        
-        Tensor2 LSV = pv2->GetL2GTransferMatrix();
-          std::cout<<LSV(0,0)<<" "<<LSV(0,1)<<" "<<LSV(0,2)<<" "<<"\n";
-         std::cout<<LSV(1,0)<<" "<<LSV(1,1)<<" "<<LSV(1,2)<<" "<<"\n";
-         std::cout<<LSV(2,0)<<" "<<LSV(2,1)<<" "<<LSV(2,2)<<" "<<"\n";
-         std::cout<<"\n";
-        std::cout<<t_2(0)<<" "<<t_2(1)<<" "<<t_2(2)<<" "<<"\n";
 
-        exit(0);
-    }
-    if(t_2(2)==0||t_1(2))
-    std::cout<<"error---> 34523 \n";
-#endif
 
     t_2=t_2*(1/t_2(2));
     t_1=t_1*(1/t_1(2));
@@ -521,7 +343,7 @@ void Surface_Mosaicing::BestEstimateOfMidPointPossition(links *l, double *X, dou
     
     /// test case to see if inclduign curvature make it better
     Vec3D Dr(0,0,0);
-    
+
     if(m_AlgorithmType == "Type2")
     {
 
@@ -545,12 +367,6 @@ void Surface_Mosaicing::BestEstimateOfMidPointPossition(links *l, double *X, dou
         double D2Y_1=Curve1*(t_1.dot(t_1,t_1))*(2*N1(2)*t_1(1)/Linklenght-N1(1));
         double D2X_2=Curve2*(t_2.dot(t_2,t_2))*(2*N2(2)*t_2(0)/Linklenght-N2(0));
         double D2Y_2=Curve2*(t_2.dot(t_2,t_2))*(2*N2(2)*t_2(1)/Linklenght-N2(1));
-        
-
-    
-    
-    
-    
     double X_0=(D2X_1+D2X_2+5*(t_1(0)-t_2(0)))/16.0;
     double Y_0=(D2Y_1+D2Y_2+5*(t_1(1)-t_2(1)))/16.0;
   
@@ -597,42 +413,38 @@ void Surface_Mosaicing::BestEstimateOfMidPointPossition(links *l, double *X, dou
         
         
     }
-   // Dr = Dr*0.0;
     Vec3D GDr=(Hous.Transpose(Hous))*Dr;
     
     x=xmid+GDr(0);
     y=ymid+GDr(1);
     z=zmid+GDr(2);
- #if TEST_MODE == Enabled
-    if(isnan(x) || isnan(y) || isnan(z))
-    {
-        std::cout<<"error5455.... "<<x<<"  "<<y<<"   "<<z<<"   \n";
-        std::cout<<"Xmid.... "<<xmid<<"  "<<ymid<<"   "<<zmid<<"   \n";
-        std::cout<<"Dr.... "<<Dr(0)<<"  "<<Dr(1)<<"   "<<Dr(2)<<"   \n";
-        std::cout<<"Link Lenght.... "<<Linklenght<<"   \n";
-        
-        exit(0);
-    }
-#endif
-
     *X=x;
     *Y=y;
     *Z=z;
     
 }
-void  Surface_Mosaicing::UpdateGeometry()
+void  Surface_Mosaicing::UpdateGeometry(MESH *pmesh)
 {
-    
-    for (std::vector<triangle *>::iterator it = m_pFT.begin() ; it != m_pFT.end(); ++it)
-        (*it)->UpdateNormal_Area(m_pBox);
-    for (std::vector<links *>::iterator it = m_pTMLH1.begin() ; it != m_pTMLH1.end(); ++it)
+    Curvature CurvatureCalculations;
+    for (std::vector<triangle *>::iterator it = (pmesh->m_pActiveT).begin() ; it != (pmesh->m_pActiveT).end(); ++it)
     {
-        (*it)->UpdateNormal();
-        (*it)->UpdateShapeOperator(m_pBox);
+    (*it)->UpdateNormal_Area(m_pBox);
     }
-    for (std::vector<vertex *>::iterator it = m_pFV.begin() ; it != m_pFV.end(); ++it)
-        Curvature P(*it);
     
+    //===== Prepare links:  normal vector and shape operator
+    for (std::vector<links *>::iterator it = (pmesh->m_pHL).begin() ; it != (pmesh->m_pHL).end(); ++it)
+    {
+            (*it)->UpdateNormal();
+            (*it)->UpdateShapeOperator(m_pBox);
+    }
+    //======= Prepare vertex:  area and normal vector and curvature of surface vertices not the edge one
+    for (std::vector<vertex *>::iterator it = (pmesh->m_pSurfV).begin() ; it != (pmesh->m_pSurfV).end(); ++it)
+        CurvatureCalculations.SurfVertexCurvature(*it);
+    //====== edge links should be updated
+    for (std::vector<links *>::iterator it = (pmesh->m_pEdgeL).begin() ; it != (pmesh->m_pEdgeL).end(); ++it)
+            (*it)->UpdateEdgeVector(m_pBox);
+    for (std::vector<vertex *>::iterator it = (pmesh->m_pEdgeV).begin() ; it != (pmesh->m_pEdgeV).end(); ++it)
+        CurvatureCalculations.EdgeVertexCurvature(*it);
 }
 // This is for minimazation
 void Surface_Mosaicing::RoughnessOfALink(links *l, double *linklength, double *midpointdistance)
@@ -663,11 +475,6 @@ void Surface_Mosaicing::RoughnessOfALink(links *l, double *linklength, double *m
     if(fabs(z1-z2)>(*pBox)(2)/2)
         zmid=zmid+(*pBox)(2)/2;
     
-    
-    
-    
-    
-    
     Vec3D geodesic_dir(x2-x1,y2-y1,z2-z1);
     
     for (int i=0;i<3;i++)
@@ -693,7 +500,6 @@ void Surface_Mosaicing::RoughnessOfALink(links *l, double *linklength, double *m
     Lo_geoV2(2)=0;
     Lo_geoV2=Lo_geoV2*(1/(Lo_geoV2.norm()));
     Vec3D Glo_geoV2=(pv2->GetL2GTransferMatrix())*Lo_geoV2;
-    
     
     
     
@@ -803,21 +609,6 @@ Tensor2 Surface_Mosaicing::NormalCoord(Vec3D N)
         N=N*(1/N.norm());
         
     }
-   /* if(N(2)==-1)
-    {
-        Hous(0,0) = 1;
-        Hous(0,1) = 0;
-        Hous(0,2) = 0;
-        Hous(1,1) = 1;
-        Hous(1,0) = 0;
-        Hous(1,2) = 0;
-        Hous(2,2) = -1;
-        Hous(2,1) = 0;
-        Hous(2,0) = 0;
-
-    }
-    else
-    {*/
         Vec3D Zk;
         Zk(2)=1.0;
         Zk=Zk+N;
@@ -826,43 +617,7 @@ Tensor2 Surface_Mosaicing::NormalCoord(Vec3D N)
         Tensor2 I('I');
         Tensor2 W=Hous.makeTen(Zk);
         Hous=(I-W*2)*(-1);
-    //}
     return Hous;
     
-    
-  /*
-    Vec3D P=N;
-    P(2) = 0;
-    P=P*(1/P.norm());
-    double cosP = P(0);
-    double sinP = P(1);
-    
-    
-    Tensor2 Rz('I');
-    Rz(0,0)=cosP;
-    Rz(1,0)=-sinP;
-    Rz(0,1)=sinP;
-    Rz(1,1)=cosP;
-    
-    Tensor2 Ry('I');
-    double cosT = N(2);
-    double sinT = -(Rz*N)(0);
-    
-    Ry(0,0) = cosT;
-    Ry(0,2) = sinT;
-    Ry(2,0) = -sinT;
-    Ry(2,2) = cosT;
-    Tensor2 M=(Ry*Rz);
-    return M;
-    
-    */
 }
-
-
-
-
-
-
-
-
 

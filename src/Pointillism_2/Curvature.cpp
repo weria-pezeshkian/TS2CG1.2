@@ -15,7 +15,6 @@ void Curvature::SurfVertexCurvature(vertex * pvertex)
 {
     m_pVertex=pvertex;
     std::vector<triangle *> Ntr=m_pVertex->GetVTraingleList();
-    
     double Area=0.0;
     Vec3D Normal;
     for (std::vector<triangle *>::iterator it = Ntr.begin() ; it != Ntr.end(); ++it)
@@ -145,9 +144,7 @@ void Curvature::SurfVertexCurvature(vertex * pvertex)
         std::cout<<" if you face this too much, you should stop the job and .... \n";
     }
 
-    
-
-   // if(true) in general we do not need this, only if we have directional inclsuions
+    // if(true) in general we do not need this, only if we have directional inclsuions
     {
     Tensor2 EigenvMat('O');
     
@@ -161,9 +158,6 @@ void Curvature::SurfVertexCurvature(vertex * pvertex)
     EigenvMat(0,1)=-EigenvMat(1,0);
     EigenvMat(1,1)=EigenvMat(0,0);
     EigenvMat(2,2)=1;
-        
-
-
         // std::cout<<(Hous*Normal)(0)<<"   "<<(Hous*Normal)(1)<<"   "<<(Hous*Normal)(2)<<"   \n";
 
  // Tensor2 TransferMatGL=EigenvMat*Hous;   /// This matrix transfers vectors from Global coordinate to local coordinate//
@@ -173,119 +167,15 @@ void Curvature::SurfVertexCurvature(vertex * pvertex)
         ///  this is correct, We can check by applying transpose(E)*t1 = (1,0,0)
         
      Tensor2 TransferMatLG=Hous*EigenvMat;   /// This matrix transfers vectors from local coordinate to global coordinate
-        
-
-        
      Tensor2 TransferMatGL=TransferMatLG.Transpose(TransferMatLG);   /// This matrix transfers vectors from Global coordinate to local coordinate
         
         m_pVertex->UpdateL2GTransferMatrix(TransferMatLG);
         m_pVertex->UpdateG2LTransferMatrix(TransferMatGL);
-        
-        
-        
-        if(pvertex->VertexOwnInclusion()==true)
-        {
-            inclusion * in=pvertex->GetInclusion();
-            Vec3D LD=in->GetLDirection();
-        }
-        
-
-//
- #if TEST_MODE == Enabled
-      Tensor2 Before = TransferMatLG;
-        Vec3D P1(1,0,0);
-        Vec3D P2(0,1,0);
-        
-        P1=TransferMatLG*P1;
-        P2=TransferMatLG*P2;
-
-        Vec3D p1=P1;
-        if(P1.dot(P1*P2,Normal)<0)
-        P1=P1*(-1);
-        
-        Tensor2 Q(P1,P2,Normal);
-        
-        TransferMatGL = Q;
-        
-        
-        TransferMatLG = Q.Transpose(TransferMatGL);
-        
-        Tensor2 After = TransferMatLG;
-
-  
-        
-        Vec3D a1(1,0,0);
-        Vec3D a2(0,1,0);
-        Vec3D a3(0,0,1);
-
-        if(P1.dot(p1*P2,Normal)<0)
-        {
-            std::cout<<((TransferMatLG*a1)*(TransferMatLG*a2))(0)<<"   "<<((TransferMatLG*a1)*(TransferMatLG*a2))(1)<<"   "<<((TransferMatLG*a1)*(TransferMatLG*a2))(2)<<"\n";
-            
-           std::cout<<(TransferMatGL*(TransferMatLG*a3))(0)<<"   "<<(TransferMatGL*(TransferMatLG*a3))(1)<<"   "<<(TransferMatGL*(TransferMatLG*a3))(2)<<"\n";
-
-            std::cout<<"=================\n";
-            std::cout<<Before(0,0)<<"   "<<Before(0,1)<<"   "<<Before(0,2)<<"\n";
-            std::cout<<Before(1,0)<<"   "<<Before(1,1)<<"   "<<Before(1,2)<<"\n";
-            std::cout<<Before(2,0)<<"   "<<Before(2,1)<<"   "<<Before(2,2)<<"\n";
-            
-            std::cout<<"====== after ===========\n";
-            std::cout<<After(0,0)<<"   "<<After(0,1)<<"   "<<After(0,2)<<"\n";
-            std::cout<<After(1,0)<<"   "<<After(1,1)<<"   "<<After(1,2)<<"\n";
-            std::cout<<After(2,0)<<"   "<<After(2,1)<<"   "<<After(2,2)<<"\n";
-            
-            std::cout<<"\n";
-            
-
-        }
-        ///// here should be corrected  . we need a good test to see if the transformation is correct
-        Vec3D localN(0,0,1);
-        Vec3D GN1 = TransferMatLG*localN;
-    if( fabs(Normal(2)-GN1(2))>0.001 || fabs(Normal(1)-GN1(1))>0.001 || fabs(Normal(0)-GN1(0))>0.001)
-    {
-        std::cout<<" error code 1110319: something is unusuall \n";
-        std::cout<<" transfer matrix does not work well \n";
-        std::cout<<Normal(0)<<"   "<<Normal(1)<<"   "<<Normal(2)<<"   G \n";
-        std::cout<<GN1(0)<<"   "<<GN1(1)<<"   "<<GN1(2)<<"  Local to G  \n";
-
-        std::cout<<"\n ";
     }
-        Vec3D LN = TransferMatGL*Normal;
-        if( fabs(LN(0))>0.0001 || fabs(LN(1))>0.0001 || fabs(1-LN(2))>0.001)
-        {
-            std::cout<<" error code 1110319: something is unusuall \n";
-            std::cout<<" transfer matrix does not work well \n";
-            std::cout<<LN(0)<<"   "<<LN(1)<<"   "<<LN(2)<<"  Local to G  \n";
-            
-            std::cout<<"\n ";
-        }
-
-        
-         Vec3D k1(1,2,3);
-         Vec3D k2=TransferMatLG*k1;
-         Vec3D k3=TransferMatGL*k2;
-        
-        if(fabs(k1(0)-k3(0))>0.0001 ||fabs(k1(1)-k3(1))>0.0001  || fabs(k1(2)-k3(2))>0.0001 )
-        {
-            std::cout<<" transfer matrix does not work well: when we transfer and back v=1,2,3 \n";
-         std::cout<<"===============\n";
-         std::cout<<k1(0)<<" "<<k1(1)<<" "<<k1(2)<<" \n";
-         std::cout<<k3(0)<<" "<<k3(1)<<" "<<k3(2)<<" \n";
-        }
-#endif
-        
-        
-    }
-
-
-    
     c1=c1/Area;
     c2=c2/Area;
     m_pVertex->UpdateCurvature(c1,c2);
-    
-    
 
- 
 }
 void Curvature::EdgeVertexCurvature(vertex * pvertex)
 {

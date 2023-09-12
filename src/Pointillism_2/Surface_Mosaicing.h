@@ -7,6 +7,7 @@
 #include "triangle.h"
 #include "Vec3D.h"
 #include "inclusion.h"
+#include "MESH.h"
 
 class Surface_Mosaicing
 {
@@ -20,47 +21,42 @@ public:
 
 public:
 
-    inline std::vector <links *> GetLinks()             {return m_pFL;}
-    inline std::vector <links *> GetHLinks()             {return m_pTMLH1;}
-    inline std::vector <triangle *> GetTriangles()         {return m_pFT;}
-    inline std::vector <vertex *> GetVertexs()     {return m_pFV;}
+//    inline std::vector <links *> GetLinks()             {return m_pFL;}
+
 
     
 public:
-    void PerformMosaicing(Vec3D * Box, std::vector<vertex* > verm , std::vector<triangle* > ptri, std::vector<links* > plink, std::vector<inclusion* > inc, int iteration);
+    void PerformMosaicing(MESH * pMesh);
     void RoughnessOfALink(links *l, double *linklength, double *midpointdistance);
 private:
 
 Vec3D m_Box;
 Vec3D *m_pBox;
-std::vector<vertex* > m_pVers;
-std::vector<triangle* > m_pTri;
-std::vector<links* >  m_pLinks;
     std::string m_AlgorithmType;
     
     
 private:
-    void UpdateGeometry();
-    void MosaicOneRound();
+    void UpdateGeometry(MESH *pmesh);
+    void MosaicOneRound(MESH * pMesh);
     void BestEstimateOfMidPointPossition(links *, double *x, double *y,double *z);
     Tensor2 NormalCoord(Vec3D N);
 
 private:
     std::vector<inclusion* > m_Inc;
-    std::vector<vertex > m_TMV;
-    std::vector<triangle > m_TMT;
-    std::vector<links >  m_TML;
-    std::vector<links *>  m_pTMLH2;
-    std::vector<links *>  m_pTMLH1;
-
-    std::vector<vertex > m_FV;
-    std::vector<triangle > m_FT;
-    std::vector<links >  m_FL;
 
     std::vector<vertex* > m_pFV;
     std::vector<triangle* > m_pFT;
     std::vector<links* >  m_pFL;
     bool m_smooth;
+public:
+    MESH *m_pMesh;
+    MESH m_Mesh;
+
+    
+    // since 2023
+private:
+    void  GenerateMidVForAllLinks(std::vector<links *> vlink);
+    
 };
 
 

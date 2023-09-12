@@ -175,7 +175,6 @@ std::vector<inclusion> ReadDTSFolder::ReadInclusionObjects(std::string file)
     
     int readafile = fscanf(fdtspoins,"%s%s%s%d%s",str2,str2,str2,&NoPoints,str2);
     
-    
     bool  check = fgets(str1, sizeof(str1), fdtspoins);
     check = fgets(str1, sizeof(str1), fdtspoins);
 
@@ -189,7 +188,6 @@ std::vector<inclusion> ReadDTSFolder::ReadInclusionObjects(std::string file)
     for (int i=0;i<NoPoints;i++)
     {
         readafile = fscanf(fdtspoins,"%d%d%d%f%f%f",&id,&tid,&pid,&x,&y,&z);
-        
         Vec3D D(x,y,z);
         inclusion p(id, tid,pid,D);
        // std::cout<<id<<"  "<<tid<<"  "<<pid<<"  "<<x<<"  "<<y<<"  "<<z<<"\n";

@@ -2,7 +2,6 @@
 #define AFX_Job_H_9F4A21B8_C13C_1223_BF23_124095086234__INCLUDED_
 
 #include "SimDef.h"
-#include "Topology.h"
 class Job
 {
 public:

@@ -36,7 +36,11 @@ void links::UpdateTriangle(triangle *v)
 {
     m_T1=v;
 }
-
+void links::UpdateV0(vertex *v0)
+{
+    m_V0=v0;
+    
+}
 void links::UpdateV(vertex *v1,vertex *v2,vertex *v3)
 {
     m_V3=v3;

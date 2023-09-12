@@ -3,48 +3,23 @@
 
 
 #include "VMDOutput.h"
+#include "Nfunction.h"
 
 
 VMDOutput::VMDOutput(Vec3D Box, std::vector<vertex* > pver , std::vector<links* > plinks, std::string Filename)
 {
-
 m_Box=Box;
-
 m_pVers=pver;
 m_pLinks=plinks;
-
-
-
 m_Filename=Filename;
-
-
-
-
-
-
-
 }
-
 VMDOutput::~VMDOutput()
 {
     
 }
-
-
-
-
-
-
-
-
-
-
-
-
 void VMDOutput::WriteGro()
 {
-
-
+    Nfunction f;
         for (std::vector<links *>::iterator it = m_pLinks.begin() ; it != m_pLinks.end(); ++it)
         {
 		(*it)->UpdateVisualize(true);
@@ -53,7 +28,7 @@ void VMDOutput::WriteGro()
         {
 		vertex * v1=(*it)->GetV1();
 		vertex * v2=(*it)->GetV2();
-            vertex * v3=(*it)->GetV3();
+        vertex * v3=(*it)->GetV3();
 
 
 		double x1=v1->GetVXPos();
@@ -81,26 +56,15 @@ void VMDOutput::WriteGro()
 		} 
 		if(rep==false)
 		{
-			
 			(*it)->UpdateVisualize(rep);
-		
-
 		}
-
-
 	}
-
-
-
-
 std::string Filename=m_Filename+".gro";
-
-
 	FILE *fgro;
     fgro = fopen(Filename.c_str(), "w");
 
     
-                                                     
+                                            
     							/// resid  res name   noatom   x   y   z
                                                      const char* Title="Network";
                                                      int Size=m_pVers.size();
@@ -110,33 +74,29 @@ std::string Filename=m_Filename+".gro";
                                                      int i=0;
           for (std::vector<vertex *>::iterator it = m_pVers.begin() ; it != m_pVers.end(); ++it)
            {
-		i++;
-		double x=(*it)->GetVXPos();
-		double y=(*it)->GetVYPos();
-		double z=(*it)->GetVZPos();
+               i++;
+                double x=(*it)->GetVXPos();
+                double y=(*it)->GetVYPos();
+                double z=(*it)->GetVZPos();
 
-		if((*it)->VertexOwnInclusion()==false)
-		{
-            const char* B="C";
-            const char* A="Ver";
-            int resid=0;
-		  fprintf(fgro, "%5d%5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f\n",resid,A,B,i,x/5.0,y/5.0,z/5.0,0.0,0.0,0.0 );
-		}
-		else
-		{
-            const char* B="O";
-            const char* A=(((*it)->GetInclusion())->GetType()).c_str();
-            int resid=((*it)->GetInclusion())->GetTypeID();
-           // std::cout<<((*it)->GetInclusion())->GetTypeID()<<"  "<<(((*it)->GetInclusion())->GetType())<<"  "<<((*it)->GetInclusion())->GetID()<<"\n";
-    		fprintf(fgro, "%5d%5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f\n",resid,A,B,i,x/5.0,y/5.0,z/5.0,0.0,0.0,0.0 );
-		}
+                if((*it)->VertexOwnInclusion()==false)
+                {
+                        const char* B="C";
+                        const char* A="Ver";
+                        int resid=0;
+                        fprintf(fgro, "%5d%5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f\n",resid,A,B,i,x/5.0,y/5.0,z/5.0,0.0,0.0,0.0 );
+                }
+                else
+                {
+                        const char* B="O";
+                        int resid = ((*it)->GetInclusion())->GetInclusionTypeID();
+                        std::string resname = "pro"+f.Int_to_String(resid);
+                        const char* A=resname.c_str();
+                        fprintf(fgro, "%5d%5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f\n",resid,A,B,i,x/5.0,y/5.0,z/5.0,0.0,0.0,0.0 );
+                }
                if(i>20000)
                    i=0;
            }
-
-
-
-
    fprintf(fgro,  "%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f\n",m_Box(0)/5,m_Box(1)/5,m_Box(2)/5,0.0,0.0,0.0,0.0,0.0,0.0 );
    fclose(fgro);
 //=================================== 
@@ -164,7 +124,7 @@ i=0;
           for (std::vector<vertex *>::iterator it = m_pVers.begin() ; it != m_pVers.end(); ++it)
            {
 		i++;
-               int resid=(*it)->GetClusterID();
+               int resid=(*it)->GetGroup();
 
 		Topfile<<i<<" 	CT1 	"<<resid <<"	Sur 	C 	"<<i<<" 	0  \n";
 
@@ -181,24 +141,20 @@ Topfile<<" [bonds] \n";
 		Topfile<<id1+1<<"   "<<id2+1<<" 	1 	1  	20000\n";
 		}
 
-           }
-
+        }
 Topfile<<"[ system ] \n";
 Topfile<<" triangluated surface \n";
 
 Topfile<<"[ molecules ] \n";
 Topfile<<" surface 1 \n";
-
-
-
-
 }
 
 /////////////////////////
 void VMDOutput::WriteGro2()
 {
     
-    
+    Nfunction f;
+
     for (std::vector<links *>::iterator it = m_pLinks.begin() ; it != m_pLinks.end(); ++it)
     {
         (*it)->UpdateVisualize(true);
@@ -279,8 +235,10 @@ void VMDOutput::WriteGro2()
         else
         {
             const char* B="O";
-            const char* A=(((*it)->GetInclusion())->GetType()).c_str();
-            int resid=((*it)->GetInclusion())->GetTypeID();
+            int resid = ((*it)->GetInclusion())->GetInclusionTypeID();
+            std::string resname = "pro"+f.Int_to_String(resid);
+            const char* A=resname.c_str();
+            
             fprintf(fgro, "%5d%5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f\n",resid,A,B,i,x,y,z,0.0,0.0,0.0 );
         }
         

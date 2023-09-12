@@ -39,9 +39,9 @@ Vec3D *m_pBox;
     double m_minRoughness;
     bool m_smooth;
     int m_monolayer;
-    void Rescaling(Vec3D zoom );   // rescale the position and the box based on a vector
-    void UpdateGeometry( );  // updates curvature, area etc of each triangle, vertex etc
-
+    void Rescaling(Vec3D zoom , MESH *pMesh);   // rescale the position and the box based on a vector
+    //void UpdateGeometry( );  // updates curvature, area etc of each triangle, vertex etc
+    void UpdateGeometry(MESH *pmesh);  // updates curvature, area etc of each triangle, vertex etc
     std::string m_MosAlType;
     void BackMapOneLayer(int layer , std::string file, double);
     bool check(std::string file);     // a function to check how the ts file looklike and do nothing
@@ -59,7 +59,7 @@ Vec3D *m_pBox;
     void InitializeVariables();
     // updates variables based on the command line arguments
     void UpdateVariables(std::vector <std::string> &);
-    void UpdateBoxSize();
+    void UpdateBoxSize(MESH* pmesh);
 
 private:
     std::string m_MeshFileName;

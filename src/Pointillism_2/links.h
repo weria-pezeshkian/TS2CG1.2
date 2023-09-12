@@ -38,6 +38,11 @@ public:
         inline double GetIntEnergy()                      {return m_IntEnergy;}
         inline double GetEdgeSize()                      {return m_EdgeSize;}
         inline Vec3D GetEdgeVector()                      {return m_EdgeVector;}
+    
+    
+    // specific for this function
+    inline vertex *GetV0()                       {return m_V0;}
+
 
     
 
@@ -62,6 +67,7 @@ void ReadLinkFromFile(std::ifstream *inputfile,std::vector <vertex *> pv, std::v
 void WriteLinkToFile(std::ofstream *inputfile);
 void UpdateEdgeVector(Vec3D *pbox);
 void PutEdgeVector(Vec3D , double);
+void UpdateV0(vertex *v0);
 
 private:
 
@@ -73,6 +79,7 @@ triangle *m_T1;
 vertex  *m_V1;
 vertex  *m_V2;
 vertex  *m_V3;
+vertex  *m_V0;
 links   *m_mirorlink;
 links   *m_neighborlink1; /// triangle is 1-2-3;  the link is 1->2   this point to 2->3    
 links   *m_neighborlink2; /// the link is 1->2   this is 3->1

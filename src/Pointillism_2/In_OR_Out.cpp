@@ -11,12 +11,7 @@
 #include "Nfunction.h"
 #include "Vec3D.h"
 #include "VMDOutput.h"
-#include "Trajectory.h"
-#include "Topology.h"
 #include "Surface_Mosaicing.h"
-#include "VertexMove.h"
-#include "MakePBCTS.h"
-#include "Traj_XXX.h"
 
 
 /*
@@ -34,11 +29,9 @@ In_OR_Out::In_OR_Out(std::string filename)
     }
     else
     {
-        m_Box(0) = 3;
-        m_Box(1) = 3;
-        m_Box(2) = 3;
-        m_pBox=&m_Box;
+
         Initialize(filename);   // read this TS file
+        m_pBox=m_pMesh->m_pBox;
 
         /// make the box size good; Find box size function create one
         ///
@@ -54,7 +47,7 @@ In_OR_Out::In_OR_Out(std::string filename)
             double x,y,z;
             std::cin>>x>>y>>z;
             int inside = 0;
-            for (std::vector<triangle *>::iterator it = m_pAllT.begin() ; it != m_pAllT.end(); ++it)
+            for (std::vector<triangle *>::iterator it = (m_pMesh->m_pActiveT).begin() ; it != (m_pMesh->m_pActiveT).end(); ++it)
             {
                 (*it)->UpdateNormal_Area(m_pBox);
                 Vec3D N = (*it)->GetAreaVector();
@@ -110,20 +103,29 @@ In_OR_Out::~In_OR_Out()
 {
     
 }
-void  In_OR_Out::UpdateGeometry()
+void  In_OR_Out::UpdateGeometry(MESH *pmesh)
 {
-    
-    
-    for (std::vector<triangle *>::iterator it = m_pAllT.begin() ; it != m_pAllT.end(); ++it)
-        (*it)->UpdateNormal_Area(m_pBox);
-    for (std::vector<links *>::iterator it = m_pHalfLinks1.begin() ; it != m_pHalfLinks1.end(); ++it)
+    Curvature CurvatureCalculations;
+    for (std::vector<triangle *>::iterator it = (pmesh->m_pActiveT).begin() ; it != (pmesh->m_pActiveT).end(); ++it)
+    (*it)->UpdateNormal_Area(m_pBox);
+
+    //===== Prepare links:  normal vector and shape operator
+    for (std::vector<links *>::iterator it = (pmesh->m_pHL).begin() ; it != (pmesh->m_pHL).end(); ++it)
     {
-        (*it)->UpdateNormal();
-        (*it)->UpdateShapeOperator(m_pBox);
+            (*it)->UpdateNormal();
+            (*it)->UpdateShapeOperator(m_pBox);
     }
-    for (std::vector<vertex *>::iterator it = m_pAllV.begin() ; it != m_pAllV.end(); ++it)
-        Curvature P(*it);
-   
+
+    //======= Prepare vertex:  area and normal vector and curvature of surface vertices not the edge one
+    for (std::vector<vertex *>::iterator it = (pmesh->m_pSurfV).begin() ; it != (pmesh->m_pSurfV).end(); ++it)
+        CurvatureCalculations.SurfVertexCurvature(*it);
+        
+    //====== edge links should be updated
+    for (std::vector<links *>::iterator it = (pmesh->m_pEdgeL).begin() ; it != (pmesh->m_pEdgeL).end(); ++it)
+            (*it)->UpdateEdgeVector(m_pBox);
+
+    for (std::vector<vertex *>::iterator it = (pmesh->m_pEdgeV).begin() ; it != (pmesh->m_pEdgeV).end(); ++it)
+        CurvatureCalculations.EdgeVertexCurvature(*it);
     
 }
 bool In_OR_Out::FileExist (const std::string& name)
@@ -133,60 +135,14 @@ bool In_OR_Out::FileExist (const std::string& name)
 }
 void In_OR_Out::Initialize(std::string file)
 {
-    double lm = 0.1;
-    double lmax =1000;
-    double mina = 0;
-    Topology S(m_pBox, &mina, &lm, &lmax);
-    Traj_XXX TSI(m_pBox);
-
-
-if(file.at(file.size()-1)=='q' && file.at(file.size()-2)=='.')
-{
-
-    S.FastReadQFile(file);
-    bool topohealth= S.GetTopologyHealth();
-
-    if(topohealth==false)
-    {
-        std::cout<<" error: Provided TS file is bad \n";
-    }
-    
-    m_pAllV.clear();
-    m_pInc.clear();
-    m_pAllT.clear();
-    m_pAllLinks.clear();
-    m_pHalfLinks1.clear();
-    m_pHalfLinks2.clear();
-    m_pAllV=S.GetVertex();
-    m_pAllT=S.GetTriangle();
-    m_pAllLinks=S.GetLinks();
-    m_pHalfLinks1=S.GetHalfLinks();
-    m_pHalfLinks2=S.GetMHalfLinks();
-
-    
-}
-else if(file.at(file.size()-1)=='i' && file.at(file.size()-2)=='s' && file.at(file.size()-3)=='t')
-{
-        m_pAllV.clear();
-        m_pInc.clear();
-        m_pAllT.clear();
-        m_pAllLinks.clear();
-        m_pHalfLinks1.clear();
-        m_pHalfLinks2.clear();
-        
-        TSI.ReadTSI(file);
-        m_pAllV=TSI.GetVertex();
-        m_pAllT=TSI.GetTriangle();
-        m_pAllLinks=TSI.GetLinks();
-        m_pHalfLinks1=TSI.GetHalfLinks();
-        m_pHalfLinks2=TSI.GetMHalfLinks();
-        m_pInc=TSI.GetInclusion();
-}
-else
-{
-std::cout<<" error: Unknown TS File Format "<<file<<"\n";
-}
-
+    // generating the mesh
+    std::string domyfile;
+    CreateMashBluePrint BluePrint;
+    MeshBluePrint meshblueprint;
+    meshblueprint = BluePrint.MashBluePrintFromInput_Top(domyfile,file);
+    std::vector<double> x;
+    //m_Mesh.GenerateMesh(meshblueprint,0,0,x);
+    m_pMesh = &m_Mesh;
     
     
     

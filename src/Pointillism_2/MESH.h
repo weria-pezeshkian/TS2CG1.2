@@ -22,18 +22,14 @@ public:
     ~MESH();
 
     
-private:
+public:
     std::vector<vertex>         m_Vertex;
     std::vector<triangle>       m_Triangle;
     std::vector<links>          m_Links;
     std::vector<inclusion>      m_Inclusion;
     Vec3D                       m_Box;
-public:
-    std::vector <InclusionType> m_InclusionType;
-    std::vector <InclusionType*> m_pInclusionType;
-    
 
-    
+
     std::vector<vertex*>        m_pActiveV; // all the active vertices edge + surf
     std::vector<vertex*>        m_pSurfV; // all the active vertices  surf
     std::vector<vertex*>        m_pEdgeV;  // edge
@@ -50,7 +46,7 @@ public:
     std::vector<inclusion*>     m_pInclusion;
     Vec3D                       *m_pBox;
     
-    void GenerateMesh(MeshBluePrint meshblueprint, double kappa, double kappag, STRUC_Membrane_Parameters smp);
+    void GenerateMesh(MeshBluePrint meshblueprint);
     MeshBluePrint Convert_Mesh_2_BluePrint(MESH *mesh);
     
     // MoveTrinagleFromAGroup2Another

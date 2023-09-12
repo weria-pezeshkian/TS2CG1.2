@@ -77,6 +77,8 @@ BackMap::BackMap(Argument *pArgu)
     std::vector<point>  point2;
     std::vector<point>  wpoint1;
     std::vector<point>  wpoint2;
+    ReadDTSFolder ReadDTSFile(dtsfolder);
+
     if(function=="analytical_shape")
     {
         std::string ifilename = pArgu->GetStructureFileName();
@@ -143,7 +145,6 @@ BackMap::BackMap(Argument *pArgu)
     }
     else
     {
-        ReadDTSFolder ReadDTSFile(dtsfolder);
 
         m_pInc = ReadDTSFile.GetInclusion();
         m_pExc = ReadDTSFile.GetExclusion();
@@ -154,6 +155,7 @@ BackMap::BackMap(Argument *pArgu)
         Vec3D *pBox= ReadDTSFile.GetBox();
         m_Box (0)=(*pBox)(0);     m_Box (1)=(*pBox)(1);     m_Box (2)=(*pBox)(2);
         m_pBox = pBox;
+        
     }
     
     //=============
@@ -305,12 +307,11 @@ BackMap::BackMap(Argument *pArgu)
     		int id = (it->second).ID;
     		for ( std::vector<inclusion*>::iterator it1 = m_pInc.begin(); it1 != m_pInc.end(); it1++ )
     		{
-
-			if(id==(*it1)->GetTypeID())
-			{
+                if(id==(*it1)->GetTypeID())
+                {
 				number++;
 
-			}
+                }
     		}
         	(it->second).created = number;
 	}
@@ -318,6 +319,7 @@ BackMap::BackMap(Argument *pArgu)
     }
 
     //== Place the inclusions;
+
 
     for ( std::map<int,ProteinList>::iterator it1 = m_TotalProteinList.begin(); it1 != m_TotalProteinList.end(); it1++ )
     {
@@ -328,8 +330,6 @@ BackMap::BackMap(Argument *pArgu)
         {
 
             int id = (*it)->GetTypeID();
-            //std::cout<<plistid<<" NOTE: this is for test and will be deleted afterward  "<<id<<"\n";
-
             if(plistid==id)
             {
 
@@ -342,14 +342,11 @@ BackMap::BackMap(Argument *pArgu)
             Vec3D Pos = Up_p1->GetPos();
             Vec3D T1 =   Up_p1->GetP1();
             Vec3D T2 =   Up_p1->GetP2();
-                std::cout<<plistid<<"   "<<pointid<<" NOTE: this is for test and will be deleted afterward  "<<id<<"\n";
 
                 if (m_MoleculesType.count(ptype) == 0)
                     std::cout << "Error:-----> molecule name " <<ptype<<" does not exist in the attached gro files \n";
                 
-
-            GenProtein(m_MoleculesType.at(ptype), id, Pos, N, Dir, T1,T2);
-                
+               GenProtein(m_MoleculesType.at(ptype), id, Pos, N, Dir, T1,T2);
 
             }
         }
@@ -653,21 +650,18 @@ void BackMap::GenLipid(MolType moltype, int listid, Vec3D Pos, Vec3D Normal, Vec
 }
 void BackMap::GenProtein(MolType moltype, int listid, Vec3D Pos, Vec3D Normal, Vec3D Dir,Vec3D t1,Vec3D t2)
 {
-    //
+
+    
         Tensor2 LG = TransferMatLG(Normal, t1, t2);
         Tensor2 GL = LG.Transpose(LG);
-    
+
 
         //===== to fit to the protein diretion
         Vec3D LocalDir;
-    
         if(m_InclusionDirectionType=="Global") //Note: in the normal condition PLM always write global so only applicable if you want to change the point folder manually
         LocalDir = GL*Dir;
         else if(m_InclusionDirectionType=="Local")
         LocalDir = Dir;
-
-    std::cout<<LocalDir(0)<<"  GOLB "<<LocalDir(1)<<"   "<<LocalDir(2)<<"  \n ";
-
         double C=LocalDir(0);
         double S= LocalDir(1);
         Tensor2 Rot=Rz(C,S);
@@ -685,7 +679,6 @@ void BackMap::GenProtein(MolType moltype, int listid, Vec3D Pos, Vec3D Normal, V
             bead TemB(beadid, (*it).GetBeadName(), (*it).GetBeadType(), (*it).GetResName(), m_ResID, vX(0), vX(1),vX(2));
             m_FinalBeads.push_back(TemB);
         }
-
         m_ResID++;
   
     

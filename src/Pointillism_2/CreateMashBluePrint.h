@@ -24,7 +24,6 @@ struct MeshBluePrint {    // data structure for the mesh blue print
     std::vector<Vertex_Map> bvertex;       // a vector of all vertices (only the blueprint not the object) in the mesh
     std::vector<Triangle_Map> btriangle;   // a vector of all triangles (only the blueprint not the object) in the mesh
     std::vector<Inclusion_Map> binclusion; // a vector of all inclusions (only the blueprint not the object) in the mesh
-    std::vector <InclusionType> binctype;  // a vector containing all inclsuion type and a default one
     std::vector <int> excluded_id;
 
     Vec3D simbox;
@@ -35,12 +34,9 @@ public:
 	CreateMashBluePrint();
 	 ~CreateMashBluePrint();
     
-public:
     
-    std::vector <InclusionType> GetAllInclusionType()    const {return m_AllInclusionType;}
 public:
     MeshBluePrint MashBluePrintFromInput_Top(std::string inputfilename, std::string topfilename); // A function to generate bluee print from provided topology file and input file //
-    void ReadInclusionType(std::string file);  // a function to read the inclsuion section of the input file.
 private:
     std::string m_InputFileName;  // a class  variable for the name of the input file (dts file)
     std::string m_TopologyFileName; // a class  variable for the name of the topology file
@@ -59,7 +55,6 @@ private:
     std::vector<Vertex_Map> m_VertexMap;       // a vector of all vertices (only the blueprint not the object) in the mesh
     std::vector<Triangle_Map> m_TriangleMap;   // a vector of all triangles (only the blueprint not the object) in the mesh
     std::vector<Inclusion_Map> m_InclusionMap; // a vector of all inclusions (only the blueprint not the object) in the mesh
-    std::vector <InclusionType> m_AllInclusionType;  // a vector containing all inclsuion type and a default one
     std::vector <int> m_ExcludedID;
     
     Vec3D m_Box;

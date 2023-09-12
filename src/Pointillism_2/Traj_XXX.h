@@ -33,9 +33,7 @@ public:
 public:
 
 void WriteTSI(int step ,  std::string filename, std::vector< vertex* > pver, std::vector< triangle* > ptriangle,   std::vector< inclusion* > pinc, std::vector< exclusion* > pexc);
-void ReadTSI1(std::string filename);
-void ReadTSI2(std::string filename);
-void ReadTSI(std::string filename);
+
 
 
 private:

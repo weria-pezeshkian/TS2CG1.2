@@ -8,6 +8,8 @@
 #include "triangle.h"
 #include "vertex.h"
 #include "links.h"
+#include "MESH.h"
+
 /*
  this class is takes a TS file, ask for a point and checks if the point is inside the TS file.
  */
@@ -21,16 +23,11 @@ public:
 private:
 
 Vec3D *m_pBox;
-    Vec3D m_Box;
+    MESH m_Mesh;
+    MESH *m_pMesh;
 
-    std::vector<vertex*>      m_pAllV;
-    std::vector<vertex>       m_AllV;
-    std::vector<triangle*>    m_pAllT;
-    std::vector<links*>       m_pAllLinks;
-    std::vector<links*>       m_pHalfLinks1;
-    std::vector<links*>       m_pHalfLinks2;
-    std::vector<inclusion*>   m_pInc;
-    void UpdateGeometry( );  // updates curvature, area etc of each triangle, vertex etc
+
+void    UpdateGeometry(MESH *pmesh);
 
     void Initialize(std::string file);
     bool FileExist (const std::string& name);

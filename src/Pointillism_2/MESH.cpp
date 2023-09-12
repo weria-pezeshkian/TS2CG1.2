@@ -14,14 +14,11 @@ MESH::~MESH()
 {
     
 }
-void MESH::GenerateMesh(MeshBluePrint meshblueprint, double kappa, double kappag, STRUC_Membrane_Parameters smp)
+void MESH::GenerateMesh(MeshBluePrint meshblueprint)
 {
     m_Box = meshblueprint.simbox;
     m_pBox = &m_Box;
-    m_InclusionType = meshblueprint.binctype;
     
-    for (std::vector<InclusionType>::iterator it = m_InclusionType.begin() ; it != m_InclusionType.end(); ++it)
-        m_pInclusionType.push_back(&(*it));
     
     
     // Making vertices
@@ -30,10 +27,11 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint, double kappa, double kappag
             vertex v(it->id,it->x,it->y,it->z);
             v.UpdateBox(m_pBox);
             v.UpdateGroup(it->domain);
-            v.UpdateKappa(kappa/2.0,kappag);
-            v.m_Lambda = smp.lambda;
-            v.m_KGC = smp.kappa_geo;
-            v.m_KNC = smp.kappa_normal;
+            v.UpdateDomainID(it->domain);
+            v.UpdateKappa(0,0);
+            v.m_Lambda = 0;
+            v.m_KGC = 0;
+            v.m_KNC = 0;
             m_Vertex.push_back(v);
     }
 //===== Make exclution [since June, 2023]
@@ -97,8 +95,6 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint, double kappa, double kappag
     for (std::vector<inclusion>::iterator it = m_Inclusion.begin() ; it != m_Inclusion.end(); ++it)
         m_pInclusion.push_back(&(*it));
 
-
-    
     t=0;
     for (std::vector<triangle>::iterator it = m_Triangle.begin() ; it != m_Triangle.end(); ++it)
         m_pActiveT.push_back(&(*it));
@@ -233,25 +229,19 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint, double kappa, double kappag
         if(isedge==false)
         m_pSurfV.push_back(*it);
     }
-    
-    //
-    
-    
     for (std::vector<inclusion*>::iterator it = m_pInclusion.begin() ; it != m_pInclusion.end(); ++it)
-    {
         ((*it)->Getvertex())->UpdateInclusion((*it));
-        int inc_typeid=(*it)->GetInclusionTypeID();
-        if(m_InclusionType.size()-1<inc_typeid)
-        {
-            std::cout<<" Error: inclusion with typeid of "<<inc_typeid<<" has not been defined \n";
-            exit(0);
-        }
-        (*it)->UpdateInclusionType(&(m_InclusionType.at(inc_typeid)));
-    }
+    
     // =======
     // ==== info of the mesh
     
-    std::cout<<"---> active vertex "<<m_pActiveV.size()<<" surf vertex "<<m_pSurfV.size()<<"  edge vertex "<<m_pEdgeV.size()<<" -- \n";
+
+    
+    
+    std::cout<<"---> active vertex "<<m_pActiveV.size()<<" surf vertex "<<m_pSurfV.size()<<"  edge vertex "<<m_pEdgeV.size()<<"";
+    std::cout<<" inclusions "<<m_pInclusion.size()<<"  ";
+    std::cout<<" total links "<<m_Links.size()<<"  ";
+    std::cout<<" trinagles "<<m_pActiveT.size()<<"  \n";
 
 
 
@@ -270,7 +260,6 @@ MeshBluePrint MESH::Convert_Mesh_2_BluePrint(MESH *mesh)
     std::vector<Vertex_Map> bvertex;       // a vector of all vertices (only the blueprint not the object) in the mesh
     std::vector<Triangle_Map> btriangle;   // a vector of all triangles (only the blueprint not the object) in the mesh
     std::vector<Inclusion_Map> binclusion; // a vector of all inclusions (only the blueprint not the object) in the mesh
-    std::vector <InclusionType> binctype;  // a vector containing all inclsuion type and a default one
     Vec3D simbox;
     
     // vertex member of the blue print
@@ -305,13 +294,11 @@ MeshBluePrint MESH::Convert_Mesh_2_BluePrint(MESH *mesh)
         tim.x = ((*it)->GetLDirection())(0);
         tim.y = ((*it)->GetLDirection())(1);
         tim.vid = ((*it)->Getvertex())->GetVID();
-        tim.tid = ((*it)->GetInclusionType())->ITid;
+        tim.tid = ((*it)->GetInclusionTypeID());
         tim.id = ((*it)->GetID());
         binclusion.push_back(tim);
 
     }
-    // inclusion type map member of the blue print
-    BluePrint.binctype = mesh->m_InclusionType;
     // Add other map into the mesh map
     BluePrint.bvertex = bvertex;
     BluePrint.btriangle = btriangle;
