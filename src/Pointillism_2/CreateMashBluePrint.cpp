@@ -27,7 +27,7 @@ MeshBluePrint CreateMashBluePrint::MashBluePrintFromInput_Top(std::string inputf
     m_MeshBluePrint.btriangle = m_TriangleMap;
     m_MeshBluePrint.binclusion = m_InclusionMap;
     m_MeshBluePrint.simbox = m_Box;
-    m_MeshBluePrint.excluded_id = m_ExcludedID;
+    m_MeshBluePrint.bexclusion = m_ExclusionMap;
     return m_MeshBluePrint;
 }
 CreateMashBluePrint::~CreateMashBluePrint()
@@ -179,8 +179,18 @@ void CreateMashBluePrint::Read_TSIFile(std::string tsifile)
             getline(tsi,str);
             for (int i=0;i<nexc;i++)
             {
-                tsi>>id;
-                m_ExcludedID.push_back(id);
+                getline(tsi,str);
+                std::vector<std::string> S = f.split(str);
+                if(S.size()<3)
+                {
+                    std::cout<<"error ---> information of the exclusion at line "<<i<<" is not sufficent in the tsi file \n";
+                    exit(0);
+                }
+                Exclusion_Map tem;
+                tem.id = f.String_to_Int(S[0]);
+                tem.vid =f.String_to_Int(S[1]);
+                tem.R = f.String_to_Double(S[2]);
+                m_ExclusionMap.push_back(tem);
             }
 
         }

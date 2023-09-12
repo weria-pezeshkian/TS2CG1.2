@@ -36,27 +36,11 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
     }
 //===== Make exclution [since June, 2023]
        
-       std::vector<int> excluded_ver = meshblueprint.excluded_id; // this vertices should be excluded
-       for (std::vector<int>::iterator it = excluded_ver.begin() ; it != excluded_ver.end(); ++it)
-       {
-           ((meshblueprint.bvertex).at((*it))).include = false;
-       }
-       int t=0;
        for (std::vector<vertex>::iterator it = m_Vertex.begin() ; it != m_Vertex.end(); ++it)
-       {
-               if(((meshblueprint.bvertex).at((t))).include == true)
                    m_pActiveV.push_back(&(*it));
-           t++;
-       }
-    //== since the vertex number remain constant, it is better to change the id of active vertices
-    t=0;
-    for (std::vector<vertex*>::iterator it = m_pActiveV.begin() ; it != m_pActiveV.end(); ++it)
-    {
-        (*it)->UpdateVID(t);
-        t++;
-    }
+
     // Making triangles
-    t=0;
+    int t=0;
     int temid = 0;
     for (std::vector<Triangle_Map>::iterator it = (meshblueprint.btriangle).begin() ; it != (meshblueprint.btriangle).end(); ++it)
     {
@@ -66,14 +50,10 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
         int vid2 = ((meshblueprint.btriangle).at(t)).v2;
         int vid3 = ((meshblueprint.btriangle).at(t)).v3;
 
-        if(((meshblueprint.bvertex).at(vid1)).include == true)
-        if(((meshblueprint.bvertex).at(vid2)).include == true)
-        if(((meshblueprint.bvertex).at(vid3)).include == true)
-        {
+
         triangle T(temid,&(m_Vertex.at(it->v1)),&(m_Vertex.at(it->v2)),&(m_Vertex.at(it->v3)));
         m_Triangle.push_back(T);
             temid++;
-        }
         t++;
     }
     //make inclusions
@@ -92,6 +72,22 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
         m_Inclusion.push_back(Tinc);
         (m_Vertex.at(it->vid)).UpdateOwnInclusion(true);
     }
+    //make exclusion
+    for (std::vector<Exclusion_Map>::iterator it = (meshblueprint.bexclusion).begin() ; it != (meshblueprint.bexclusion).end(); ++it)
+    {
+        exclusion Texc(it->id);
+        if(m_Vertex.size()<it->vid+1)
+        {
+        std::cout<<"----> error: exclusion vertex id is out of range "<<std::endl;
+            exit(0);
+        }
+        Texc.Updatevertex(&(m_Vertex.at(it->vid)));
+        Texc.UpdateRadius(it->R);
+        m_Exclusion.push_back(Texc);
+    }
+    for (std::vector<exclusion>::iterator it = m_Exclusion.begin() ; it != m_Exclusion.end(); ++it)
+        m_pExclusion.push_back(&(*it));
+    
     for (std::vector<inclusion>::iterator it = m_Inclusion.begin() ; it != m_Inclusion.end(); ++it)
         m_pInclusion.push_back(&(*it));
 

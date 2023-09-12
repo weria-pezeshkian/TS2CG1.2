@@ -498,7 +498,7 @@ void Edit_configuration::BackMapOneLayer(int layer , std::string file, double H)
         fi=m_Folder+"visualization_data/Lower.vtu";
         vtu.Writevtu(pMesh->m_pActiveV,pMesh->m_pActiveT,pMesh->m_pActiveL,fi);
         Traj_XXX TSI(m_pBox);
-        TSI.WriteTSI(0,"extended.tsi",pMesh->m_pActiveV,pMesh->m_pActiveT,pMesh->m_pInclusion,m_pExc);
+        TSI.WriteTSI(0,"extended.tsi",pMesh->m_pActiveV,pMesh->m_pActiveT,pMesh->m_pInclusion,pMesh->m_pExclusion);
 
     }
     //=============
@@ -616,7 +616,7 @@ if(layer==1)
    }
     //==== We write Exclusion data
     
-    if(m_pExc.size()!=0)
+    if((pMesh->m_pInclusion).size()!=0)
     {
     FILE *ExcFile;
     ExcFile = fopen((m_Folder+"/ExcData.dat").c_str(), "w");
@@ -624,7 +624,7 @@ if(layer==1)
     
     
     const char* CHAR1 ="< Exclusion NoExc   ";
-    NoPoints=m_pExc.size();
+    NoPoints=(pMesh->m_pInclusion).size();
     const char* CHAR2 ="   >";
     
     fprintf(ExcFile,  "%s%5d%s\n",CHAR1,NoPoints,CHAR2);
@@ -636,7 +636,7 @@ if(layer==1)
     
     i=0;
     
-    for (std::vector<exclusion *>::iterator it = m_pExc.begin() ; it != m_pExc.end(); ++it)
+    for (std::vector<exclusion *>::iterator it = (pMesh->m_pExclusion).begin() ; it != (pMesh->m_pExclusion).end(); ++it)
     {
         
         vertex* ver = (*it)->Getvertex();

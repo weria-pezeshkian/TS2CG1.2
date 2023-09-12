@@ -1,7 +1,6 @@
 #if !defined(AFX_exclusion_H_8P4B21B8_C13C_5648_BF23_124095086234__INCLUDED_)
 #define AFX_exclusion_H_8P4B21B8_C13C_5648_BF23_124095086234__INCLUDED_
 #include "SimDef.h"
-#include "CNTCell.h"
 #include "Vec3D.h"
 #include "vertex.h"
 #include "Nfunction.h"

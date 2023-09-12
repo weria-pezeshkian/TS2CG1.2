@@ -165,10 +165,6 @@ void vertex::UpdateOwnInclusion(bool own)
 {
 m_OwnInclusion=own;
 }
-void vertex::UpdateVCNTCell(CNTCell * z)
-{
-m_CNTCell=z;
-}
 void vertex::UpdateGroup(int z)
 {
     m_Group=z;
@@ -196,33 +192,6 @@ void vertex::UpdateL2GTransferMatrix(Tensor2 v)
 void vertex::UpdateG2LTransferMatrix(Tensor2 v)
 {
     m_T_Global_2_Local = v;
-}
-bool vertex::CheckCNT()
-{
-    Vec3D min = m_CNTCell->GetCNTSidemin();
-    Vec3D max = m_CNTCell->GetCNTSidemax();
-    bool flag=true;
-    if(m_X<min(0) || m_X>=max(0))
-    {
-        flag=false;
-    }
-    else if(m_Y<min(1) || m_Y>=max(1))
-    {
-        flag=false;
-    }
-    else if(m_Z<min(2) || m_Z>=max(2))
-    {
-        flag=false;
-    }
-    
-    if (flag==false)
-    {
-        std::cout<<m_X <<"  x "<<min(0)<<"  "<<max(0)<<"\n";
-        std::cout<<m_Y <<"  y "<<min(1)<<"  "<<max(1)<<"\n";
-        std::cout<<m_Z <<"  z "<<min(2)<<"  "<<max(2)<<"\n";
-        std::cout<<m_ID<<" warning (error) particle id.  Box "<<(*m_pBox)(0)<<"  "<<(*m_pBox)(1)<<"\n";
-    }
-    return flag;
 }
 void vertex::NOPBCUpdatePos(Vec3D X)
 {

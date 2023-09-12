@@ -88,6 +88,8 @@ void Surface_Mosaicing::MosaicOneRound(MESH * pMesh)
 {    ///
 //---> First we copy the old vertices into the new vertices only the position, box and incs
     m_Mesh.m_Inclusion = pMesh->m_Inclusion;
+    m_Mesh.m_Exclusion = pMesh->m_Exclusion;
+
     for (std::vector<vertex *>::iterator it = (pMesh->m_pActiveV).begin() ; it != (pMesh->m_pActiveV).end(); ++it)
     {
         double x=(*it)->GetVXPos();
@@ -120,6 +122,15 @@ void Surface_Mosaicing::MosaicOneRound(MESH * pMesh)
             std::cout<<"error 3234---> should not happen \n";
         it->Updatevertex(&((m_Mesh.m_Vertex)[vid]));
         (m_Mesh.m_pInclusion).push_back(&(*it));
+
+    }
+    for (std::vector<exclusion>::iterator it = (m_Mesh.m_Exclusion).begin() ; it != (m_Mesh.m_Exclusion).end(); ++it)
+    {
+        int vid = (it->Getvertex())->GetVID();
+        if(vid>=(m_Mesh.m_Vertex).size())
+            std::cout<<"error 3234---> should not happen \n";
+        it->Updatevertex(&((m_Mesh.m_Vertex)[vid]));
+        (m_Mesh.m_pExclusion).push_back(&(*it));
 
     }
 

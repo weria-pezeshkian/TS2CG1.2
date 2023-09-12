@@ -1,7 +1,6 @@
 #if !defined(AFX_vertex_H_8P4B21B8_C13C_5648_BF23_124095086234__INCLUDED_)
 #define AFX_vertex_H_8P4B21B8_C13C_5648_BF23_124095086234__INCLUDED_
 #include "SimDef.h"
-#include "CNTCell.h"
 #include "Vec3D.h"
 #include "Tensor2.h"
 #include "inclusion.h"
@@ -38,7 +37,6 @@ public:
         inline std::vector <links *> GetVLinkList()             {return m_VLinkList;}
         inline std::vector <triangle *> GetVTraingleList()         {return m_VTraingleList;}
         inline std::vector <vertex *> GetVNeighbourVertex()     {return m_VNeighbourVertex;}
-        inline CNTCell * GetVCNTCell()                      {return m_CNTCell;}
         inline inclusion* GetInclusion()                    {return m_pInclusion;}
         inline bool VertexOwnInclusion()                    {return m_OwnInclusion;}
         inline Vec3D *GetBox()                              {return m_pBox;}
@@ -55,7 +53,6 @@ public:
   void NOPBCUpdatePos(Vec3D z);
   void UpdateGroupName(std::string z); // A vertex can only have one group name, is different from group id
   void UpdateKappa(double z1,double z2);
-  void UpdateVCNTCell(CNTCell * z);
   void UpdateBox(Vec3D *z);
   void UpdateCurvature(double,double); // vis
   void UpdateEnergy(double); 
@@ -75,11 +72,6 @@ public:
     void UpdateIsFullDomain(bool z);
     void UpdateDomainID(int );                    // update domain ID, only in version 1.1 and above
 
-
-    public:
-    bool CheckCNT();
-    
-
 private:
 
     int m_ID;         // ID of the vertex, a unique number
@@ -94,7 +86,6 @@ private:
     inclusion *m_pInclusion;                    // pointer to an inclusion that the vertex hold (could be empty)
     bool m_OwnInclusion;                        // to check if the vertex own any inclusion
     double m_Area;                              // area of the vertex
-    CNTCell * m_CNTCell;                        // a unitcell that the vertex belong to at any point of the simulation, it will be chnage during a simulation
     int m_Group;            // Id of a group that the vertex belong too
     private:
     Vec3D m_Normal;
