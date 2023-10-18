@@ -271,6 +271,15 @@ void Surface_Mosaicing::MosaicOneRound(MESH * pMesh)
             it->m_LinkType = 1;
         }
     }
+    //==== Getting the edge vertex from link
+    for (std::vector<links*>::iterator it = (m_Mesh.m_pEdgeL).begin() ; it != (m_Mesh.m_pEdgeL).end(); ++it)
+    {
+        (m_Mesh.m_pEdgeV).push_back((*it)->GetV1());
+        ((*it)->GetV1())->m_pEdgeLink = *it;
+        ((*it)->GetV2())->m_pPrecedingEdgeLink = *it;
+        ((*it)->GetV2())->AddtoNeighbourVertex((*it)->GetV1());
+        ((*it)->GetV1())->m_VertexType = 1;
+    }
     for (std::vector<vertex*>::iterator it = (m_Mesh.m_pActiveV).begin() ; it != (m_Mesh.m_pActiveV).end(); ++it)
     {
         bool isedge = false;

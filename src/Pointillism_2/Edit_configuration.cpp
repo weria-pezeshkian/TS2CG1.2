@@ -454,7 +454,6 @@ void Edit_configuration::BackMapOneLayer(int layer , std::string file, double H)
         (*it)->UpdateVZPos(z);
     }
     UpdateGeometry(pMesh);
-    
 //-----------> increasing the number of points, i.e., vertices
     std::vector <Surface_Mosaicing> Vmos;
     for (int j=0;j<Iteration;j++)
@@ -474,7 +473,6 @@ void Edit_configuration::BackMapOneLayer(int layer , std::string file, double H)
   
     m_pBox = pMesh->m_pBox;
 
-  
     double Lx=(*m_pBox)(0);
     double Ly=(*m_pBox)(1);
     double Lz=(*m_pBox)(2);
@@ -502,7 +500,6 @@ void Edit_configuration::BackMapOneLayer(int layer , std::string file, double H)
 
     }
     //=============
- 
     std::string     UFUpper = m_Folder+"/OuterBM.dat";
     std::string     UFInner = m_Folder+"/InnerBM.dat";
 
@@ -528,7 +525,6 @@ void Edit_configuration::BackMapOneLayer(int layer , std::string file, double H)
     fprintf(BMFile1,  "%s%10d%s\n",STR1,NoPoints,STR2);
     if(layer==-1)
     fprintf(BMFile2,  "%s%10d%s\n",STR1,NoPoints,STR2);
-    
     const char* Cont="< id domain_id area X Y Z Nx Ny Nz P1x P1y P1z P2x P2y P2z C1 C2  >";
     if(layer==1)
     fprintf(BMFile1,  "%s\n",Cont);
@@ -545,18 +541,15 @@ void Edit_configuration::BackMapOneLayer(int layer , std::string file, double H)
         if(layer==-1)
         fprintf(BMFile2,  "%s\n",lay);
     }
-
     int i=0;
     double dr=1;
     if (m_monolayer==-1)
     dr=-1;
    for (std::vector<vertex *>::iterator it = (pMesh->m_pActiveV).begin() ; it != (pMesh->m_pActiveV).end(); ++it)
     {
-        
         double area=(*it)->GetArea();
         Vec3D normal=(*it)->GetNormalVector();
         normal = normal*(layer)*(dr);
-        std::vector <double> curvature = (*it)->GetCurvature();
         //    inclusion* inc = (*it)->GetInclusion();
         Tensor2  L2G = (*it)->GetL2GTransferMatrix();
         Vec3D LD1(1,0,0);
@@ -568,16 +561,32 @@ void Edit_configuration::BackMapOneLayer(int layer , std::string file, double H)
         double z=(*it)->GetVZPos();
         int domain = (*it)->GetDomainID();
 
+        double c1,c2;
+        if((*it)->m_VertexType==0)
+        {
+            std::vector <double> curvature = (*it)->GetCurvature();
+            c1 = curvature[0];
+            c2 = curvature[1];
+        }
+        else
+        {
+            c1 = (*it)->m_Normal_Curvature;
+            c2 = 0;
+        }
         
-        
-        if(layer==1) fprintf(BMFile1,"%10d%5d%10.3f%10.3f%10.3f%10.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f\n",i,domain,area,x,y,z,normal(0),normal(1),normal(2),GD1(0),GD1(1),GD1(2),GD2(0),GD2(1),GD2(2),curvature.at(0),curvature.at(1));
-        
-        if(layer==-1) fprintf(BMFile2,"%10d%5d%10.3f%10.3f%10.3f%10.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f\n",i,domain,area,x,y,z,normal(0),normal(1),normal(2),GD1(0),GD1(1),GD1(2),GD2(0),GD2(1),GD2(2),curvature.at(0),curvature.at(1));
+        if(layer==1)
+        {
+
+            fprintf(BMFile1,"%10d%5d%10.3f%10.3f%10.3f%10.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f\n",i,domain,area,x,y,z,normal(0),normal(1),normal(2),GD1(0),GD1(1),GD1(2),GD2(0),GD2(1),GD2(2),c1,c2);
+        }
+        if(layer==-1)
+        {
+            fprintf(BMFile2,"%10d%5d%10.3f%10.3f%10.3f%10.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f\n",i,domain,area,x,y,z,normal(0),normal(1),normal(2),GD1(0),GD1(1),GD1(2),GD2(0),GD2(1),GD2(2),c1,c2);
+        }
         
         i++;
         
     }
-
 if(layer==1)
 {
     

@@ -246,6 +246,26 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
     //WritevtuFiles VTU(pState);
     //std::string file="ini_Mesh.vtu";
     //VTU.Writevtu(m_pAllV,m_pAllT,m_pAllLinks,file);
+    
+//==== checking the mesh; this can go to another function. for now we keep it here.
+    int no_repeated_link = 0;
+    for (std::vector<links>::iterator it = m_Links.begin() ; it != m_Links.end(); ++it)
+    {
+        for (std::vector<links>::iterator it1 = it+1 ; it1 != m_Links.end(); ++it1)
+        {
+            if(it->GetV1()==it1->GetV1() && it->GetV2()==it1->GetV2())
+            {
+                no_repeated_link++;
+                
+            }
+            
+        }
+    }
+    if(no_repeated_link!=0)
+    {
+        std::cout<<" error---> approximatly  "<<no_repeated_link/3<<" trinagles was found to be inconsisent in their orientation \n";
+        exit(0);
+    }
 }
 //===========================================================
 // Note, the converted blue print will not have the exclusions
