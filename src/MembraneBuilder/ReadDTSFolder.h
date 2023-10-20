@@ -13,7 +13,7 @@ class ReadDTSFolder
 {
 public:
     
-    ReadDTSFolder(std::string gmxfilename);
+    ReadDTSFolder();
 	 ~ReadDTSFolder();
 
 
@@ -27,7 +27,8 @@ public:
 
 
 public:
-    
+    void Read(std::string gmxfilename);
+
 
 
 

@@ -5,7 +5,6 @@
 #include <math.h>
 #include "FlatPointMaker.h"
 #include "GroFile.h"
-#include "ReadDTSFolder.h"
 #include "GenerateUnitCells.h"
 #include "Def.h"
 #include "PDBFile.h"

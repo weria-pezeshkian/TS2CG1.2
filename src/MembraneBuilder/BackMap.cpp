@@ -77,7 +77,7 @@ BackMap::BackMap(Argument *pArgu)
     std::vector<point>  point2;
     std::vector<point>  wpoint1;
     std::vector<point>  wpoint2;
-    ReadDTSFolder ReadDTSFile(dtsfolder);
+    ReadDTSFolder DTSFolder;
 
     if(function=="analytical_shape")
     {
@@ -145,14 +145,15 @@ BackMap::BackMap(Argument *pArgu)
     }
     else
     {
+        DTSFolder.Read(dtsfolder);
 
-        m_pInc = ReadDTSFile.GetInclusion();
-        m_pExc = ReadDTSFile.GetExclusion();
+        m_pInc = DTSFolder.GetInclusion();
+        m_pExc = DTSFolder.GetExclusion();
 
-        m_point1 = ReadDTSFile.GetUpperPoints();
-        m_point2 = ReadDTSFile.GetInnerPoints();
+        m_point1 = DTSFolder.GetUpperPoints();
+        m_point2 = DTSFolder.GetInnerPoints();
         
-        Vec3D *pBox= ReadDTSFile.GetBox();
+        Vec3D *pBox= DTSFolder.GetBox();
         m_Box (0)=(*pBox)(0);     m_Box (1)=(*pBox)(1);     m_Box (2)=(*pBox)(2);
         m_pBox = pBox;
         

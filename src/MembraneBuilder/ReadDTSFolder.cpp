@@ -2,7 +2,11 @@
 
 #include <stdio.h>
 #include "ReadDTSFolder.h"
-ReadDTSFolder::ReadDTSFolder(std::string foldername)
+ReadDTSFolder::ReadDTSFolder()
+{
+    
+}
+void ReadDTSFolder::Read(std::string foldername)
 {
 
 
