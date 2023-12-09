@@ -13,21 +13,22 @@ class ReadDTSFolder
 {
 public:
     
-    ReadDTSFolder(std::string gmxfilename);
+    ReadDTSFolder();
 	 ~ReadDTSFolder();
 
 
-        inline std::vector<point*>  GetUpperPoints()         {return m_pOuterPoint;}
-        inline std::vector<point*>  GetInnerPoints()         {return m_pInnerPoint;}
-        inline std::vector<inclusion*>  GetInclusion()         {return m_pInclusion;}
-        inline std::vector<exclusion*>  GetExclusion()         {return m_pExclusion;}
+        inline std::vector<point>  GetUpperPoints()         {return m_OuterPoint;}
+        inline std::vector<point>  GetInnerPoints()         {return m_InnerPoint;}
+        inline std::vector<inclusion>  GetInclusion()         {return m_Inclusion;}
+        inline std::vector<exclusion>  GetExclusion()         {return m_Exclusion;}
 
-        inline Vec3D *GetBox()         {return m_pBox;}
+        inline Vec3D GetBox()         {return m_Box;}
 
 
 
 public:
     
+    void Read(std::string foldername);
 
 
 
@@ -38,14 +39,7 @@ private:
     std::vector<point>  m_InnerPoint;
     std::vector<inclusion>  m_Inclusion;
     std::vector<exclusion>  m_Exclusion;
-
-    std::vector<point*>  m_pOuterPoint;
-    std::vector<point*>  m_pInnerPoint;
-    std::vector<inclusion*>  m_pInclusion;
-    std::vector<exclusion*>  m_pExclusion;
-
     Vec3D m_Box;
-    Vec3D *m_pBox;
 
 
 private:

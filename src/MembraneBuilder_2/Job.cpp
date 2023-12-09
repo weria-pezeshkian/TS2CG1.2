@@ -40,10 +40,8 @@ if(a.GetHealth()==true )
         {
             if(function=="backmap" || function=="analytical_shape")
             BackMap B(&a);
-            else if(function=="1dsin")
+            else if(function=="1dsin") // this will be removed soon
             Shape_1DSinBuilder B(&a);
-            else if(function=="analytical_shape")
-                Membrane_Builder B(&a);
             else
             std::cout<<function<<" function is not regognized \n";
 

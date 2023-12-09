@@ -10,7 +10,7 @@ g++ -o PCG *.o
 rm *.o
 mv PCG ../../
 cd ../
-cd Pointillism
+cd Pointillism_2
 g++ -c -O3 *.cpp
 g++ -o PLM *.o
 rm *.o

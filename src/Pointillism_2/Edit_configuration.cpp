@@ -633,7 +633,7 @@ if(layer==1)
     
     
     const char* CHAR1 ="< Exclusion NoExc   ";
-    NoPoints=(pMesh->m_pInclusion).size();
+    NoPoints=(pMesh->m_pExclusion).size();
     const char* CHAR2 ="   >";
     
     fprintf(ExcFile,  "%s%5d%s\n",CHAR1,NoPoints,CHAR2);

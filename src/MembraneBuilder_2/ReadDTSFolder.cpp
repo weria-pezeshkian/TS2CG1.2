@@ -2,14 +2,15 @@
 
 #include <stdio.h>
 #include "ReadDTSFolder.h"
-ReadDTSFolder::ReadDTSFolder(std::string foldername)
+ReadDTSFolder::ReadDTSFolder()
+{
+    
+}
+void ReadDTSFolder::Read(std::string foldername)
 {
 
 
-    /*if(foldername.at(foldername.size()-1)=='/')
-    {
-        foldername.pop_back();
-    }*/
+
     std::string file1 = "./"+foldername+"/OuterBM.dat";
     std::string file2 = "./"+foldername+"/InnerBM.dat";
     std::string file3 = "./"+foldername+"/IncData.dat";
@@ -47,26 +48,7 @@ ReadDTSFolder::ReadDTSFolder(std::string foldername)
         m_Exclusion =  ReadExclusionObjects(file4);
     }
     
-    
-   
-     for (std::vector<point>::iterator it = m_OuterPoint.begin() ; it != m_OuterPoint.end(); ++it)
-         m_pOuterPoint.push_back(&(*it));
-    
-    for (std::vector<point>::iterator it = m_InnerPoint.begin() ; it != m_InnerPoint.end(); ++it)
-        m_pInnerPoint.push_back(&(*it));
-    
-    for (std::vector<inclusion>::iterator it = m_Inclusion.begin() ; it != m_Inclusion.end(); ++it)
-        m_pInclusion.push_back(&(*it));
-    
-    for (std::vector<exclusion>::iterator it = m_Exclusion.begin() ; it != m_Exclusion.end(); ++it)
-        m_pExclusion.push_back(&(*it));
-    
-    for (std::vector<inclusion*>::iterator it = m_pInclusion.begin() ; it != m_pInclusion.end(); ++it)
-    {
-        int pid=(*it)->GetPointID();
-        (m_pOuterPoint.at(pid))->UpdateInclusion(*it);
-        
-    }
+
 
 }
 ReadDTSFolder::~ReadDTSFolder()
@@ -105,9 +87,7 @@ std::vector<point> ReadDTSFolder::ReadPointObjects(std::string file, int lay)
     m_Box(1) = Ly;
     m_Box(2) = Lz;
     
-    
-    m_pBox = (&m_Box);
-    
+        
     
     bool check = fgets(str1, sizeof(str1), fdtspoins);
     check = fgets(str1, sizeof(str1), fdtspoins);

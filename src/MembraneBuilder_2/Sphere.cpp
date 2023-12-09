@@ -5,7 +5,6 @@
 #include <math.h>
 #include "Sphere.h"
 #include "GroFile.h"
-#include "ReadDTSFolder.h"
 #include "GenerateUnitCells.h"
 #include "Def.h"
 #include "PDBFile.h"
