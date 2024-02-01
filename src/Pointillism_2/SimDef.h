@@ -24,13 +24,13 @@
 #define Def_OutputFolderName        "-o"
 #define Def_SmoothingFlag        "-smooth"
 #define Def_resizebox           "-resizebox"
-#define Def_Monolayer           "-resizebox"
+#define Def_Monolayer           "-monolayer"
 
 #define KBT 1
 #define PI 3.14159265359
 #define S60 0.8660254037844
 #define SQ3 1.73205080757
-#define SoftWareVersion   "1.1"
+#define SoftWareVersion   "version 1.2"
 #define Precision       8
 #define Enabled   1
 #define Disabled  2
@@ -38,6 +38,7 @@
 // commond line options name
 
 
+#define G_tsiPrecision     "18.10"
 
 
 

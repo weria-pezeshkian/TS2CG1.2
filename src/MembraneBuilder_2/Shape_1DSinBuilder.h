@@ -16,7 +16,6 @@
 #include "Argument.h"
 #include "Vec3D.h"
 #include "bead.h"
-#include "molecules.h"
 #include "point.h"
 #include "inclusion.h"
 #include "GenerateMolType.h"
@@ -51,8 +50,6 @@ public:
 
 private:
     std::vector<bead*> m_pAllBeads;
-    std::vector<molecules> m_AllMolecules;
-    std::vector<molecules*> m_pAllMolecules;
     Vec3D *m_pBox;
     Vec3D  m_Box;
     std::vector<bead> m_FinalBeads;

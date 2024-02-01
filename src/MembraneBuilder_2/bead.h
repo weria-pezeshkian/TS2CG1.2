@@ -6,7 +6,6 @@
 #include "Vec3D.h"
 #include "UnitCell.h"
 
-class molecules;
 class bead
 {
 public:
@@ -25,7 +24,6 @@ public:
         inline int GetResid()         const        {return m_Resid;}
         inline std::string GetBeadName()        const        {return m_BeadName;}
         inline UnitCell *GetBeadUnitCell()        const        {return m_BeadUnitCell;}
-        inline molecules *GetBeadMol()        const        {return m_pBeadMol;}
         inline bool Hasmol()        const        {return m_hasMol;}
 
 
@@ -39,7 +37,6 @@ public:
   void UpdatePos(Vec3D* B, double x, double y, double z);
   void UpdatePos(double x, double y, double z);
   void UpdateBeadUnitCell(UnitCell * z);
-  void UpdateBeadMol(molecules * z);
     void UpdateHasMol(bool z);
 
 public:
@@ -58,7 +55,6 @@ private:
   int m_ID;
   Vec3D *m_pBox;
   UnitCell *m_BeadUnitCell;
-  molecules *m_pBeadMol;
 
 };
 

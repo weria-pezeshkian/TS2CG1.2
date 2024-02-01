@@ -5,57 +5,82 @@
 #include <math.h>
 #include "GenerateMolType.h"
 #include "GroFile.h"
-
+/*
+ This class reads the str file to generate molecules
+ 1) Reads the header of the str file to find all the gro file names that are started by word include
+ 
+ 
+ 
+ struct MolType is in the ReadLipidLibrary class.
+ */
 
 
 GenerateMolType::GenerateMolType(Argument *pArgu)
 {
-    m_Health =true;
     Nfunction f;
-    std::string strfilename = pArgu->GetStructureFileName();
-    m_BondLenght = pArgu->GetBond_length();
-    std::cout<<"--> Generating molecule types from  "<<strfilename<<"  file"<<"\n";
+    std::string strfilename = pArgu->GetStructureFileName();    // getting the name of the input file name with -str
+    m_BondLenght = pArgu->GetBond_length();                 // a length that everything should be rescaled to: -Bondlength in the commandline
 
 
 //=======================================================
 //==== File has been checked
 //=======================================================
-
     std::ifstream strfile;
     strfile.open(strfilename.c_str());
-    std::string str;
-    std::vector<std::string> gfilenames;
+    if(strfile.good()==false)
+    {
+        std::cout<<"---> error: while opening the str file with  name: "<<strfilename<<"  ; check if the file exist "<<"\n";
+        exit(0);
+    }
+    std::cout<<"---> generating molecule types from  "<<strfilename<<"  file"<<"\n";
 //=======================================================
-//==== reading all the gro files
+//==== reading all the gro files inside the str file
 //=======================================================
+    std::string namestr;  // a containor for string
+    std::vector<std::string> gfilenames;  // a container for all the gro file names included in the str file
+    
+    // reading the str file to get all the gro file name;
     while (true)
     {
-        strfile>>str;
-        
+        strfile>>namestr;
         if(strfile.eof())
             break;
-        if(str=="include")
+        
+        if(namestr=="include")
         {
-            strfile>>str;
-            if (f.FileExist(str)==true)
-            gfilenames.push_back(str);
+            strfile>>namestr;
+            if (f.FileExist(namestr)==true)
+            gfilenames.push_back(namestr);
             else
             {
-                std::cout<<"--> Error: File name "<<str<<" included in the "<<strfilename<<" does not exist \n";
-                std::cout<<"--> all other steps are terminated \n";
-                m_Health = false;
-                break;
+                std::cout<<"--> Error: File name "<<namestr<<" included in the "<<strfilename<<" does not exist \n";
+                std::cout<<"-> aborted! You are allowed to try one more time. Kidding, please do not :) \n";
+                exit(0);
             }
         }
-        std::getline (strfile,str);
-
+        std::getline (strfile,namestr);
     }
-    strfile.close();
-    
+    strfile.close();  // close the file
+    //== using the gro file name to create mol types
+    for (std::vector<std::string>::iterator it = gfilenames.begin() ; it != gfilenames.end(); ++it)
+    {
+        GroFile GF(*it);
+        std::vector<bead> vbeads = GF.GetAllBeads();
+        std::string molname =GF.GetTitle();
+        
+        MolType temMOL;
+        temMOL.Beads = vbeads;
+        temMOL.MolName = molname;
+        temMOL.beadnumber = vbeads.size();
+        double cmolarea = MolAreaCal(temMOL);
+        temMOL.molarea = cmolarea;
+        m_MoleculesType.insert(std::pair<std::string, MolType>(molname, temMOL));
+    }
+ 
     //====== Check if a Lib is defined, otherwise read what we have here
     if(pArgu->GetLipidLibrary()=="no")
     {
-        std::cout<<"-> Note the lipids will be generated from the internal lib (Martini 2) of "<<SoftWareName<<".  \n";
+        std::cout<<"---> Note, the lipid library file is not provided. Therefore the lipids will be generated from the internal lib (Martini 2) of "<<SoftWareName<<".  \n";
         LiBMol();
     }
     else
@@ -70,32 +95,9 @@ GenerateMolType::GenerateMolType(Argument *pArgu)
         else
         {
             std::cout<<"--> Faild in reading the library "<<ExternalLIB.GetLiBTitle()<<"\n";
-            m_Health=false;
+            exit(0);
         }
     }
-if(m_Health==true)
-{
-    for (std::vector<std::string>::iterator it = gfilenames.begin() ; it != gfilenames.end(); ++it)
-    {
-        GroFile GF(*it);        
-        std::vector<bead> vbeads = GF.GetAllBeads();
-        std::string molname =GF.GetTitle();
-        
-        MolType temMOL;
-        temMOL.Beads = vbeads;
-        temMOL.MolName = molname;
-        temMOL.beadnumber = vbeads.size();
-        double cmolarea = MolAreaCal(temMOL);
-        temMOL.molarea = cmolarea;
-        m_MoleculesType.insert(std::pair<std::string, MolType>(molname, temMOL));
-
-    }
-    int nolib = gfilenames.size();
-
-    
-
-    
-    
     if(pArgu->GetLipidLibrary()=="no")
     {
         std::cout<<" **** Molecule list and number of their particles are listed bellow  **** "<<"\n";
@@ -104,69 +106,6 @@ if(m_Health==true)
         std::cout <<"*    "<< it->first  <<" ---> "<< (it->second).beadnumber<<"  area of "<<(it->second).molarea<<"  nm^2"<< std::endl ;
         }
     }
-    
-
-}
-    
-    
-    
-    //================ Some checks on the other line of the file =======
-    /*
-    int l=0;
-    bool flagLsection=false;
-    bool flagPsection=false;
-    bool flag = false;
-
-    if(m_Health==true)
-    {
-        std::ifstream strfile;
-        strfile.open(strfilename.c_str());
-        while (true)
-        {
-            l++;
-            std::getline (strfile,str);
-            if(strfile.eof())
-                break;
-            
-            std::vector<std::string> Line = f.split(str);
-            
-            if(Line.size()!=0 && (Line.at(0)).at(0)!=';')
-            {
-
-                    if((Line.at(0)).at(0)=='[' && flag==false)
-                    {
-                        flag=true;
-
-                    }
-                    else if((Line.at(0))=="End" && flag==true)
-                    {
-                        flag=false;
-                    }
-                    else if((Line.at(0))=="End" && flag==false)
-                    {
-                        std::cout<<" Error GMT: line "<<l<<" Mol Type <"<<Line.at(0)<<"> has not been defined  \n";
-                        m_Health = false;
-                        break;
-                        
-                    }
-                    else if(flag==true)
-                    {
-                        
-                        std::map<std::string, MolType>::iterator iter = m_MoleculesType.find(Line.at(0));
-                        if (iter == m_MoleculesType.end() )
-                        {
-                            std::cout<<" Error GMT: line "<<l<<" Mol Type <"<<Line.at(0)<<"> has not been defined  \n";
-                            m_Health = false;
-                            break;
-                        }
-                    }
-                
-            }
-        }
-        
-    }
-    */
-    //=======================
     
 }
 GenerateMolType::~GenerateMolType()

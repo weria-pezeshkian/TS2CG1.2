@@ -6,7 +6,6 @@
 #include "Nfunction.h"
 #include "BackMap.h"
 #include "Shape_1DSinBuilder.h"
-#include "Membrane_Builder.h"
 
 Job::Job(std::vector <std::string> argument)
 {

@@ -82,10 +82,6 @@ void bead::UpdateBeadUnitCell(UnitCell * z)
 {
     m_BeadUnitCell = z;
 }
-void bead::UpdateBeadMol(molecules * z)
-{
-    m_pBeadMol = z;
-}
 void bead::UpdateHasMol(bool z)
 {
     m_hasMol = z;

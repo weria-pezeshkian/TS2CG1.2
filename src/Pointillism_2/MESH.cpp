@@ -24,7 +24,8 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
     // Making vertices
     for (std::vector<Vertex_Map>::iterator it = (meshblueprint.bvertex).begin() ; it != (meshblueprint.bvertex).end(); ++it)
     {
-            vertex v(it->id,it->x,it->y,it->z);
+            vertex v(it->id,(it->x+0.00000001*(rand() % 100)),it->y,it->z);
+           // vertex v(it->id,it->x,it->y,it->z);
             v.UpdateBox(m_pBox);
             v.UpdateGroup(it->domain);
             v.UpdateDomainID(it->domain);

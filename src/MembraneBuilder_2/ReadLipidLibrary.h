@@ -16,14 +16,8 @@
 #include "Argument.h"
 #include "Vec3D.h"
 #include "bead.h"
-#include "molecules.h"
+#include "Data_Structure.h"
 
-struct MolType {
-    std::vector<bead> Beads;
-    std::string MolName;
-    int beadnumber;
-    double molarea;
-} ;
 class ReadLipidLibrary
 {
 public:
@@ -42,8 +36,6 @@ public:
 private:
     std::vector<bead*> m_pAllBeads;
     std::map<std::string , MolType>  m_MoleculesType;
-    std::vector<molecules> m_AllMolecules;
-    std::vector<molecules> m_pAllMolecules;
     bool m_Health;
     double m_BondLenght;
     std::string m_LiBTitle;

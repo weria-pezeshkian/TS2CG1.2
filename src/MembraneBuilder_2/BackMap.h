@@ -16,29 +16,15 @@
 #include "Argument.h"
 #include "Vec3D.h"
 #include "bead.h"
-#include "molecules.h"
 #include "point.h"
 #include "inclusion.h"
 #include "GenerateMolType.h"
 #include "Tensor2.h"
 #include "ReadDTSFolder.h"
+#include "Data_Structure.h"
 
-struct ProteinList {
-    std::string ProteinName;
-    double Ratio;
-    double Phi;
-    double Theta;
-    double Z0;
-    int ID;
-    int Maxno;
-    int created;
-    
-} ;
-struct ExcludedVolumeBeads {
-    Vec3D X;
-    double R;
-    
-} ;
+
+
 class BackMap
 {
 public:
@@ -52,8 +38,6 @@ public:
 
 private:
     std::vector<bead*> m_pAllBeads;
-    std::vector<molecules> m_AllMolecules;
-    std::vector<molecules*> m_pAllMolecules;
     Vec3D *m_pBox;
     Vec3D  m_Box;
     std::vector<bead> m_FinalBeads;
@@ -70,6 +54,13 @@ private:
     std::vector<exclusion*>  m_pExc;
 
 private:
+    //=== since 2024
+    void ExcludePointsUsingExclusion(std::vector<exclusion*>&, std::vector<point*>&, std::vector<point*>&);
+    bool CheckProteinInfo (std::map<int , ProteinList>&, std::map<std::string , MolType>&, std::vector<inclusion*> &);
+    
+    
+    
+    //======== old functions
     double dist2between2Points(Vec3D X1,Vec3D X2);
     void WriteFinalGroFile();
     bool AnyBeadWithinCutoff(UnitCell *,Vec3D Pos);
@@ -91,7 +82,6 @@ private:
     void GenProtein(MolType moltype, int , Vec3D Pos, Vec3D Normal, Vec3D Dir,Vec3D t1,Vec3D t2);
     void GenLipid(MolType moltype, int , Vec3D Pos, Vec3D Normal, Vec3D Dir,Vec3D t1,Vec3D t2);
 
-    std::string functiontype(std::string filename);
 };
 
 

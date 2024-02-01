@@ -42,13 +42,7 @@ Shape_1DSinBuilder::Shape_1DSinBuilder(Argument *pArgu)
     //==========================================================================================================
     GenerateMolType  MOLTYPE(pArgu);
     m_MoleculesType = MOLTYPE.GetMolType();
-    
-    if(MOLTYPE.GetHealth()==false)
-    {
-        std::cout<<"-> aborted! You are allowed to try one more time. Kidding, please do not :) \n";
-        std::exit(0);
-        
-    }
+
     m_Box(0)=m_State.Lx;     m_Box(1)=m_State.Ly;     m_Box(2)=m_State.Lz;
     m_pBox = (&m_Box);
     //********************** Finding the total area of the layers

@@ -16,7 +16,6 @@
 #include "Argument.h"
 #include "Vec3D.h"
 #include "bead.h"
-#include "molecules.h"
 #include "point.h"
 #include "inclusion.h"
 #include "GenerateMolType.h"

@@ -9,7 +9,7 @@ Traj_XXX::Traj_XXX(Vec3D *pBox)
  m_pBox=pBox;
 m_Condition=true;
     Nfunction f;
-    m_tsiPrecision = f.Int_to_String(18)+"."+f.Int_to_String(10);
+    m_tsiPrecision = G_tsiPrecision ; //f.Int_to_String(18)+"."+f.Int_to_String(10);
 }
 
 Traj_XXX::~Traj_XXX()
@@ -21,11 +21,12 @@ void Traj_XXX::WriteTSI(int step ,  std::string filename , std::vector< vertex* 
     FILE * output;
     output = fopen((filename).c_str(), "w");
     std::string format = "%"+m_tsiPrecision+"lf%"+m_tsiPrecision+"lf%"+m_tsiPrecision+"lf\n";
-    const char* version="version 1.1";
+    const char* version=SoftWareVersion;
     fprintf(output,"%s\n",version);
 //------
     const char* box="box";
-    fprintf(output,"%s%18.10lf%18.10lf%18.10lf\n",box,(*m_pBox)(0),(*m_pBox)(1),(*m_pBox)(2));
+    format = "%s%"+m_tsiPrecision+"lf%"+m_tsiPrecision+"lf%"+m_tsiPrecision+"lf\n";
+    fprintf(output,format.c_str(),box,(*m_pBox)(0),(*m_pBox)(1),(*m_pBox)(2));
 
     const char* ver="vertex";
     int size=pver.size();

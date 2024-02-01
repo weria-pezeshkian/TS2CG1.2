@@ -10,8 +10,14 @@
 #include "PDBFile.h"
 #include "GenDomains.h"
 #include "PointBasedBlueprint.h"
-
 /*
+ 1) read the point
+ 2) exclude the point base of exclsuion data
+ 3) exclude point based on proteins
+ 4) place proteins or generate them
+ 5) place the lipids
+ 
+ 
  
  further extentions
  
@@ -34,9 +40,8 @@ BackMap::BackMap(Argument *pArgu)
     std::cout<<"=========================================================================================================="<<"\n";
     Nfunction f;      // In this class there are some useful function and we can use it.
 
-    
-    
     //====== getting data points to create cg membrane
+    std::cout<<"---> attempting to obtain point data \n";
     PointBasedBlueprint SurfDataPoint(pArgu);
     std::vector<point*>  m_pPointUp = SurfDataPoint.m_pPointUp;
     std::vector<point*>  m_pPointDown = SurfDataPoint.m_pPointDown;
@@ -45,25 +50,69 @@ BackMap::BackMap(Argument *pArgu)
     Vec3D *m_pBox = SurfDataPoint.m_pBox;
     Wall *m_pWall = SurfDataPoint.m_pWall;
     m_monolayer = SurfDataPoint.m_monolayer;
-    
+    std::cout<<"---> point data has been obtained \n";
+
     //======== OutPut file name declaration and finding input file names ========================================
     std::string gname = pArgu->GetGeneralOutputFilename();   // get the generic name for the outputs
     m_FinalOutputGroFileName =gname+".gro";                     // create the output gro file name based on the generic name
     std::string m_FinalTopologyFileName=gname+".top";
     
     //======
-    GenerateMolType  MOLTYPE(pArgu);
-    m_MoleculesType = MOLTYPE.GetMolType();
-
-    if(MOLTYPE.GetHealth()==false)
-    {
-        std::cout<<"-> aborted! You are allowed to try one more time. Kidding, please do not :) \n";
+    std::cout<<"---> attempting to generate molecule type \n";
+    GenerateMolType  MOLTYPE(pArgu);   // using the str file, the included gro file in the str and the lib file, different mol types will be generated. proteins and lipids are treated as mols.
+    m_MoleculesType = MOLTYPE.GetMolType();   // a map containing all the mol types: (name, MolType)
+    std::cout<<"---> molecule types have been generated \n";
+  
+    //== we should exclude points and get rid of exclusion.
+    ExcludePointsUsingExclusion(m_pExc, m_pPointUp, m_pPointDown);
+    
+    //==== now we need to place the proteins
+    // first we read str file to find protein info
+    std::string strfilename = pArgu->GetStructureFileName();    // str file name
+    if(FindProteinList(strfilename)==false) // this data will be stored in m_TotalProteinList map(tsi_protein_id,ProteinList)
         std::exit(0);
-        
+    //== before going further, it would be better to check if the info about
+    //proteins in str file also exist in the PLM output and also in the mol type
+    if(CheckProteinInfo (m_TotalProteinList,m_MoleculesType, m_pInc)==false) //
+        std::exit(0);
+
+    
+    // m_MoleculesType map (name, MolType)
+    //m_TotalProteinList map(tsi_protein_id,ProteinList)
+    //m_pInc
+    
+    if(m_pInc.size()!=0)
+    {
+        for ( std::map<int,ProteinList>::iterator it = m_TotalProteinList.begin(); it != m_TotalProteinList.end(); it++ )
+        {
+            int number = 0;
+            int id = (it->second).ID;
+            for ( std::vector<inclusion*>::iterator it1 = m_pInc.begin(); it1 != m_pInc.end(); it1++ )
+            {
+                if(id==(*it1)->GetTypeID())
+                {
+                number++;
+
+                }
+            }
+            (it->second).created = number;
+        }
+    }
+    else  // if the inclusion file is empty, we generate proteins according to the data in the str file
+    {
+        CreateRandomInclusion();
+        for (std::vector<inclusion>::iterator it2 = m_RandomInc.begin() ; it2 != m_RandomInc.end(); ++it2)
+            m_pInc.push_back(&(*it2));
     }
     
- 
+    
+    
+    // Perhaps reading the str file to find out which lipids are needed and which proteins are there ....
+    //GenDomains GENDOMAIN(strfilename,p1,p2,m_Renormalizedlipidratio);  // this somehow reads the lipids
+    //std::vector<Domain*> pAllDomain = GENDOMAIN.GetDomains();
 
+
+    
 
     /*
      std::string strfilename = pArgu->GetStructureFileName();    // Get the stracture file name
@@ -95,95 +144,13 @@ BackMap::BackMap(Argument *pArgu)
 
     
     
-    if(m_pExc.size()!=0)
-    {
-        std::cout<<" Note: we are excluding points based on exclusion, If it is slow, contact the developer \n";
-        // m_pExc
-        //m_point2
-        
-        for ( std::vector<exclusion*>::iterator it = m_pExc.begin(); it != m_pExc.end(); it++ )
-        {
-            int pointid=(*it)->GetPointID();
-            if(pointid<0 || pointid>m_point1.size())
-            std::cout<<"error 23456 \n";
-            
-            point *Up_p1=m_point1.at(pointid);
-            Vec3D Pos = Up_p1->GetPos();
-            Vec3D N = Up_p1->GetNormal();
-            double R = (*it)->GetRadius();
-            if(R!=0)
-            Up_p1->UpdateArea(0);
 
-            for ( std::vector<point*>::iterator it1 = m_point1.begin(); it1 != m_point1.end(); it1++ )
-            {
-                Vec3D Pos1 = (*it1)->GetPos();
-                Vec3D DP = Pos1-Pos;
-                double dist = DP.norm();
-                Vec3D UnitDP =DP*(1/dist);
-                double sinT = fabs((UnitDP*N).norm());
-                double cosT = fabs(N.dot(UnitDP,N));
-
-                if(dist*sinT<=R && dist*cosT<6)
-                {
-                    (*it1)->UpdateArea(0);
-
-                }
-
-                
-            }
-            for ( std::vector<point*>::iterator it1 = m_point2.begin(); it1 != m_point2.end(); it1++ )
-            {
-                Vec3D Pos1 = (*it1)->GetPos();
-                Vec3D DP = Pos1-Pos;
-                double dist = DP.norm();
-                Vec3D UnitDP =DP*(1/dist);
-                double sinT = fabs((UnitDP*N).norm());
-                double cosT = fabs(N.dot(UnitDP,N));
-
-                if(dist*sinT<=R && dist*cosT< 6)
-                {
-                    (*it1)->UpdateArea(0);
-                    
-                }
-                
-            }
-            
-
-        }
-
-        
-    }
     
-    // read str file to find protein
 
-    if( FindProteinList(strfilename)==false)
-        std::exit(0);
     
 
 
-    if(m_pInc.size()==0)
-    {
-        CreateRandomInclusion();
-        for (std::vector<inclusion>::iterator it2 = m_RandomInc.begin() ; it2 != m_RandomInc.end(); ++it2)
-            m_pInc.push_back(&(*it2));
-    }
-    else 
-    {
 
-    	for ( std::map<int,ProteinList>::iterator it = m_TotalProteinList.begin(); it != m_TotalProteinList.end(); it++ )
-    	{
-        	int number = 0;
-    		int id = (it->second).ID;
-    		for ( std::vector<inclusion*>::iterator it1 = m_pInc.begin(); it1 != m_pInc.end(); it1++ )
-    		{
-                if(id==(*it1)->GetTypeID())
-                {
-				number++;
-
-                }
-    		}
-        	(it->second).created = number;
-	}
 
     }
 
@@ -753,169 +720,88 @@ void BackMap::CreateRandomInclusion()
     }
     
 }
-/*void BackMap::CreateWallBead(std::vector<point*>  p1, std::vector<point*>  p2)
-{
-    std::string file="Wall.gro";
-    FILE *fgro;
-    fgro = fopen(file.c_str(), "w");
-    
-    
-    /// resid  res name   noatom   x   y   z
-    const char* Title=" Wall of Water Beads ";
-    int Size=p1.size()+p2.size();
-    
-    fprintf(fgro,  "%s\n",Title);
-    fprintf(fgro, "%5d\n",Size);
-    int i=0;
-    for (std::vector<point*>::iterator it = p1.begin() ; it != p1.end(); ++it)
-    {
-        
-        i++;
-        Vec3D X=(*it)->GetPos();
-        Vec3D N=(*it)->GetNormal();
-        
-        X=X+N*(0.7);
-        const char* A1="W2";
-        const char* A2="PO4";
-        int resid=1;
-        fprintf(fgro, "%5d%5s%5s%5d%8.3f%8.3f%8.3f\n",resid%10000,A1,A2,i%10000,X(0),X(1),X(2) );
-        
-    }
-    for (std::vector<point*>::iterator it = p2.begin() ; it != p2.end(); ++it)
-    {
-        
-        i++;
-        Vec3D X=(*it)->GetPos();
-        Vec3D N=(*it)->GetNormal();
-        
-        X=X+N*(0.7);
-        const char* A1="W2";
-        const char* A2="PO4";
-        int resid=1;
-        fprintf(fgro, "%5d%5s%5s%5d%8.3f%8.3f%8.3f\n",resid%10000,A1,A2,i%10000,X(0),X(1),X(2) );
-        
-    }
-    
-    fprintf(fgro,  "%10.5f%10.5f%10.5f\n",m_Box(0),m_Box(1),m_Box(2) );
-    fclose(fgro);
-    
-}
- */
 bool BackMap::FindProteinList(std::string filename)
 {
-    bool OK=true;
+    //===  this function was updated in Dec, 2023.
+    std::cout<<"---> reading protein information from the str file "<<"\n";
     Nfunction f;
     std::ifstream strfile;
     strfile.open(filename.c_str());
-    std::string str,pname;
-    double ap;
-    int pid;
-    
-    
-    
-    int l=0;
-    bool lipidflag=false;
+    if(strfile.good()==false)
+    {
+        std::cout<<"---> error (3R22-D): while opening the str file with  name: "<<filename<<"  ; check if the file exist "<<"\n";
+        exit(0);
+    }
+    //== Read the file until reaching the protein section
     bool proteinflag=false;
-    bool flag = false;
+    std::string str;
     while (true)
     {
-       
-        l++;
         std::getline (strfile,str);
-        
         if(strfile.eof())
-            break;
-        
-        std::vector<std::string> Line = f.split(str);
-        //****************
-        if(Line.size()!=0 && (Line.at(0)).at(0)!=';')
         {
-            
-            if((Line.at(0)).at(0)=='[' && flag==false)
-            {
-                str = f.trim(str);
-                str.erase(std::remove(str.begin(), str.end(), '['), str.end());
-                str.erase(std::remove(str.begin(), str.end(), ']'), str.end());
-                str.erase(std::remove(str.begin(), str.end(), ' '), str.end());
-                flag=true;
-                
-
-                 if(str=="ProteinList")
-                {
-                    lipidflag = false;
-                    proteinflag =true;
-                }
-                else if(str=="LipidsList")
-                {
-                    lipidflag = true;
-                    proteinflag =false;
-                }
-                else if(str=="ShapeData")
-                {
-                    lipidflag = false;
-                    proteinflag =false;
-                }
-                else
-                {
-
-                    std::cout<<" Error7787: line "<<l<<" <"<<str<<"> of the "<<filename<< " file \n";
-                    OK=false;
-                }
-                
-            }
-            else if((Line.at(0))=="End" && flag==true)
-            {
-                flag=false;
-            }
-            else if(flag==true && proteinflag==true)
-            {
-                if(Line.size()>=6)
-                {
-                    ProteinList CP;
-                    CP.ID = f.String_to_Int(Line.at(1));
-                    CP.ProteinName = Line.at(0);
-                    CP.Ratio = f.String_to_Double(Line.at(2));
-                    CP.Phi=f.String_to_Double(Line.at(3));
-                    CP.Theta=f.String_to_Double(Line.at(4));
-                    CP.Z0=f.String_to_Double(Line.at(5));
-                    m_TotalProteinList.insert(std::pair<int,ProteinList>(CP.ID, CP));
-                }
-                else
-                {
-
-                    std::cout<<" Error9837: line "<<l<<" <"<<str<<"> of the "<<filename<< " file \n";
-                    OK=false;
-                    
-                }
-                
-            }
-            else if(flag==true && lipidflag==true)
-            {
-
-
-            }
-
-            
+            return false;
         }
-        
+        str = f.trim(str);
+        str.erase(std::remove(str.begin(), str.end(), '['), str.end());
+        str.erase(std::remove(str.begin(), str.end(), ']'), str.end());
+        str.erase(std::remove(str.begin(), str.end(), ' '), str.end());
+        if(str=="ProteinList")
+        {
+            proteinflag = true;
+            break;
+        }
+    }
+    //== now read the protein information
+    if(proteinflag==true)
+    {
+      while (true)
+      {
+        std::getline (strfile,str);
+        std::vector<std::string> Line = f.split(str);
+        if(Line.size()!=0)
+        {
+            if(Line[0]=="End" || Line[0]=="END")
+            {
+                break;
+            }
+            else if(Line.size()>=6)
+            {
+                ProteinList CP;
+                CP.ProteinName = Line.at(0);
+                CP.ID = f.String_to_Int(Line.at(1));
+                CP.Ratio = f.String_to_Double(Line.at(2));
+                CP.Phi=f.String_to_Double(Line.at(3));
+                CP.Theta=f.String_to_Double(Line.at(4));
+                CP.Z0=f.String_to_Double(Line.at(5));
+                m_TotalProteinList.insert(std::pair<int,ProteinList>(CP.ID, CP));
+            }
+            else
+            {
+            std::cout<<"---> error (3R22-E): protein information in the str file is incomplete "<<"\n";
+            std::cout<<"---> other possible causs of this error. 1) the protein section in str file does not end with word End "<<"\n";
+            exit(0);
+            }
+        }
+      }//while (true)
+    }
+    else
+    {
+    std::cout<<"---> warnning: the str file does not contain any information about proteins "<<"\n";
     }
     strfile.close();
 
     
-    
-    
-    
-  if(m_TotalProteinList.size()!=0)
-  {
-    std::cout<<"*************************** Protein List ID ********************** \n";
-    for ( std::map<int,ProteinList>::iterator it = m_TotalProteinList.begin(); it != m_TotalProteinList.end(); it++ )
+    if(m_TotalProteinList.size()!=0)
     {
-        std::cout <<"*    "<< it->first  <<" ---> "<< (it->second).ProteinName<< std::endl ;
+      std::cout<<" ---> Protein List and ID have been read from the input file \n";
+      for ( std::map<int,ProteinList>::iterator it = m_TotalProteinList.begin(); it != m_TotalProteinList.end(); it++ )
+      {
+          std::cout <<"----> "<< it->first  <<" ------> "<< (it->second).ProteinName<< std::endl ;
+      }
+      std::cout<<"************************************************************** \n";
     }
-    std::cout<<"************************************************************** \n";
-  }
-    
-    return OK;
+    return true;
 }
 Tensor2  BackMap::TransferMatLG(Vec3D Normal, Vec3D t1, Vec3D t2)
 {
@@ -924,65 +810,73 @@ Tensor2  BackMap::TransferMatLG(Vec3D Normal, Vec3D t1, Vec3D t2)
     return LG;
     
 }
-std::string BackMap::functiontype(std::string filename)
+
+//=== since 2024
+// a function that use up the exclsuions by making the area of that specific points zero.
+void BackMap::ExcludePointsUsingExclusion(std::vector<exclusion*> &m_pExc, std::vector<point*> &m_pPointUp, std::vector<point*> &m_pPointDown)
 {
-    std::string ftype;
-    bool OK=true;
-    Nfunction f;
-    std::ifstream file;
-    file.open(filename.c_str());
-    bool flag = false;
-    std::string str;
     
-    while (true)
+    if(m_pExc.size()!=0)
     {
-        std::getline (file,str);
-        if(file.eof())
-            break;
+        std::cout<<" Note: we are excluding points based on exclusion, If it is slow, contact the developer \n";
         
-        std::cout<<str<<"\n";
-        std::vector<std::string> Line = f.split(str);
-        if(Line.size()!=0 && (Line.at(0)).at(0)!=';')
+        for ( std::vector<exclusion*>::iterator it = m_pExc.begin(); it != m_pExc.end(); it++ )
         {
-            if((Line.at(0)).at(0)=='[' && flag==false)
-            {
-                str = f.trim(str);
-                str.erase(std::remove(str.begin(), str.end(), '['), str.end());
-                str.erase(std::remove(str.begin(), str.end(), ']'), str.end());
-                str.erase(std::remove(str.begin(), str.end(), ' '), str.end());
-                
-                if(str=="ShapeData")
-                    flag = true;
-            }
-            else if((Line.at(0))=="End" && flag==true)
-            {
-                flag=false;
-            }
-            else if(flag==true && Line.at(0)=="ShapeType")
-            {
-
-                    if(Line.size()<2)
-                        std::cout<<" Error: ShapeType information in the str file is not correct \n";
-                    else
-                    ftype = Line.at(1);
-                
-                break;
-
-            }
+            int pointid=(*it)->GetPointID();
+            if(pointid<0 || pointid>m_pPointUp.size())
+            std::cout<<"error 23456 \n";
             
-            
+            point *Up_p1=m_pPointUp.at(pointid);
+            Vec3D Pos = Up_p1->GetPos();
+            Vec3D N = Up_p1->GetNormal();
+            double R = (*it)->GetRadius();
+            if(R!=0)
+            Up_p1->UpdateArea(0);
+
+            for ( std::vector<point*>::iterator it1 = m_pPointUp.begin(); it1 != m_pPointUp.end(); it1++ )
+            {
+                Vec3D Pos1 = (*it1)->GetPos();
+                Vec3D DP = Pos1-Pos;
+                double dist = DP.norm();
+                Vec3D UnitDP =DP*(1/dist);
+                double sinT = fabs((UnitDP*N).norm());
+                double cosT = fabs(N.dot(UnitDP,N));
+
+                if(dist*sinT<=R && dist*cosT<6)
+                {
+                    (*it1)->UpdateArea(0);
+
+                }
+
+                
+            }
+            for ( std::vector<point*>::iterator it1 = m_pPointDown.begin(); it1 != m_pPointDown.end(); it1++ )
+            {
+                Vec3D Pos1 = (*it1)->GetPos();
+                Vec3D DP = Pos1-Pos;
+                double dist = DP.norm();
+                Vec3D UnitDP =DP*(1/dist);
+                double sinT = fabs((UnitDP*N).norm());
+                double cosT = fabs(N.dot(UnitDP,N));
+
+                if(dist*sinT<=R && dist*cosT< 6)
+                {
+                    (*it1)->UpdateArea(0);
+                    
+                }
+                
+            }
         }
-        
-        
     }
-    
-    
-    file.close();
-    
-
-    return ftype;
 }
-
+bool CheckProteinInfo (std::map<int , ProteinList>& plist, std::map<std::string , MolType>& moltype, std::vector<inclusion*> & incs)
+{
+    
+    std::cout<<" this function has not been completed yet. \n";
+    
+    
+    return true;
+}
 
 
 

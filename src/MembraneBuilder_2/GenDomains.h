@@ -23,13 +23,12 @@ class GenDomains
 {
 public:
     
-	GenDomains(std::string strfilename, std::vector<point*>  point1,std::vector<point*>  point2,bool renorm);
-	virtual ~GenDomains();
+	GenDomains(std::string file, std::vector<point*> point1, std::vector<point*>  point2,bool renorm);
+	~GenDomains();
     
-            inline  std::vector<Domain*> GetDomains()                const  {return m_pAllDomains;}
+    inline  std::vector<Domain*> GetDomains()                const  {return m_pAllDomains;}
 
 public:
-    void AddAGenDomainsLipid(std::string name, double Ap, double Ratio);
     void Configure();
 private:
     
