@@ -23,7 +23,7 @@ class GenDomains
 {
 public:
     
-	GenDomains(std::string file, std::vector<point*> point1, std::vector<point*>  point2,bool renorm);
+	GenDomains(std::string file, std::vector<point*> point1, std::vector<point*> point2, bool renorm);
 	~GenDomains();
     
     inline  std::vector<Domain*> GetDomains()                const  {return m_pAllDomains;}
