@@ -36,8 +36,8 @@ private:
     
 
 private:
-    std::vector<point*> m_Point1;
-    std::vector<point*> m_Point2;
+    std::vector<point*> m_pPointUp;
+    std::vector<point*> m_pPointDown;
     std::vector<Domain*> m_pAllDomains;
     std::vector<Domain> m_AllDomains;
 

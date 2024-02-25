@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <limits>
 #include "GenDomains.h"
 #include "Def.h"
 
@@ -14,16 +15,13 @@
  
  */
 
-GenDomains::GenDomains(std::string strfilename, std::vector<point*>  point1,std::vector<point*>  point2,bool renorm)
+GenDomains::GenDomains(std::string strfilename, std::vector<point*> pPointUp, std::vector<point*> pPointDown, bool renorm)
 {
+    Nfunction f;
+    double SmallestDouble = std::numeric_limits<double>::epsilon();
     m_Health = true;
-    m_Point1 = point1;
-    m_Point2 = point2;
-    
     //************************ Read str file *************/
     
-    Nfunction f;
-    std::vector <int> DomainTypes;
     std::ifstream strfile;
     strfile.open(strfilename.c_str());
     std::string str,lname;
@@ -31,6 +29,8 @@ GenDomains::GenDomains(std::string strfilename, std::vector<point*>  point1,std:
     double ap;
     bool flag =false;
     int FileLine = 0;
+    
+    
     while (true)
     {
         std::getline (strfile,str);
@@ -75,17 +75,16 @@ GenDomains::GenDomains(std::string strfilename, std::vector<point*>  point1,std:
                 int domainid = f.String_to_Int(Line.at(1));
                 //std::getline (strfile,str);
                 std::vector<point*> P1,P2;
-                DomainTypes.push_back(domainid);
-                for ( std::vector<point*>::iterator it = m_Point1.begin(); it != m_Point1.end(); it++ )
+                for ( std::vector<point*>::iterator it = pPointUp.begin(); it != pPointUp.end(); it++ )
                 {
                     int id = (*it)->GetDomainID();
-                    if(id==domainid)
+                    if(id==domainid && (*it)->GetArea()>SmallestDouble)
                     P1.push_back((*it));
                 }
-                for ( std::vector<point*>::iterator it = m_Point2.begin(); it != m_Point2.end(); it++ )
+                for ( std::vector<point*>::iterator it = pPointDown.begin(); it != pPointDown.end(); it++ )
                 {
                     int id = (*it)->GetDomainID();
-                    if(id==domainid)
+                    if(id==domainid && (*it)->GetArea()>SmallestDouble)
                     P2.push_back((*it));
                 }
                 Domain Do1 (domainid,P1);
@@ -128,31 +127,58 @@ GenDomains::GenDomains(std::string strfilename, std::vector<point*>  point1,std:
     }
 
     strfile.close();
-
-    for ( std::vector<point*>::iterator it = m_Point2.begin(); it != m_Point2.end(); it++ )
+    //==== get all the domain ids from the points. it will be much shorter then the point list
+    std::vector<int> PointDomianIDRange;
+    for ( std::vector<point*>::iterator it = pPointDown.begin(); it != pPointDown.end(); it++ )
     {
         int id = (*it)->GetDomainID();
-        bool found = false;
-        for ( std::vector<int>::iterator it2 = DomainTypes.begin(); it2 != DomainTypes.end(); it2++ )
+        std::vector<int>::iterator mem = std::find(PointDomianIDRange.begin(), PointDomianIDRange.end(), id);
+        if (mem == PointDomianIDRange.end())
+        PointDomianIDRange.push_back(id);
+    }
+    for ( std::vector<point*>::iterator it = pPointUp.begin(); it != pPointUp.end(); it++ )
+    {
+        int id = (*it)->GetDomainID();
+        std::vector<int>::iterator mem = std::find(PointDomianIDRange.begin(), PointDomianIDRange.end(), id);
+        if (mem == PointDomianIDRange.end())
+        PointDomianIDRange.push_back(id);
+    }
+    //==
+    //== CHECK if all the points domain are defined in the file
+    
+    //m_AllDomains
+    std::vector<int> DomianTypes;
+    for ( std::vector<Domain>::iterator it = m_AllDomains.begin(); it != m_AllDomains.end(); it++ )
+    {
+        int domainidtype = (*it).GetDomainID();
+        DomianTypes.push_back(domainidtype);
+        std::vector<int>::iterator pdomainid = std::find(PointDomianIDRange.begin(), PointDomianIDRange.end(), domainidtype);
+        if (pdomainid == PointDomianIDRange.end())
         {
-            if(id==(*it2))
-            found = true;
+            std::cout<<"---> warning: there is a domain defined with domain id of "<<domainidtype<<" while no point with this domain exist \n";
+            std::cout<<"---> note: this could has happened because some points are covered my protein or exclusions! \n";
         }
-        if(found == false)
+
+    }
+    std::cout<<"---> checking if the domain ids in str file covers all in the point files \n";
+    for ( std::vector<int>::iterator it = PointDomianIDRange.begin(); it != PointDomianIDRange.end(); it++ )
+    {
+        std::vector<int>::iterator domainid = std::find(DomianTypes.begin(), DomianTypes.end(), *it);
+
+        if (domainid == DomianTypes.end())
         {
-            std::cout<<" Error: there are points with domain id of "<<id<<" while this id is not defined in the str file \n";
+            std::cout<<" Error: there are points with domain id of "<<*it<<" while this id is not defined in the str file \n";
             std::exit(0);
 
         }
-
         
     }
-    /// CHECK if all the points domain are defined in the file
-    
+    std::cout<<"---> domain ids are all good \n";
     for ( std::vector<Domain>::iterator it = m_AllDomains.begin(); it != m_AllDomains.end(); it++ )
     {
         m_pAllDomains.push_back(&(*it));
     }
+    //=== renormalizaing
     for ( std::vector<Domain*>::iterator it = m_pAllDomains.begin(); it != m_pAllDomains.end(); it++ )
         (*it)->Configure(renorm);
 

@@ -17,7 +17,6 @@
 
 Domain::Domain(int domaintypeid, std::vector<point*>  point1)
 {
-    m_Health = true;
     m_point = point1;
     m_DomainTypeID = domaintypeid;
     m_DomainTotalLipid = 0;
@@ -101,7 +100,6 @@ void Domain::Configure(bool renorm)
     if(m_DomainTotalLipid>m_point.size())
     {
         std::cout<<" Error: Not enough point for the domain to place lipid: "<<m_DomainTotalLipid<<"  lipid should be created  "<<m_point.size()<<" is available \n";
-        m_Health = false;
         std::exit(0);
         
     }

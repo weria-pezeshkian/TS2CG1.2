@@ -23,7 +23,7 @@
  
  further extentions
  
- 1). in random inc, we should prevent them to be close
+ 1). in random inc, we should prevent them to be close; it is also wrong since we do not clauclate all the area yet. 
  2.) angle and theta is not used yet
  3.) pattern based protein insertion
  
@@ -133,14 +133,15 @@ BackMap::BackMap(Argument *pArgu)
 
     //== next task is to make the domain work and also make sure that the point with area zero is not part of the domain points
 
-    
-    //std::string strfilename = pArgu->GetStructureFileName();    // Get the stracture file name
+    bool Renormalizedlipidratio = pArgu->GetRenorm();
+    GenDomains GENDOMAIN(strfilename,pPointUp,pPointDown,Renormalizedlipidratio);  // this somehow reads the lipids
+    std::vector<Domain*> pAllDomain = GENDOMAIN.GetDomains();
     //m_ResID = 1;
-   //m_Renormalizedlipidratio = pArgu->GetRenorm();
+   //
    //m_Iter = pArgu->GetIter();
     // Perhaps reading the str file to find out which lipids are needed and which proteins are there ....
-    //GenDomains GENDOMAIN(strfilename,pPointUp,pPointUp,m_Renormalizedlipidratio);  // this somehow reads the lipids
-    //std::vector<Domain*> pAllDomain = GENDOMAIN.GetDomains();
+    //
+    //
 
 
     
@@ -169,8 +170,8 @@ BackMap::BackMap(Argument *pArgu)
 
     }
     // Make all the domain containing different lipids
-    GenDomains GENDOMAIN(strfilename,p1,p2,m_Renormalizedlipidratio);
-    std::vector<Domain*> pAllDomain = GENDOMAIN.GetDomains();
+    //GenDomains GENDOMAIN(strfilename,p1,p2,m_Renormalizedlipidratio);
+    //std::vector<Domain*> pAllDomain = GENDOMAIN.GetDomains();
     std::cout<<" Number of the domains defined in the input file  "<< pAllDomain.size()/2 <<"\n";
     int layer = 0;
         std::cout<<"------  we aim to generate  ------- \n";
@@ -272,8 +273,6 @@ BackMap::BackMap(Argument *pArgu)
             }
             
         }
-
-        
     }
      */
     std::cout<<"*************************** Number of created Lipids,   ********************** \n";

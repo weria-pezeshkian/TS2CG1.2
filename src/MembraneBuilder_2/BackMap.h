@@ -80,7 +80,7 @@ private:
     Tensor2 Rz(double cos, double sin);
     Tensor2 TransferMatLG(Vec3D N, Vec3D t1, Vec3D t2);
     void CreateRandomInclusion(std::vector<point*> &PointUp);
-    bool m_Renormalizedlipidratio;
+    //bool m_Renormalizedlipidratio;
     double    m_TotalAreaUp ;
     double    m_TotalAreaDown ;
     double    m_AvailPointUp ;

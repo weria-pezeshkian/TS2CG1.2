@@ -27,8 +27,7 @@ public:
     
             inline  std::vector<point*>                 GetDomainPoint()                const  {return m_point;}
             inline  std::vector<DomainLipid>            GetDomainLipids()               const  {return m_AllDomainLipids;}
-            inline  std::vector<DomainLipid*>           GetpDomainLipids()               const  {return m_pAllDomainLipids;}
-            inline  bool                                GetHealth()                     const  {return m_Health;}
+            inline  std::vector<DomainLipid*>           GetpDomainLipids()              const  {return m_pAllDomainLipids;}
             inline  int                                 GetDomainID()                   const  {return m_DomainTypeID;}
             inline  int                                 GetDomainTotalLipid()                   const  {return m_DomainTotalLipid;}
 
@@ -46,7 +45,6 @@ private:
     std::vector<point*>  m_point;
     std::vector<DomainLipid>  m_AllDomainLipids;
     std::vector<DomainLipid*>  m_pAllDomainLipids;
-    bool m_Health;
     int m_DomainTotalLipid;
 
 
