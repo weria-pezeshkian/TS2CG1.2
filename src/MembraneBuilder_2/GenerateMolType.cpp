@@ -61,21 +61,7 @@ GenerateMolType::GenerateMolType(Argument *pArgu)
         std::getline (strfile,namestr);
     }
     strfile.close();  // close the file
-    //== using the gro file name to create mol types
-    for (std::vector<std::string>::iterator it = gfilenames.begin() ; it != gfilenames.end(); ++it)
-    {
-        GroFile GF(*it);
-        std::vector<bead> vbeads = GF.GetAllBeads();
-        std::string molname =GF.GetTitle();
-        
-        MolType temMOL;
-        temMOL.Beads = vbeads;
-        temMOL.MolName = molname;
-        temMOL.beadnumber = vbeads.size();
-        double cmolarea = MolAreaCal(temMOL);
-        temMOL.molarea = cmolarea;
-        m_MoleculesType.insert(std::pair<std::string, MolType>(molname, temMOL));
-    }
+
  
     //====== Check if a Lib is defined, otherwise read what we have here
     if(pArgu->GetLipidLibrary()=="no")
@@ -106,7 +92,21 @@ GenerateMolType::GenerateMolType(Argument *pArgu)
         std::cout <<"*    "<< it->first  <<" ---> "<< (it->second).beadnumber<<"  area of "<<(it->second).molarea<<"  nm^2"<< std::endl ;
         }
     }
-    
+    //== using the gro file name to create mol types. this should be at the end
+    for (std::vector<std::string>::iterator it = gfilenames.begin() ; it != gfilenames.end(); ++it)
+    {
+        GroFile GF(*it);
+        std::vector<bead> vbeads = GF.GetAllBeads();
+        std::string molname =GF.GetTitle();
+        
+        MolType temMOL;
+        temMOL.Beads = vbeads;
+        temMOL.MolName = molname;
+        temMOL.beadnumber = vbeads.size();
+        double cmolarea = MolAreaCal(temMOL);
+        temMOL.molarea = cmolarea;
+        m_MoleculesType.insert(std::pair<std::string, MolType>(molname, temMOL));
+    }
 }
 GenerateMolType::~GenerateMolType()
 {

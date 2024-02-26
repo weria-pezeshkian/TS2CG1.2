@@ -501,7 +501,7 @@ BackMap::BackMap(Argument *pArgu)
             double area = tempoint->GetArea();
             double rn = double(rand()%(1000000))/1000000.0;
             double prob=area/(LL->Ap);
-           // std::cout<<DL.size()<<"  "<<LL->Ap<<"We 2222get here \n";
+           // std::cout<<prob<<"  "<<area<<"  "<<LL->Ap<< "We 2222get here \n";
 
             if(prob>rn && LL->MaxNo>NoMadeLipid)
             {

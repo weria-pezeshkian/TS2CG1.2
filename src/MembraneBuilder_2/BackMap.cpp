@@ -8,17 +8,16 @@
 #include "GenerateUnitCells.h"
 #include "Def.h"
 #include "PDBFile.h"
-#include "GenDomains.h"
 #include "PointBasedBlueprint.h"
 /*
  1) read the point// checked!
  2) exclude the point base of exclsuion data// checked
  3) place proteins or generate them // checked
  4) exclude point based on proteins  // checked
- 5) place the lipids
+ 5) place the lipids  // checked
  6) check for all unnessry variable and function and remove them
  6) make protein placment better
- 
+ 7) random protein still does not work
  
  
  further extentions
@@ -104,7 +103,7 @@ BackMap::BackMap(Argument *pArgu)
     
 //== better to place the proteins and make then remove the excluded points  then generate the domains. Note, we should tell the user some domain could be removed due to protein and exclsuion
     //== however, if a error happen due to user, the error will be revealed later about domain. We can add a check function later
-    
+    m_ResID = 1; // we set the resid of the first mol to 2, the number will be updated when a mol is generated
     m_InclusionDirectionType = pArgu->GetInclusionDirectionType(); //Note: in the normal condition PLM always write global so only applicable if you want to change the point folder manually
     if(m_InclusionDirectionType=="Local")
     {
@@ -131,18 +130,27 @@ BackMap::BackMap(Argument *pArgu)
     std::cout<<"---> generating domains using the input files \n";
 
 
-    //== next task is to make the domain work and also make sure that the point with area zero is not part of the domain points
 
     bool Renormalizedlipidratio = pArgu->GetRenorm();
+    m_Iter = pArgu->GetIter();  // how many iteration should be made to make sure enough lipid is placed.
     GenDomains GENDOMAIN(strfilename,pPointUp,pPointDown,Renormalizedlipidratio);  // this somehow reads the lipids
     std::vector<Domain*> pAllDomain = GENDOMAIN.GetDomains();
-    //m_ResID = 1;
-   //
-   //m_Iter = pArgu->GetIter();
-    // Perhaps reading the str file to find out which lipids are needed and which proteins are there ....
     //
-    //
+    std::cout<<"---> now,  the domain info is used to place lipids \n";
 
+    for ( std::vector<Domain*>::iterator it = pAllDomain.begin(); it != pAllDomain.end(); it++ ) // all the domains
+    {
+        GenLipidsForADomain(*it);
+    }
+
+    //== next task wall
+
+    // write the wall info
+    
+    // write gro file
+    
+    // write top file
+    
 
     
 
@@ -199,84 +207,8 @@ BackMap::BackMap(Argument *pArgu)
     }
     
 
-//    for ( std::vector<DomainLipid>::iterator it2 = DL.begin(); it2 != DL.end(); it2++ )
-    {
-        
-    }
-
-    for ( std::vector<Domain*>::iterator it = pAllDomain.begin(); it != pAllDomain.end(); it++ )
-    {
-            std::vector<DomainLipid*> DL = (*it)->GetpDomainLipids();
-
-        int iteration = 0;
-        int madetotallipids = 0;
-        int lipidlistID = 0;
-        int NoMadeLipid = 0 ;  // temperory because our strcture cannot increase it
-        int CreateTotalLipids = (*it)->GetDomainTotalLipid();
-
-        std::vector<point*>  dpoint = (*it)->GetDomainPoint();
-        while(true)
-        {
-            iteration++;
-
-                if( lipidlistID>DL.size()-1)
-                    break;
-                if(madetotallipids==CreateTotalLipids)
-                    break;
-                if(iteration>m_Iter*(dpoint.size()))
-                {
-                std::cout<<" Warning: With "<< m_Iter <<" iterations, we could not place the expected number of the lipids \n";
-                std::cout<<" if you are unhappy, increase the number of the iteration with option -iter, or regenerate the points \n";
-                break;
-                }
-
-
-
-            
-            int pointid = rand()%(dpoint.size());
-            point* tempoint = dpoint.at(pointid);
-
-            DomainLipid *LL=DL.at(lipidlistID);
-            int RNG=(rand()%CreateTotalLipids)+1;
-            Vec3D  Dir(0,0,0);
-            Vec3D N = tempoint->GetNormal();
-            Vec3D T1 =   tempoint->GetP1();
-            Vec3D T2 =   tempoint->GetP2();
-
-            std::string ltype = LL->Name;
-            Vec3D Pos = tempoint->GetPos();
-            double area = tempoint->GetArea();
-            double rn = double(rand()%(1000000))/1000000.0;
-            double prob=area/(LL->Ap);
-           // std::cout<<DL.size()<<"  "<<LL->Ap<<"We 2222get here \n";
-
-            if(prob>rn && LL->MaxNo>NoMadeLipid)
-            {
-                madetotallipids++;
-                NoMadeLipid++;
-                int t = LL->no_created;
-                ((*it)->GetpDomainLipids()).at(lipidlistID)->no_created=t+1;
-                //std::cout<< ((*it)->GetpDomainLipids()).at(lipidlistID)->no_created<<" "<<t+1<<"no beads \n";
-                if (m_map_MolName2MoleculesType.count(ltype) == 0)
-                    std::cout << "Error:-----> molecule name " <<ltype<<" does not exist in the lib files \n";
-                
-                GenLipid(m_map_MolName2MoleculesType.at(ltype), 0, Pos, N, Dir, T1, T2);
-                (dpoint.at(pointid))->UpdateArea(0);
-            }
-            if(LL->MaxNo==NoMadeLipid )
-            {
-           //  std::cout<<"domain id "<<(*it)->GetDomainID()<<"  name "<<LL->Name<<" created for the domain "<<madetotallipids<<"  domain "<<CreateTotalLipids<<"  "<<lipidlistID<<"  "<<NoMadeLipid<<"  "<<LL->MaxNo<<"\n";
-                lipidlistID++;
-                NoMadeLipid = 0;
-
-
-            }
-            
-        }
-    }
-     */
     std::cout<<"*************************** Number of created Lipids,   ********************** \n";
-    /*layer = 0;
+    //layer = 0;
     for ( std::vector<Domain*>::iterator it = pAllDomain.begin(); it != pAllDomain.end(); it++ )
     {
         layer++;
@@ -368,14 +300,7 @@ BackMap::~BackMap()
 }
 void BackMap::GenLipid(MolType moltype, int listid, Vec3D Pos, Vec3D Normal, Vec3D Dir,Vec3D t1,Vec3D t2)
 {
-    //
-
-    
-    
      Tensor2 LG = TransferMatLG(Normal, t1, t2);
-    
-    
-    
       std::vector<bead> vbeads = moltype.Beads;
             for ( std::vector<bead>::iterator it = vbeads.begin(); it != vbeads.end(); it++ )
             {
@@ -388,11 +313,7 @@ void BackMap::GenLipid(MolType moltype, int listid, Vec3D Pos, Vec3D Normal, Vec
     
     m_ResID++;
     
-    
-
-
-
-    
+    return;
 }
 void BackMap::GenProtein(MolType moltype, int listid, Vec3D Pos, Vec3D Normal, Vec3D Dir,Vec3D t1,Vec3D t2)
 {
@@ -425,6 +346,7 @@ void BackMap::GenProtein(MolType moltype, int listid, Vec3D Pos, Vec3D Normal, V
             m_FinalBeads.push_back(TemB);
         }
         m_ResID++;
+    return;
 }
 double BackMap::dist2between2Points(Vec3D X1,Vec3D X2)
 {
@@ -531,19 +453,33 @@ void BackMap::CreateRandomInclusion(std::vector<point*> &pPointUp)
     //==== reading input file to find number of requested proteins
     if(m_map_IncID2ProteinLists.size()!=0)
     {
-        std::cout<<" According to the data and area we generate  "<<m_map_IncID2ProteinLists.size()<<" proteins types \n";
+        std::cout<<"---> According to the data and area we generate  "<<m_map_IncID2ProteinLists.size()<<" proteins types \n";
     }
     for ( std::map<int,ProteinList>::iterator it = m_map_IncID2ProteinLists.begin(); it != m_map_IncID2ProteinLists.end(); it++ )
     {
         (it->second).created = 0;
         double ratio = (it->second).Ratio;
         std::string type = (it->second).ProteinName;
+//======================== error message =================================
+        if (m_map_MolName2MoleculesType.count(type) == 0)
+        {
+            std::cout<<"---> error: mol type "<<type<<" does not exist in the map \n";
+            std::cout<<"    ----------------------<error>----------------------------- \n";
+            std::cout<<"         below list exist in the lib and gro \n";
+            for ( std::map<std::string , MolType>::iterator it = m_map_MolName2MoleculesType.begin(); it != m_map_MolName2MoleculesType.end(); it++ )
+            {
+                std::cout<<"                      -) "<<(*it).first<<"\n";
+            }
+            std::cout<<"    ---------------------------------------------------------- \n";
+            return;
+        }
+//=========================================================
         double area = (m_map_MolName2MoleculesType.at(type)).molarea;
         int neededno = m_TotalAreaUp/(area)*ratio;
         (it->second).Maxno = neededno;
         totinc+=neededno;
         
-        std::cout<<" We will try to generate  "<<neededno<<"  "<<type<<" protein \n" ;
+        std::cout<<"---> We will try to generate  "<<neededno<<"  "<<type<<" protein \n" ;
 
     }
     //==== end of reading inout file (str) to find number of proteins
@@ -901,7 +837,66 @@ bool BackMap::RemovePointsCloseToBeadList(std::vector<point*> &pPointUp, std::ve
     
     return true;
 }
+bool BackMap::GenLipidsForADomain(Domain *pdomain)
+{
 
+    std::vector<DomainLipid*> pdomainlipids = pdomain->GetpDomainLipids();
+    std::vector<point*>  dpoint = pdomain->GetDomainPoint();
+   // int CreateTotalLipids = pdomain->GetDomainTotalLipid();
+
+int iteration = 0;
+int NoMadeTotalLipid = 0;
+int NoMadeLipid = 0 ;  // temperory because our strcture cannot increase it
+
+for (std::vector<DomainLipid*>::iterator it = pdomainlipids.begin(); it != pdomainlipids.end(); it++ )
+{ //=============
+    while(true)
+    {
+        iteration++;
+        if(iteration>m_Iter*(dpoint.size()))
+        {
+            std::cout<<"---> Warning: with "<< m_Iter <<" iterations, we could not place the expected number of the lipids \n";
+            std::cout<<" if you are unhappy, increase the number of the iteration with option -iter, or regenerate the points \n";
+            break;
+        }
+        int pointid = rand()%(dpoint.size());   // selecting a random point
+        point* Ran_point = dpoint.at(pointid);  // select a random point
+        double area = Ran_point->GetArea();
+
+        double prob=area/((*it)->Ap);   // Ap is the area per lipid for that specific lipid
+        double rn = double(rand()%(1000000))/1000000.0;
+
+        if(prob>rn && NoMadeLipid < (*it)->MaxNo )
+        {
+            NoMadeTotalLipid++;
+            NoMadeLipid++;
+            (*it)->no_created=(*it)->no_created+1;
+            {//================================ Create a single lipid at the point position ======================================
+                Vec3D  Dir(0,0,0);
+                Vec3D N =    Ran_point->GetNormal();
+                Vec3D T1 =   Ran_point->GetP1();
+                Vec3D T2 =   Ran_point->GetP2();
+                Vec3D Pos =  Ran_point->GetPos();
+                std::string ltype = (*it)->Name;
+                if (m_map_MolName2MoleculesType.count(ltype) == 0)
+                {
+                    std::cout << "Error:-----> molecule name " <<ltype<<" does not exist in the lib files \n";
+                    return false;
+                }
+                GenLipid(m_map_MolName2MoleculesType.at(ltype), 0, Pos, N, Dir, T1, T2);
+                Ran_point->UpdateArea(0);
+            }//============================================================================================================
+        }
+        if((*it)->MaxNo==NoMadeLipid )
+        {
+            NoMadeLipid = 0;
+            break;
+        }
+    } //while(true)
+}
+    
+return true;
+}
 
 #endif
 

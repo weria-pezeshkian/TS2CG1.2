@@ -178,7 +178,7 @@ GenDomains::GenDomains(std::string strfilename, std::vector<point*> pPointUp, st
     {
         m_pAllDomains.push_back(&(*it));
     }
-    //=== renormalizaing
+    //=== renormalizaing and obtaining max lipid and more...
     for ( std::vector<Domain*>::iterator it = m_pAllDomains.begin(); it != m_pAllDomains.end(); it++ )
         (*it)->Configure(renorm);
 

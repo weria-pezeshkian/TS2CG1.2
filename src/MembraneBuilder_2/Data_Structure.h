@@ -22,10 +22,9 @@ struct MolType {
 struct DomainLipid {
     std::string Name;           // name of the lipid
     double Ap;                  // AP of this lipid structure
-    double Ratio;               // how many ratio in the domain
+    double Ratio;               // how many/ratio in the domain
     int no_created;          // how many has been created
     int MaxNo;                  // how many of this type we should create
- //   int DynamicMaxNo;
     
 } ;
 struct ProteinList {

@@ -22,6 +22,7 @@
 #include "Tensor2.h"
 #include "ReadDTSFolder.h"
 #include "Data_Structure.h"
+#include "GenDomains.h"
 
 
 
@@ -71,6 +72,7 @@ private:
     bool CheckProteinInfo (std::map<int , ProteinList>&, std::map<std::string , MolType>&, std::vector<inclusion*> &);
     bool PlaceProteins(std::vector<point*> &PointUp);
     bool RemovePointsCloseToBeadList(std::vector<point*> &PointUp, std::vector<point*> &PointDown, std::vector<bead*> vpbeads, double RCutOff, Vec3D* m_pBox);
+    bool GenLipidsForADomain(Domain *pdomain); // generates all the lipid for a specific domain
 
     
     //======== old functions

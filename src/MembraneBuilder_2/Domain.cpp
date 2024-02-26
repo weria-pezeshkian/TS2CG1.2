@@ -35,23 +35,13 @@ void Domain::AddADomainLipid(std::string name, double Ap, double Ratio)
 }
 void Domain::Configure(bool renorm)
 {
-    
+  //== this function 1) obtain the total ratio and possibly make it 1. 2) obtains max lipids of each one in this domain
 
     
-    
+    // obtain the total ratio
     double totalratio=0;
     for ( std::vector<DomainLipid>::iterator it = m_AllDomainLipids.begin(); it != m_AllDomainLipids.end(); it++ )
-    {
         totalratio+=(*it).Ratio ;
-    }
-    if((totalratio>0.999 && totalratio<1.0001) || renorm==true)
-    {
-    }
-    else
-    {
-        std::cout<<" warrning: the total lipid percentage for domain "<<m_DomainTypeID<<" is not 1. It is ("<<totalratio<<") make sure you know what are you doing or use -renorm option \n";
-        
-    }
 
     if(renorm==true)
     {
@@ -64,7 +54,12 @@ void Domain::Configure(bool renorm)
             std::cout<<"--> "<<(*it).Name<<"   "<<(*it).Ratio<<"  \n";
         }
     }
-    
+    else if (totalratio<0.99999 && totalratio>1.000001)
+    {
+        std::cout<<" warrning: the total lipid percentage for domain "<<m_DomainTypeID<<" is not 1. It is ("<<totalratio<<") make sure you know what are you doing or use -renorm option \n";
+        
+    }
+    //== obtaining the total area of the domain points
     double Tarea = 0; // total area of the domain point;
     for ( std::vector<point*>::iterator it = m_point.begin(); it != m_point.end(); it++ )
     {
@@ -79,7 +74,6 @@ void Domain::Configure(bool renorm)
     for ( std::vector<DomainLipid>::iterator it = m_AllDomainLipids.begin(); it != m_AllDomainLipids.end(); it++ )
     {
         avAP+= ((*it).Ap)*((*it).Ratio);
-        //  (*it).DynamicMaxNo = (*it).MaxNo;
     }
     for ( std::vector<DomainLipid>::iterator it = m_AllDomainLipids.begin(); it != m_AllDomainLipids.end(); it++ )
     {
@@ -88,7 +82,6 @@ void Domain::Configure(bool renorm)
         else
         (*it).MaxNo=0;
         (*it).no_created = 0;
-        //  (*it).DynamicMaxNo = (*it).MaxNo;
     }
     
     m_DomainTotalLipid = 0;
@@ -99,9 +92,8 @@ void Domain::Configure(bool renorm)
     
     if(m_DomainTotalLipid>m_point.size())
     {
-        std::cout<<" Error: Not enough point for the domain to place lipid: "<<m_DomainTotalLipid<<"  lipid should be created  "<<m_point.size()<<" is available \n";
+        std::cout<<" Error: Not enough point for the domain to place lipid: "<<m_DomainTotalLipid<<"  lipid should be created  "<<m_point.size()<<" points is available \n";
         std::exit(0);
-        
     }
     for ( std::vector<DomainLipid>::iterator it = m_AllDomainLipids.begin(); it != m_AllDomainLipids.end(); it++ )
     {
