@@ -14,17 +14,17 @@
 #define PI 3.14159265359
 #define S60 0.8660254037844
 #define SQ3 1.73205080757
-#define SoftWareVersion   "1.2"
-#define SoftWareName      "CG Membrane builder"
-#define LIBExt            "LIB"
-#define STRExt            "str"
-#define Precision       8
-#define Enabled   1
-#define Disabled  2
-#define FunctionType  "-function"
-#define HELPEx  "-h"
-#define LipidLibraryFileName  "-LLIB"
-#define GET_SEED  "-seed"
+#define Precision               8
+#define Enabled                 1
+#define Disabled                2
+#define SoftWareVersion         "1.2"
+#define SoftWareName            "CG Membrane builder"
+#define LIBExt                  "LIB"
+#define STRExt                  "str"
+#define FunctionType            "-function"
+#define HELPEx                  "-h"
+#define LipidLibraryFileName    "-LLIB"
+#define GET_SEED                "-seed"
 
 
 

@@ -40,7 +40,6 @@ public:
     
 private:
     // final data
-    std::vector<bead> m_FinalBeads;         // all the beads generated at the end
     std::string m_FinalOutputGroFileName;
     std::string m_FinalTopologyFileName;
     
@@ -48,7 +47,8 @@ private:
     // all the maps
     std::map<std::string , MolType>  m_map_MolName2MoleculesType;
     std::map<int , ProteinList>  m_map_IncID2ProteinLists;
-    
+    std::vector<bead> m_FinalBeads;         // all the beads generated at the end
+
 private:
 
     std::vector<bead*> m_pAllBeads;
@@ -59,20 +59,19 @@ private:
 
 
     int m_ResID;
-    std::vector<inclusion>  m_RandomInc;
-    std::vector<inclusion*>  m_pInc;
     std::vector<ExcludedVolumeBeads>  m_ExcludeBeads;
     double m_Iter;
     std::string m_InclusionDirectionType;
-    std::vector<exclusion*>  m_pExc;
+
 
 private:
     //=== since 2024
     void ExcludePointsUsingExclusion(std::vector<exclusion*>&, std::vector<point*>&, std::vector<point*>&);
     bool CheckProteinInfo (std::map<int , ProteinList>&, std::map<std::string , MolType>&, std::vector<inclusion*> &);
-    bool PlaceProteins(std::vector<point*> &PointUp);
+    bool PlaceProteins(std::vector<point*> &PointUp, std::vector<inclusion*>  &pInc);
     bool RemovePointsCloseToBeadList(std::vector<point*> &PointUp, std::vector<point*> &PointDown, std::vector<bead*> vpbeads, double RCutOff, Vec3D* m_pBox);
     bool GenLipidsForADomain(Domain *pdomain); // generates all the lipid for a specific domain
+    bool GenTopologyFile(std::vector<Domain*>, int wbeadno); // generates topology file
 
     
     //======== old functions
@@ -81,18 +80,15 @@ private:
     bool AnyBeadWithinCutoff(UnitCell *,Vec3D Pos);
     Tensor2 Rz(double cos, double sin);
     Tensor2 TransferMatLG(Vec3D N, Vec3D t1, Vec3D t2);
-    void CreateRandomInclusion(std::vector<point*> &PointUp);
+    std::vector<inclusion> CreateRandomInclusion(std::vector<point*> &PointUp);
     //bool m_Renormalizedlipidratio;
-    double    m_TotalAreaUp ;
-    double    m_TotalAreaDown ;
-    double    m_AvailPointUp ;
-    double    m_AvailPointDown ;
     bool m_monolayer;
 
    // void CreateWallBead(std::vector<point*>  p1, std::vector<point*>  p2);
     bool FindProteinList(std::string str);
     void GenProtein(MolType moltype, int , Vec3D Pos, Vec3D Normal, Vec3D Dir,Vec3D t1,Vec3D t2);
     void GenLipid(MolType moltype, int , Vec3D Pos, Vec3D Normal, Vec3D Dir,Vec3D t1,Vec3D t2);
+    void Welldone();
 
 };
 

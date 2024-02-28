@@ -16,6 +16,7 @@
  4) exclude point based on proteins  // checked
  5) place the lipids  // checked
  6) check for all unnessry variable and function and remove them
+ 6) monolayer does not work
  6) make protein placment better
  7) random protein still does not work
  
@@ -35,9 +36,9 @@ BackMap::BackMap(Argument *pArgu)
 
     srand (pArgu->GetSeed());
     std::cout<<"\n";
-    std::cout<<"=========================================================================================================="<<"\n";
-    std::cout<<"****************** "<< SoftWareName <<" ******************   "<<"\n";
-    std::cout<<"******************  Version:  "<<SoftWareVersion<<" ****************** \n";
+    std::cout<<"██████████████████████████████████████████████████  \n";
+    std::cout<<"██████████████ "<< SoftWareName <<" ██████████████   "<<"\n";
+    std::cout<<"                  Version:  "<<SoftWareVersion<<"  \n";
     std::cout<<"=========================================================================================================="<<"\n";
     Nfunction f;      // In this class there are some useful function and we can use it.
 
@@ -46,17 +47,17 @@ BackMap::BackMap(Argument *pArgu)
     PointBasedBlueprint SurfDataPoint(pArgu);
     std::vector<point*>  pPointUp = SurfDataPoint.m_pPointUp;
     std::vector<point*>  pPointDown = SurfDataPoint.m_pPointDown;
-    std::vector<exclusion*>  m_pExc = SurfDataPoint.m_pExc;
-    std::vector<inclusion*>  m_pInc = SurfDataPoint.m_pInc;
+    std::vector<inclusion*>  pInc = SurfDataPoint.m_pInc;
+    std::vector<exclusion*>  pExc = SurfDataPoint.m_pExc;
     Vec3D *m_pBox = SurfDataPoint.m_pBox;
-    Wall *m_pWall = SurfDataPoint.m_pWall;
+    Wall *pWall = SurfDataPoint.m_pWall;
     m_monolayer = SurfDataPoint.m_monolayer;
     std::cout<<"---> point data has been obtained \n";
 
     //======== OutPut file name declaration and finding input file names ========================================
     std::string gname = pArgu->GetGeneralOutputFilename();   // get the generic name for the outputs
     m_FinalOutputGroFileName =gname+".gro";                     // create the output gro file name based on the generic name
-    std::string m_FinalTopologyFileName=gname+".top";
+    m_FinalTopologyFileName=gname+".top";
     
     //======
     std::cout<<"---> attempting to generate molecule type \n";
@@ -66,7 +67,7 @@ BackMap::BackMap(Argument *pArgu)
   
     //== we should exclude points and get rid of exclusion. This is done by making the area of the point zero.
     //== this could be made more efficient but is not needed as exclusion should not inlcude to many points
-    ExcludePointsUsingExclusion(m_pExc, pPointUp, pPointDown);
+    ExcludePointsUsingExclusion(pExc, pPointUp, pPointDown);
     
     //==== now we need to place the proteins
     // first we read str file to find protein info
@@ -75,18 +76,18 @@ BackMap::BackMap(Argument *pArgu)
         std::exit(0);
     //== before going further, it would be better to check if the info about
     //proteins in str file also exist in the PLM output and also in the mol type
-    if(CheckProteinInfo (m_map_IncID2ProteinLists, m_map_MolName2MoleculesType, m_pInc)==false) //
+    if(CheckProteinInfo (m_map_IncID2ProteinLists, m_map_MolName2MoleculesType, pInc)==false) //
         std::exit(0);
     
 
-    if(m_pInc.size()!=0)
+    if(pInc.size()!=0)
     {
         //== I do not know why do we need this
         for ( std::map<int,ProteinList>::iterator it = m_map_IncID2ProteinLists.begin(); it != m_map_IncID2ProteinLists.end(); it++ )
         {
             int number = 0;
             int id = (it->second).ID;
-            for ( std::vector<inclusion*>::iterator it1 = m_pInc.begin(); it1 != m_pInc.end(); it1++ )
+            for ( std::vector<inclusion*>::iterator it1 = pInc.begin(); it1 != pInc.end(); it1++ )
             {
                 if(id==(*it1)->GetTypeID())
                     number++;
@@ -96,9 +97,9 @@ BackMap::BackMap(Argument *pArgu)
     }
     else  // if the inclusion file is empty, we generate proteins according to the data in the str file
     {
-        CreateRandomInclusion(pPointUp);
-        for (std::vector<inclusion>::iterator it2 = m_RandomInc.begin() ; it2 != m_RandomInc.end(); ++it2)
-            m_pInc.push_back(&(*it2));
+        std::vector<inclusion> RandomInc = CreateRandomInclusion(pPointUp);
+        for (std::vector<inclusion>::iterator it2 = RandomInc.begin() ; it2 != RandomInc.end(); ++it2)
+            pInc.push_back(&(*it2));
     }
     
 //== better to place the proteins and make then remove the excluded points  then generate the domains. Note, we should tell the user some domain could be removed due to protein and exclsuion
@@ -111,7 +112,7 @@ BackMap::BackMap(Argument *pArgu)
         std::cout<<" Note: in the normal condition PLM always write global so only applicable if you want to change the point folder manually\n";
     }
     //== Placing the inclusions;
-    if(PlaceProteins(pPointUp)==false) // this creates all the protein beads and put them in m_FinalBeads
+    if(PlaceProteins(pPointUp,pInc)==false) // this creates all the protein beads and put them in m_FinalBeads
         std::exit(0);
     std::cout<<"---> proteins are placed, now we remove points that are close to the proteins \n";
     
@@ -143,44 +144,38 @@ BackMap::BackMap(Argument *pArgu)
         GenLipidsForADomain(*it);
     }
 
-    //== next task wall
 
-    // write the wall info
-    
-    // write gro file
-    
-    // write top file
-    
-
-    
+    //=============== write the wall info
+    std::cout<<"---> attempting to make the wall beads \n";
+    std::vector<bead> WB = pWall->GetWallBead();
+    if((pWall->GetWallPoint()).size()>0 && pWall->GetState()==true)
+    {
+        PDBFile pdb;
+        std::string pdbfile = "wall.pdb";
+        pdb.WritePDBFile(pdbfile, pWall->GetWallPoint());
+    }
+    else if(pWall->GetState()==true)
+    {
+        std::cout<<"Note ----> No wall.pdb file will be generated since the total created wall beads are zero \n";
+    }
+    for (std::vector<bead>::iterator it = WB.begin() ; it != WB.end(); ++it)
+    {
+        m_FinalBeads.push_back((*it));
+    }
+    std::cout<<"---> attempting to write the final gro file \n";
+    WriteFinalGroFile();
+    std::cout<<"---> attempting to write the final topology file \n";
+    GenTopologyFile(pAllDomain,(WB.size()));
+    std::cout<<" ███████████████████████████████████████████████████████████████  \n";
+    std::cout<<" █████████  Seems everything went well. Well done! █████████████  \n";
+    std::cout<<" ███████████████████████████████████████████████████████████████  \n";
+    Welldone();
 
     /*
 
 
 //==========================================================================================================
 
-
-
-    
-    //============================== Finding the total area of the layers
-    m_TotalAreaUp = 0.0;
-    m_TotalAreaDown = 0.0;
-    for ( std::vector<point*>::iterator it = m_point1.begin(); it != m_point1.end(); it++ )
-        m_TotalAreaUp+= (*it)->GetArea();
-    for ( std::vector<point*>::iterator it = m_point2.begin(); it != m_point2.end(); it++ )
-        m_TotalAreaDown+= (*it)->GetArea();
-
-    if(m_monolayer == false)
-    std::cout<<"--> Note: the total upper monolayer area is "<<m_TotalAreaUp<<" and the total lower monolayer area is "<<m_TotalAreaDown<<"\n";
-    else
-    std::cout<<"--> Note: the total monolayer area is "<<m_TotalAreaUp<<" \n";
-
-
-    }
-    // Make all the domain containing different lipids
-    //GenDomains GENDOMAIN(strfilename,p1,p2,m_Renormalizedlipidratio);
-    //std::vector<Domain*> pAllDomain = GENDOMAIN.GetDomains();
-    std::cout<<" Number of the domains defined in the input file  "<< pAllDomain.size()/2 <<"\n";
     int layer = 0;
         std::cout<<"------  we aim to generate  ------- \n";
     for ( std::vector<Domain*>::iterator it = pAllDomain.begin(); it != pAllDomain.end(); it++ )
@@ -230,67 +225,6 @@ BackMap::BackMap(Argument *pArgu)
         if(layer%2!=0 && m_monolayer == true)
         std::cout <<"   in the  monolayer \n";
     }
-
-    //=============== write the wall info
-    if(WPoint.size()>0 && CWall.GetState()==true)
-    {
-        PDBFile pdb;
-        std::string pdbfile = "wall.pdb";
-        pdb.WritePDBFile(pdbfile, WPoint);
-    }
-    else if(CWall.GetState()==true)
-    {
-        std::cout<<"Note ----> No wall.pdb file will be generated since the total created wall beads are zero \n";
-    }
-    for (std::vector<bead>::iterator it = WB.begin() ; it != WB.end(); ++it)
-    {
-        m_FinalBeads.push_back((*it));
-    }
-    //============== End Wall info and data
-
-    
-    WriteFinalGroFile();
-    
-    
-    //==========================================================================================================
-    //=============== Open Topology files and make mols
-    //==========================================================================================================
-    std::ofstream Topgro;
-    Topgro.open(m_FinalTopologyFileName.c_str());
-    Topgro<<" ;This file was generated by TS Back Mapping \n";
-    Topgro<<" [ system ] \n";
-    Topgro<<" Expect a large membrane \n";
-    Topgro<<" [ molecules ] \n";
-    
-    for ( std::map<int,ProteinList>::iterator it = m_TotalProteinList.begin(); it != m_TotalProteinList.end(); it++ )
-        Topgro<<(it->second).ProteinName<<"   "<<(it->second).created<<"\n";
-
-    layer = 0;
-    
-    
-    for ( std::vector<Domain*>::iterator it = pAllDomain.begin(); it != pAllDomain.end(); it++ )
-    {
-        layer++;
-        std::vector<DomainLipid> DL = (*it)->GetDomainLipids();
-        
-        if(layer%2!=0 || m_monolayer == false)
-        {
-            Topgro <<"; domain "<<(*it)->GetDomainID() <<" \n";
-            if(layer%2!=0 && m_monolayer == false)
-            Topgro  <<" ;  in the upper monolayer \n";
-            else if(layer%2==0 && m_monolayer == false)
-            Topgro <<" ;  in the lower monolayer \n";
-            for ( std::vector<DomainLipid>::iterator it2 = DL.begin(); it2 != DL.end(); it2++ )
-            {
-                Topgro <<"     "<<(*it2).Name<<"  "<<(*it2).no_created<<"     "<<std::endl ;
-                
-            }
-        }
-
-    }
-    if(WB.size()!=0)
-    Topgro<<"Wall    "<<WB.size()<<"\n";
-
 */
 
 }
@@ -393,13 +327,8 @@ double BackMap::dist2between2Points(Vec3D X1,Vec3D X2)
 }
 void BackMap::WriteFinalGroFile()
 {
-    
-   
-
     FILE *fgro;
     fgro = fopen(m_FinalOutputGroFileName.c_str(), "w");
-    
-    
     /// resid  res name   noatom   x   y   z
     const char* Title=" System ";
     int Size=m_FinalBeads.size();
@@ -409,7 +338,6 @@ void BackMap::WriteFinalGroFile()
     int i=0;
     for (std::vector<bead>::iterator it = m_FinalBeads.begin() ; it != m_FinalBeads.end(); ++it)
     {
-        
         i++;
         double x=(*it).GetXPos();
         double y=(*it).GetYPos();
@@ -428,9 +356,8 @@ void BackMap::WriteFinalGroFile()
     fprintf(fgro,  "%10.5f%10.5f%10.5f\n",m_Box(0),m_Box(1),m_Box(2) );
     fclose(fgro);
     
-    
+    return;
 }
-
 Tensor2 BackMap::Rz(double cos, double sin)
 {
     Tensor2  R;
@@ -446,8 +373,11 @@ Tensor2 BackMap::Rz(double cos, double sin)
     return R;
 }
 //=== we can make this function better
-void BackMap::CreateRandomInclusion(std::vector<point*> &pPointUp)
+std::vector<inclusion> BackMap::CreateRandomInclusion(std::vector<point*> &pPointUp)
 {
+    
+    std::vector<inclusion>  RandomInc;
+
     int totinc = 0;
     int totcreated = 0;
     //==== reading input file to find number of requested proteins
@@ -471,15 +401,19 @@ void BackMap::CreateRandomInclusion(std::vector<point*> &pPointUp)
                 std::cout<<"                      -) "<<(*it).first<<"\n";
             }
             std::cout<<"    ---------------------------------------------------------- \n";
-            return;
+            exit(0);
         }
 //=========================================================
+        double membrane_total_area = 0 ;
+        for ( std::vector<point*>::iterator it = pPointUp.begin(); it != pPointUp.end(); it++ )
+            membrane_total_area+= (*it)->GetArea();
+        
         double area = (m_map_MolName2MoleculesType.at(type)).molarea;
-        int neededno = m_TotalAreaUp/(area)*ratio;
+        int neededno = membrane_total_area/(area)*ratio;
         (it->second).Maxno = neededno;
         totinc+=neededno;
         
-        std::cout<<"---> We will try to generate  "<<neededno<<"  "<<type<<" protein \n" ;
+        std::cout<<"---> We are attempting to generate  "<<neededno<<" proteins of type "<<type<<"  \n" ;
 
     }
     //==== end of reading inout file (str) to find number of proteins
@@ -521,14 +455,9 @@ void BackMap::CreateRandomInclusion(std::vector<point*> &pPointUp)
             l=l+max;
 
         }
-
-        
-        
         //===================
-        
         for ( std::vector<ExcludedVolumeBeads>::iterator it = m_ExcludeBeads.begin(); it != m_ExcludeBeads.end(); it++ )
         {
-            
             Vec3D XP1 = it->X;
             double R1 = it->R;
             
@@ -536,19 +465,14 @@ void BackMap::CreateRandomInclusion(std::vector<point*> &pPointUp)
             
             if(XP2.dot((XP2-XP1),(XP2-XP1))<(R1+R)*(R1+R))
                 accept = false;
-
-            
         }
         
         //======================
         
         if(accept==true)
         {
-
             double d1= double(rand()%1000)/1000;
             double d2= double(rand()%1000)/1000;
-            
-            
             //
             Vec3D D(d1,d2,0);
             D=D*(1/(D.norm()));
@@ -561,7 +485,7 @@ void BackMap::CreateRandomInclusion(std::vector<point*> &pPointUp)
             //
             id++;
         inclusion inc(id, tid,pointid,D);
-        m_RandomInc.push_back(inc);
+        RandomInc.push_back(inc);
             totcreated++;
             (m_map_IncID2ProteinLists.at(tid)).created = (m_map_IncID2ProteinLists.at(tid)).created +1;
             
@@ -570,10 +494,10 @@ void BackMap::CreateRandomInclusion(std::vector<point*> &pPointUp)
             Ex.X =(pPointUp.at(RNG2))->GetPos();
             Ex.R = R;
             m_ExcludeBeads.push_back(Ex);
-            
-            
         }
     }
+    
+    return RandomInc;
 }
 bool BackMap::FindProteinList(std::string filename)
 {
@@ -668,14 +592,14 @@ Tensor2  BackMap::TransferMatLG(Vec3D Normal, Vec3D t1, Vec3D t2)
 
 //=== since 2024
 // a function that use up the exclsuions by making the area of that specific points zero.
-void BackMap::ExcludePointsUsingExclusion(std::vector<exclusion*> &m_pExc, std::vector<point*> &m_pPointUp, std::vector<point*> &m_pPointDown)
+void BackMap::ExcludePointsUsingExclusion(std::vector<exclusion*> &pExc, std::vector<point*> &m_pPointUp, std::vector<point*> &m_pPointDown)
 {
     
-    if(m_pExc.size()!=0)
+    if(pExc.size()!=0)
     {
         std::cout<<" Note: we are excluding points based on exclusion, If it is slow, contact the developer \n";
         
-        for ( std::vector<exclusion*>::iterator it = m_pExc.begin(); it != m_pExc.end(); it++ )
+        for ( std::vector<exclusion*>::iterator it = pExc.begin(); it != pExc.end(); it++ )
         {
             int pointid=(*it)->GetPointID();
             if(pointid<0 || pointid>m_pPointUp.size())
@@ -766,12 +690,12 @@ bool BackMap::CheckProteinInfo (std::map<int , ProteinList>& plist, std::map<std
     return true;
 }
 
-bool BackMap::PlaceProteins(std::vector<point*> &pPointUp)
+bool BackMap::PlaceProteins(std::vector<point*> &pPointUp, std::vector<inclusion*>  &pInc)
 {
     for ( std::map<int,ProteinList>::iterator it1 = m_map_IncID2ProteinLists.begin(); it1 != m_map_IncID2ProteinLists.end(); it1++ )
     {
         int plistid=it1->first;
-    for ( std::vector<inclusion*>::iterator it = m_pInc.begin(); it != m_pInc.end(); it++ )
+    for ( std::vector<inclusion*>::iterator it = pInc.begin(); it != pInc.end(); it++ )
     {
         int id = (*it)->GetTypeID();
         if(plistid==id)
@@ -897,7 +821,54 @@ for (std::vector<DomainLipid*>::iterator it = pdomainlipids.begin(); it != pdoma
     
 return true;
 }
+//=============== make topology file
+bool BackMap::GenTopologyFile(std::vector<Domain*> pdomains, int WBead_no)
+{
+    //==========================================================================================================
+    //==========================================================================================================
+    std::ofstream Topgro;
+    Topgro.open(m_FinalTopologyFileName.c_str());
+    Topgro<<" ;This file was generated by TS2CG membrane builder script i.e., PCG \n";
+    Topgro<<" [ system ] \n";
+    Topgro<<" Expect a large membrane \n";
+    Topgro<<" [ molecules ] \n";
+    
+    for ( std::map<int,ProteinList>::iterator it = m_map_IncID2ProteinLists.begin(); it != m_map_IncID2ProteinLists.end(); it++ )
+        Topgro<<(it->second).ProteinName<<"   "<<(it->second).created<<"\n";
 
+    int layer = 0;
+    
+    
+    for ( std::vector<Domain*>::iterator it = pdomains.begin(); it != pdomains.end(); it++ )
+    {
+        layer++;
+        std::vector<DomainLipid> DL = (*it)->GetDomainLipids();
+        
+        if(layer%2!=0 || m_monolayer == false)
+        {
+            Topgro <<"; domain "<<(*it)->GetDomainID() <<" \n";
+            if(layer%2!=0 && m_monolayer == false)
+            Topgro  <<" ;  in the upper monolayer \n";
+            else if(layer%2==0 && m_monolayer == false)
+            Topgro <<" ;  in the lower monolayer \n";
+            for ( std::vector<DomainLipid>::iterator it2 = DL.begin(); it2 != DL.end(); it2++ )
+            {
+                Topgro <<"     "<<(*it2).Name<<"  "<<(*it2).no_created<<"     "<<std::endl ;
+                
+            }
+        }
+
+    }
+    if(WBead_no!=0)
+    Topgro<<"Wall    "<<WBead_no<<"\n";
+    
+ 
+    return true;
+}
+void BackMap::Welldone()
+{
+//std::cout << "\n ████████████████ Well Done ██████████████████\n";
+}
 #endif
 
 
