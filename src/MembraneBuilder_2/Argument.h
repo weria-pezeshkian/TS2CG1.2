@@ -39,6 +39,7 @@ public:
         inline const Wall GetWall()                                     const {return m_Wall;}
         inline const double GetRCutOff()                                     const {return m_RCutOff;}
         inline Shape_1DSin Get1DSinState()                                     const {return m_1DSinState;}
+        inline bool  GetMonolayer()                                     const {return m_Monolayer;}
 
     // // =================
 
@@ -56,6 +57,7 @@ private:
     int m_Seed;
     double m_BondL;
     bool m_Renorm;
+    bool m_Monolayer;
     double m_Iter;
     double m_RCutOff;
     std::string m_Function;

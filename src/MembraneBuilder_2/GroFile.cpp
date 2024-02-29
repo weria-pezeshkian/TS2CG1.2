@@ -300,18 +300,16 @@ void GroFile::WriteGroFile(std::string file)
         double x=(*it).GetXPos();
         double y=(*it).GetYPos();
         double z=(*it).GetZPos();
-        
-        
-        const char* A1=((*it).GetResName()).c_str();
-        const char* A2=((*it).GetBeadName()).c_str();
         int resid=(*it).GetResid();
-        fprintf(fgro, "%5d%5s%5s%5d%8.3f%8.3f%8.3f\n",resid,A1,A2,i,x,y,z );
+        fprintf(fgro, "%5d%5s%5s%5d%8.3f%8.3f%8.3f\n",resid,((*it).GetResName()).c_str(),((*it).GetBeadName()).c_str(),i,x,y,z );
 
     }
     
 
     fprintf(fgro,  "%10.5f%10.5f%10.5f\n",m_Box(0),m_Box(1),m_Box(2) );
     fclose(fgro);
+    
+    return;
 }
 
 

@@ -17,9 +17,7 @@
  1). in random inc, we should prevent them to be close
  2.) angle and theta is not used yet
  3.) pattern based protein insertion
- 
- 
- 
+
  */
 PointBasedBlueprint::PointBasedBlueprint(Argument *pArgu)
 {
@@ -39,7 +37,7 @@ PointBasedBlueprint::PointBasedBlueprint(Argument *pArgu)
     
         if(ftype == "Flat")
         {
-            std::cout<<"Flat bilayer will be made \n";
+            std::cout<<"---> note: Flat bilayer will be made \n";
             FlatPointMaker  Fu(pArgu);
             m_PointUp = Fu.GetUpPoint();
             m_PointDown = Fu.GetInPoint();
@@ -49,7 +47,7 @@ PointBasedBlueprint::PointBasedBlueprint(Argument *pArgu)
         }
          else if(ftype == "1D_PBC_Fourier")
         {
-            std::cout<<"shape from 1D_PBC_Fourier will be made \n";
+            std::cout<<"---> note: shape from 1D_PBC_Fourier will be made \n";
             SHGeneric1DPBCPointMaker  Fu(pArgu);
             m_PointUp = Fu.GetUpPoint();
             m_PointDown = Fu.GetInPoint();
@@ -59,7 +57,7 @@ PointBasedBlueprint::PointBasedBlueprint(Argument *pArgu)
         }
         else if(ftype == "Sphere")
         {
-            std::cout<<"vesicle will be made \n";
+            std::cout<<"---> note: vesicle will be made \n";
             Sphere  Fu(pArgu);
             m_PointUp = Fu.GetUpPoint();
             m_PointDown = Fu.GetInPoint();
@@ -69,7 +67,7 @@ PointBasedBlueprint::PointBasedBlueprint(Argument *pArgu)
         }
         else if(ftype == "Cylinder")
         {
-            std::cout<<"vesicle will be made \n";
+            std::cout<<"---> note: vesicle will be made \n";
             Cylinder  Fu(pArgu);
             m_PointUp = Fu.GetUpPoint();
             m_PointDown = Fu.GetInPoint();
@@ -219,7 +217,6 @@ std::string PointBasedBlueprint::functiontype(std::string filename)
         if(file.eof())
             break;
         
-        std::cout<<str<<"\n";
         std::vector<std::string> Line = f.split(str);
         if(Line.size()!=0 && (Line.at(0)).at(0)!=';')
         {

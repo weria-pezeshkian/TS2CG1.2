@@ -10,19 +10,16 @@
 #include "PDBFile.h"
 #include "PointBasedBlueprint.h"
 /*
- 1) read the point// checked!
- 2) exclude the point base of exclsuion data// checked
- 3) place proteins or generate them // checked
- 4) exclude point based on proteins  // checked
- 5) place the lipids  // checked
- 6) check for all unnessry variable and function and remove them
- 6) monolayer does not work
- 6) make protein placment better
- 7) random protein still does not work
+ 1) read the point
+ 2) exclude the point base of exclsuion data
+ 3) place proteins or generate them
+ 4) exclude point based on proteins
+ 5) place the lipids
  
  
  further extentions
- 
+ 6) check for all unnessry variable and function and remove them
+ 6) make protein placment better
  1). in random inc, we should prevent them to be close; it is also wrong since we do not clauclate all the area yet. 
  2.) angle and theta is not used yet
  3.) pattern based protein insertion
@@ -32,14 +29,14 @@
  */
 BackMap::BackMap(Argument *pArgu)
 {
-    m_monolayer = false;
-
+    m_monolayer = false;  // this is false
+    m_Warning=0;
     srand (pArgu->GetSeed());
     std::cout<<"\n";
-    std::cout<<"██████████████████████████████████████████████████  \n";
-    std::cout<<"██████████████ "<< SoftWareName <<" ██████████████   "<<"\n";
-    std::cout<<"                  Version:  "<<SoftWareVersion<<"  \n";
-    std::cout<<"=========================================================================================================="<<"\n";
+    std::cout<<"███████████████████████████████████████████████████████████████  \n";
+    std::cout<<"                      "<< SoftWareName <<"              "<<"\n";
+    std::cout<<"                         Version:  "<<SoftWareVersion<<"  \n";
+    std::cout<<"███████████████████████████████████████████████████████████████  \n";
     Nfunction f;      // In this class there are some useful function and we can use it.
 
     //====== getting data points to create cg membrane
@@ -49,9 +46,16 @@ BackMap::BackMap(Argument *pArgu)
     std::vector<point*>  pPointDown = SurfDataPoint.m_pPointDown;
     std::vector<inclusion*>  pInc = SurfDataPoint.m_pInc;
     std::vector<exclusion*>  pExc = SurfDataPoint.m_pExc;
-    Vec3D *m_pBox = SurfDataPoint.m_pBox;
+    Vec3D *pBox = SurfDataPoint.m_pBox;
     Wall *pWall = SurfDataPoint.m_pWall;
-    m_monolayer = SurfDataPoint.m_monolayer;
+    m_monolayer = SurfDataPoint.m_monolayer; // if pPointDown is empty, m_monolayer is false,
+    //if m_monolayer is not true, we check the PCG option and see if monolayer is defined
+    if(m_monolayer==false && pArgu->GetMonolayer()==true)
+    {
+        pPointDown.clear();
+        m_monolayer=true;
+        std::cout<<"---> note: while we have points to build both monolayers, since monolayer is defined in PCG commond, we create only one layer \n";
+    }
     std::cout<<"---> point data has been obtained \n";
 
     //======== OutPut file name declaration and finding input file names ========================================
@@ -124,7 +128,7 @@ BackMap::BackMap(Argument *pArgu)
         for ( std::vector<bead>::iterator it = m_FinalBeads.begin(); it != m_FinalBeads.end(); it++ )
             tempropbeads.push_back(&(*it));
         
-        bool RMpoint = RemovePointsCloseToBeadList(pPointUp, pPointDown, tempropbeads, RCutOff, m_pBox);
+        bool RMpoint = RemovePointsCloseToBeadList(pPointUp, pPointDown, tempropbeads, RCutOff, pBox);
         if(RMpoint==false)
             std::exit(0);
     }
@@ -137,14 +141,25 @@ BackMap::BackMap(Argument *pArgu)
     GenDomains GENDOMAIN(strfilename,pPointUp,pPointDown,Renormalizedlipidratio);  // this somehow reads the lipids
     std::vector<Domain*> pAllDomain = GENDOMAIN.GetDomains();
     //
-    std::cout<<"---> now,  the domain info is used to place lipids \n";
+    std::cout<<"---> now,  the domain info will be used to place lipids \n";
 
+    std::cout<<"expected time:  ";
+    for ( std::vector<Domain*>::iterator it = pAllDomain.begin(); it != pAllDomain.end(); it++ ) // all the domains
+    std::cout<<"█";
+    
+    std::cout<<"\n";
+    std::cout<<"remaining time: ";
     for ( std::vector<Domain*>::iterator it = pAllDomain.begin(); it != pAllDomain.end(); it++ ) // all the domains
     {
-        GenLipidsForADomain(*it);
+        if((*it)->GetDomainPoint().size()!=0)// this is only valid if
+            GenLipidsForADomain(*it);
+        std::cout<<"█";
     }
+    std::cout<<"\n";
 
-
+    std::string sms = InfoDomain(pAllDomain);
+    std::cout<<sms;
+    
     //=============== write the wall info
     std::cout<<"---> attempting to make the wall beads \n";
     std::vector<bead> WB = pWall->GetWallBead();
@@ -163,69 +178,20 @@ BackMap::BackMap(Argument *pArgu)
         m_FinalBeads.push_back((*it));
     }
     std::cout<<"---> attempting to write the final gro file \n";
-    WriteFinalGroFile();
+    WriteFinalGroFile(pBox);
     std::cout<<"---> attempting to write the final topology file \n";
-    GenTopologyFile(pAllDomain,(WB.size()));
-    std::cout<<" ███████████████████████████████████████████████████████████████  \n";
-    std::cout<<" █████████  Seems everything went well. Well done! █████████████  \n";
-    std::cout<<" ███████████████████████████████████████████████████████████████  \n";
+    bool gentop = GenTopologyFile(pAllDomain,(WB.size()));
+    if(m_Warning==0)
+    {
+        std::cout<<" ██████████████████████████████████████████████████████████████  \n";
+        std::cout<<" █████████  Seems everything went well. Well done! ████████████  \n";
+        std::cout<<" ██████████████████████████████████████████████████████████████  \n";
+    }
+    else
+    {
+        std::cout<<" █████████  outputs have been generated, but there were "<< m_Warning<<" warnings in the process █████████████  \n";
+    }
     Welldone();
-
-    /*
-
-
-//==========================================================================================================
-
-    int layer = 0;
-        std::cout<<"------  we aim to generate  ------- \n";
-    for ( std::vector<Domain*>::iterator it = pAllDomain.begin(); it != pAllDomain.end(); it++ )
-    {
-
-        layer++;
-        std::vector<DomainLipid> DL = (*it)->GetDomainLipids();
-        
-        if(layer%2!=0 || m_monolayer == false)
-        {
-        std::cout <<"*     For domain with ID "<<(*it)->GetDomainID() <<" \n";
-        for ( std::vector<DomainLipid>::iterator it2 = DL.begin(); it2 != DL.end(); it2++ )
-        {
-            std::cout <<"*     "<<(*it2).MaxNo<<"  "<<(*it2).Name<<"     "<<std::endl ;
-
-        }
-        }
-        if(layer%2!=0 && m_monolayer == false)
-        std::cout <<"   in the upper monolayer \n";
-        else if(layer%2==0 && m_monolayer == false)
-        std::cout <<"   in the lower monolayer \n";
-        if(layer%2!=0 && m_monolayer == true)
-        std::cout <<"   in the  monolayer \n";
-    }
-    
-
-    std::cout<<"*************************** Number of created Lipids,   ********************** \n";
-    //layer = 0;
-    for ( std::vector<Domain*>::iterator it = pAllDomain.begin(); it != pAllDomain.end(); it++ )
-    {
-        layer++;
-        std::vector<DomainLipid> DL = (*it)->GetDomainLipids();
-        
-        if(layer%2!=0 || m_monolayer == false)
-        {
-            std::cout <<"*     For domain with ID "<<(*it)->GetDomainID() <<" \n";
-            for ( std::vector<DomainLipid>::iterator it2 = DL.begin(); it2 != DL.end(); it2++ )
-            {
-                std::cout <<"*     "<<(*it2).no_created<<"  "<<(*it2).Name<<"     "<<std::endl ;
-                
-            }
-        }
-        if(layer%2!=0 && m_monolayer == false)
-        std::cout <<"   in the upper monolayer \n";
-        else if(layer%2==0 && m_monolayer == false)
-        std::cout <<"   in the lower monolayer \n";
-        if(layer%2!=0 && m_monolayer == true)
-        std::cout <<"   in the  monolayer \n";
-    }
-*/
 
 }
 BackMap::~BackMap()
@@ -251,10 +217,8 @@ void BackMap::GenLipid(MolType moltype, int listid, Vec3D Pos, Vec3D Normal, Vec
 }
 void BackMap::GenProtein(MolType moltype, int listid, Vec3D Pos, Vec3D Normal, Vec3D Dir,Vec3D t1,Vec3D t2)
 {
-
         Tensor2 LG = TransferMatLG(Normal, t1, t2);
         Tensor2 GL = LG.Transpose(LG);
-
 
         //===== to fit to the protein diretion
         Vec3D LocalDir;
@@ -282,50 +246,7 @@ void BackMap::GenProtein(MolType moltype, int listid, Vec3D Pos, Vec3D Normal, V
         m_ResID++;
     return;
 }
-double BackMap::dist2between2Points(Vec3D X1,Vec3D X2)
-{
-    
-    double dist2=0;
-    
-    double x1=X1(0);
-    double y1=X1(1);
-    double z1=X1(2);
-    
-    double x2=X2(0);
-    double y2=X2(1);
-    double z2=X2(2);
-    
-    
-    double dx=x2-x1;
-    double dy=y2-y1;
-    double dz=z2-z1;
-    
-    if(fabs(dx)>(*m_pBox)(0)/2.0)
-    {
-        if(dx<0)
-            dx=(*m_pBox)(0)+dx;
-        else if(dx>0)
-            dx=dx-(*m_pBox)(0);
-    }
-    if(fabs(dy)>(*m_pBox)(1)/2.0)
-    {
-        if(dy<0)
-            dy=(*m_pBox)(1)+dy;
-        else if(dy>0)
-            dy=dy-(*m_pBox)(1);
-    }
-    if(fabs(dz)>(*m_pBox)(2)/2.0)
-    {
-        if(dz<0)
-            dz=(*m_pBox)(2)+dz;
-        else if(dz>0)
-            dz=dz-(*m_pBox)(2);
-    }
-
-    dist2=dx*dx+dy*dy+dz*dz;
-    return dist2;
-}
-void BackMap::WriteFinalGroFile()
+void BackMap::WriteFinalGroFile(Vec3D *pBox)
 {
     FILE *fgro;
     fgro = fopen(m_FinalOutputGroFileName.c_str(), "w");
@@ -351,9 +272,8 @@ void BackMap::WriteFinalGroFile()
         fprintf(fgro, "%5d%5s%5s%5d%8.3f%8.3f%8.3f\n",resid%100000,A1,A2,i%100000,x,y,z );
         
     }
-    
-    
-    fprintf(fgro,  "%10.5f%10.5f%10.5f\n",m_Box(0),m_Box(1),m_Box(2) );
+
+    fprintf(fgro,  "%10.5f%10.5f%10.5f\n",(*pBox)(0),(*pBox)(1),(*pBox)(2) );
     fclose(fgro);
     
     return;
@@ -361,15 +281,12 @@ void BackMap::WriteFinalGroFile()
 Tensor2 BackMap::Rz(double cos, double sin)
 {
     Tensor2  R;
-    
     R(0,0) = cos;
     R(0,1) = -sin;
     R(1,0) = sin;
     R(1,1) = cos;
     R(2,2) = 1;
 
-    
-    
     return R;
 }
 //=== we can make this function better
@@ -425,9 +342,9 @@ std::vector<inclusion> BackMap::CreateRandomInclusion(std::vector<point*> &pPoin
     {
         s++;
         bool accept = true;
-        int RNG1=(rand()%totinc)+1;
-        int RNG2=(rand()%pPointUp.size());
-        int pointid = (pPointUp.at(RNG2))->GetID();
+        //=== randomly selecting a point
+        point* temPoint = pPointUp.at((rand()%pPointUp.size()));
+        int pointid = temPoint->GetID();
         int tid=0;
         int l=0;
         bool chosen =false;
@@ -435,6 +352,7 @@ std::vector<inclusion> BackMap::CreateRandomInclusion(std::vector<point*> &pPoin
         double R = 0;
         
         
+        int RNG1=(rand()%totinc)+1;
         ///======== here we only try to find one of the protein type randomly based on RNG1
         for ( std::map<int,ProteinList>::iterator it = m_map_IncID2ProteinLists.begin(); it != m_map_IncID2ProteinLists.end(); it++ )
         {
@@ -455,14 +373,13 @@ std::vector<inclusion> BackMap::CreateRandomInclusion(std::vector<point*> &pPoin
             l=l+max;
 
         }
-        //===================
+        // if the distance between  is smaller than the
         for ( std::vector<ExcludedVolumeBeads>::iterator it = m_ExcludeBeads.begin(); it != m_ExcludeBeads.end(); it++ )
         {
             Vec3D XP1 = it->X;
             double R1 = it->R;
             
-            Vec3D XP2 =(pPointUp.at(RNG2))->GetPos();
-            
+            Vec3D XP2 =temPoint->GetPos();
             if(XP2.dot((XP2-XP1),(XP2-XP1))<(R1+R)*(R1+R))
                 accept = false;
         }
@@ -477,9 +394,9 @@ std::vector<inclusion> BackMap::CreateRandomInclusion(std::vector<point*> &pPoin
             Vec3D D(d1,d2,0);
             D=D*(1/(D.norm()));
 
-            Vec3D N = (pPointUp.at(RNG2))->GetNormal();
-            Vec3D T1 =   (pPointUp.at(RNG2))->GetP1();
-            Vec3D T2 =   (pPointUp.at(RNG2))->GetP2();
+            Vec3D N = temPoint->GetNormal();
+            Vec3D T1 =   temPoint->GetP1();
+            Vec3D T2 =   temPoint->GetP2();
             Tensor2 LG = TransferMatLG(N,T1,T2);
             D=LG*D;
             //
@@ -491,7 +408,7 @@ std::vector<inclusion> BackMap::CreateRandomInclusion(std::vector<point*> &pPoin
             
             
             ExcludedVolumeBeads Ex;
-            Ex.X =(pPointUp.at(RNG2))->GetPos();
+            Ex.X =temPoint->GetPos();
             Ex.R = R;
             m_ExcludeBeads.push_back(Ex);
         }
@@ -567,18 +484,22 @@ bool BackMap::FindProteinList(std::string filename)
     else
     {
     std::cout<<"---> warnning: the str file does not contain any information about proteins "<<"\n";
+        m_Warning++;
     }
     strfile.close();
 
     
     if(m_map_IncID2ProteinLists.size()!=0)
     {
-      std::cout<<" ---> Protein List and ID have been read from the input file \n";
+      std::cout<<"\n";
+      std::cout<<"          |------------------------------------------------------------|\n";
+      std::cout<<"          |     Protein List and ID have been read from the input file |\n";
+      std::cout<<"          |------------------------------------------------------------| \n";
       for ( std::map<int,ProteinList>::iterator it = m_map_IncID2ProteinLists.begin(); it != m_map_IncID2ProteinLists.end(); it++ )
       {
-          std::cout <<"----> "<< it->first  <<" ------> "<< (it->second).ProteinName<< std::endl ;
+          std::cout <<"          |        inclusion with id "<< it->first  <<" is mapped to ------> "<< (it->second).ProteinName<< std::endl ;
       }
-      std::cout<<"************************************************************** \n";
+      std::cout<<"          |------------------------------------------------------------| \n\n";
     }
     return true;
 }
@@ -643,7 +564,6 @@ void BackMap::ExcludePointsUsingExclusion(std::vector<exclusion*> &pExc, std::ve
                     (*it1)->UpdateArea(0);
                     
                 }
-                
             }
         }
     }
@@ -716,7 +636,6 @@ bool BackMap::PlaceProteins(std::vector<point*> &pPointUp, std::vector<inclusion
             }
             
             GenProtein(m_map_MolName2MoleculesType.at(ptype), id, Pos, N, Dir, T1,T2);
-
         }
     }
     plistid++;
@@ -756,7 +675,6 @@ bool BackMap::RemovePointsCloseToBeadList(std::vector<point*> &pPointUp, std::ve
             rem = GCNT.anythingaround(Pos2);
         if(rem==true)
             (*it)->UpdateArea(0);
-
     }
     
     return true;
@@ -781,6 +699,7 @@ for (std::vector<DomainLipid*>::iterator it = pdomainlipids.begin(); it != pdoma
         {
             std::cout<<"---> Warning: with "<< m_Iter <<" iterations, we could not place the expected number of the lipids \n";
             std::cout<<" if you are unhappy, increase the number of the iteration with option -iter, or regenerate the points \n";
+            m_Warning++;
             break;
         }
         int pointid = rand()%(dpoint.size());   // selecting a random point
@@ -869,6 +788,98 @@ void BackMap::Welldone()
 {
 //std::cout << "\n ████████████████ Well Done ██████████████████\n";
 }
+
+std::string BackMap::InfoDomain(std::vector<Domain*> pAllDomain)
+{
+    Nfunction f;
+    int layer = 0;
+    std::string message;
+    message+= "        |--------------------------------------------------| \n";
+    message+= "        |        Information on the Generated Lipids       |\n";
+    message+= "        |--------------------------------------------------| \n";
+    for ( std::vector<Domain*>::iterator it = pAllDomain.begin(); it != pAllDomain.end(); it++ )
+    {
+
+        layer++;
+        std::vector<DomainLipid> DL = (*it)->GetDomainLipids();
+        
+        if(layer%2!=0 || m_monolayer == false)// this means that if it is monolayer, we do not print the inner monolayer info
+        {
+                message+="        | -> For domain with ID "+f.Int_to_String((*it)->GetDomainID())+" \n";
+            for ( std::vector<DomainLipid>::iterator it2 = DL.begin(); it2 != DL.end(); it2++ )
+            {
+                if((*it2).MaxNo==(*it2).no_created)
+                {
+                message+="        |   -> PCG created "+f.Int_to_String((*it2).no_created)+"  molecules of "+(*it2).Name+" \n" ;
+                }
+                else
+                {
+                message+="        |      -> warning "+f.Int_to_String((*it2).MaxNo)+"  molecules of "+(*it2).Name+" was planned BUT we succeed to create  "+f.Int_to_String((*it2).no_created)+"  \n" ;
+                m_Warning++;
+                }
+            }
+        }
+        if(layer%2!=0 && m_monolayer == false)
+        {
+                message+="        |     In the upper monolayer \n";
+                message+="        |     \n";
+
+        }
+        else if(layer%2==0 && m_monolayer == false)
+        {
+                message+="        |     In the lower monolayer \n";
+                message+="        |     \n";
+        }
+        if(layer%2!=0 && m_monolayer == true)
+                message+="        |     In the  monolayer \n";
+    }
+    message+= "        |-------------------------------------------------- \n";
+    return message;
+}
+/*double BackMap::dist2between2Points(Vec3D X1,Vec3D X2, Vec3D *pBox)
+{
+    
+    double dist2=0;
+    
+    double x1=X1(0);
+    double y1=X1(1);
+    double z1=X1(2);
+    
+    double x2=X2(0);
+    double y2=X2(1);
+    double z2=X2(2);
+    
+    
+    double dx=x2-x1;
+    double dy=y2-y1;
+    double dz=z2-z1;
+    
+    if(fabs(dx)>(*pBox)(0)/2.0)
+    {
+        if(dx<0)
+            dx=(*pBox)(0)+dx;
+        else if(dx>0)
+            dx=dx-(*pBox)(0);
+    }
+    if(fabs(dy)>(*pBox)(1)/2.0)
+    {
+        if(dy<0)
+            dy=(*pBox)(1)+dy;
+        else if(dy>0)
+            dy=dy-(*pBox)(1);
+    }
+    if(fabs(dz)>(*pBox)(2)/2.0)
+    {
+        if(dz<0)
+            dz=(*pBox)(2)+dz;
+        else if(dz>0)
+            dz=dz-(*pBox)(2);
+    }
+
+    dist2=dx*dx+dy*dy+dz*dz;
+    return dist2;
+}*/
+
 #endif
 
 

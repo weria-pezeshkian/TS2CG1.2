@@ -11,6 +11,7 @@ Argument::Argument(std::vector <std::string> argument)
     
     m_BondL              = 0.1;
     m_Health             = true;
+    m_Monolayer          = false;
     m_DTSFolder            = "point";
     m_LipidLibrary          = "no";
     m_GeneralOutputFilename	 = "output";
@@ -71,6 +72,12 @@ Argument::Argument(std::vector <std::string> argument)
             {
                 i=i-1;
                 m_Renorm = true;
+
+            }
+            else if(Arg1=="-monolayer")
+            {
+                i=i-1;
+                m_Monolayer = true;
 
             }
             else if(Arg1=="-incdirtype")
