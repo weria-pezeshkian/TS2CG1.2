@@ -116,10 +116,7 @@ GenerateMolType::~GenerateMolType()
 
 double GenerateMolType::MolAreaCal(MolType mol)
 {
-    
-    
-    
-    
+
     double area = 0;
     std::vector<bead> vbeads = mol.Beads;
     double rmx2=0;

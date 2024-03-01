@@ -32,38 +32,26 @@ public:
     
 	BackMap(Argument *pArgu);
 	virtual ~BackMap();
-    
-
-
-public:
-
-    
+ 
 private:
     // final data
     std::string m_FinalOutputGroFileName;
     std::string m_FinalTopologyFileName;
     
-private:
     // all the maps
     std::map<std::string , MolType>  m_map_MolName2MoleculesType;
     std::map<int , ProteinList>  m_map_IncID2ProteinLists;
     std::vector<bead> m_FinalBeads;         // all the beads generated at the end
 
-private:
-
     std::vector<bead*> m_pAllBeads;
     int m_Warning;
-
-
-
-
+    bool m_monolayer;
     int m_ResID;
-    std::vector<ExcludedVolumeBeads>  m_ExcludeBeads;
     double m_Iter;
     std::string m_InclusionDirectionType;
 
 
-private:
+private:  // function members 
     //=== since 2024
     void ExcludePointsUsingExclusion(std::vector<exclusion*>&, std::vector<point*>&, std::vector<point*>&);
     bool CheckProteinInfo (std::map<int , ProteinList>&, std::map<std::string , MolType>&, std::vector<inclusion*> &);
@@ -74,14 +62,12 @@ private:
 
     
     //======== old functions
-    //double dist2between2Points(Vec3D X1,Vec3D X2,Vec3D *pBox));
     void WriteFinalGroFile(Vec3D *pBox);
     bool AnyBeadWithinCutoff(UnitCell *,Vec3D Pos);
     Tensor2 Rz(double cos, double sin);
     Tensor2 TransferMatLG(Vec3D N, Vec3D t1, Vec3D t2);
-    std::vector<inclusion> CreateRandomInclusion(std::vector<point*> &PointUp);
+    std::vector<inclusion> CreateRandomInclusion(std::vector<point*> &PointUp, Vec3D *pBox);
     //bool m_Renormalizedlipidratio;
-    bool m_monolayer;
 
    // void CreateWallBead(std::vector<point*>  p1, std::vector<point*>  p2);
     bool FindProteinList(std::string str);

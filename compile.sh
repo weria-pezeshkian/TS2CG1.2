@@ -4,7 +4,7 @@
 ## Weria Pezeshkian
 
 cd src
-cd MembraneBuilder
+cd MembraneBuilder_2
 g++ -c -O3 *.cpp
 g++ -o PCG *.o
 rm *.o

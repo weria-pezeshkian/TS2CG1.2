@@ -18,10 +18,7 @@
  
  
  further extentions
- 6) check for all unnessry variable and function and remove them
- 6) make protein placment better
- 1). in random inc, we should prevent them to be close; it is also wrong since we do not clauclate all the area yet. 
- 2.) angle and theta is not used yet
+ 2.) angle and theta is not used yet (not needed), you can rotate it in the gro file.
  3.) pattern based protein insertion
  
  
@@ -101,7 +98,7 @@ BackMap::BackMap(Argument *pArgu)
     }
     else  // if the inclusion file is empty, we generate proteins according to the data in the str file
     {
-        std::vector<inclusion> RandomInc = CreateRandomInclusion(pPointUp);
+        std::vector<inclusion> RandomInc = CreateRandomInclusion(pPointUp, pBox);
         for (std::vector<inclusion>::iterator it2 = RandomInc.begin() ; it2 != RandomInc.end(); ++it2)
             pInc.push_back(&(*it2));
     }
@@ -290,18 +287,20 @@ Tensor2 BackMap::Rz(double cos, double sin)
     return R;
 }
 //=== we can make this function better
-std::vector<inclusion> BackMap::CreateRandomInclusion(std::vector<point*> &pPointUp)
+std::vector<inclusion> BackMap::CreateRandomInclusion(std::vector<point*> &pPointUp, Vec3D *pBox)
 {
     
     std::vector<inclusion>  RandomInc;
+    std::vector<ExcludedVolumeBeads>  ExcludeBeads;
 
-    int totinc = 0;
+    int totinc = 0;    // total number of inclusions of all types to be created
     int totcreated = 0;
     //==== reading input file to find number of requested proteins
     if(m_map_IncID2ProteinLists.size()!=0)
     {
         std::cout<<"---> According to the data and area we generate  "<<m_map_IncID2ProteinLists.size()<<" proteins types \n";
     }
+//===== find the total number demanded of each proteins and how many proteins is assked to create
     for ( std::map<int,ProteinList>::iterator it = m_map_IncID2ProteinLists.begin(); it != m_map_IncID2ProteinLists.end(); it++ )
     {
         (it->second).created = 0;
@@ -326,66 +325,69 @@ std::vector<inclusion> BackMap::CreateRandomInclusion(std::vector<point*> &pPoin
             membrane_total_area+= (*it)->GetArea();
         
         double area = (m_map_MolName2MoleculesType.at(type)).molarea;
-        int neededno = membrane_total_area/(area)*ratio;
-        (it->second).Maxno = neededno;
-        totinc+=neededno;
+        int neededno = membrane_total_area/area*ratio;   // A/a_pro=number of possible proteins. multipled by the ratio give the demanded number
+        (it->second).Maxno = neededno;                     // updated the max no of inc
+        totinc+=neededno;                                   // too see how many inc is needed.
         
         std::cout<<"---> We are attempting to generate  "<<neededno<<" proteins of type "<<type<<"  \n" ;
 
     }
-    //==== end of reading inout file (str) to find number of proteins
+//==== end of evalutaing data in the str file to find number of proteins
 
     int id=0;
     int s=0;
-    //=== checking finding random position for proteins without overlapping. overlapping between proteins not with lipids
-    while (totcreated<totinc && s<(pPointUp.size()))
+    //=== checking and finding random position for proteins without overlapping. overlapping between proteins not with lipids
+    while (totcreated<totinc && s<(pPointUp.size())) // to select a point randomly
     {
         s++;
         bool accept = true;
         //=== randomly selecting a point
         point* temPoint = pPointUp.at((rand()%pPointUp.size()));
-        int pointid = temPoint->GetID();
-        int tid=0;
-        int l=0;
-        bool chosen =false;
-        int max = 0;
-        double R = 0;
-        
-        
-        int RNG1=(rand()%totinc)+1;
-        ///======== here we only try to find one of the protein type randomly based on RNG1
-        for ( std::map<int,ProteinList>::iterator it = m_map_IncID2ProteinLists.begin(); it != m_map_IncID2ProteinLists.end(); it++ )
+        int pointid = temPoint->GetID();  // id of the randomly selected point
+        int tid=0;                          // type id of a radon protein type that will be selected later
+        double Rpro = 0;                    // radii of the chosen protein type
+
+        ProteinList* pRandomProList;
+        MolType* pRandomProtype;
+        //== we find a protein randomly
+        while (true)
         {
-             max =  (it->second).Maxno;
-            int nocreated = (it->second).created;
-            //if(l<max && RNG1<=max)
-            if(RNG1>l && RNG1<=max+l && nocreated<max)
+            std::map<int,ProteinList>::iterator it = m_map_IncID2ProteinLists.begin();
+            std::advance(it, std::rand() % m_map_IncID2ProteinLists.size());
+            
+            pRandomProList = &(it->second);
+            if(pRandomProList->created<pRandomProList->Maxno)
             {
-                tid = (it->second).ID;
-                chosen = true;
-                
-                std::string type = (it->second).ProteinName;
-                double area = (m_map_MolName2MoleculesType.at(type)).molarea;
-                
-                R=sqrt(area/acos(-1));
+                tid = pRandomProList->ID;
+                //== this take the protein in the str and find a protype from the lib or gro
+                pRandomProtype = &(m_map_MolName2MoleculesType.at(pRandomProList->ProteinName));// find the pro type asscoaited with the name
+                double area = pRandomProtype->molarea;
+                Rpro=sqrt(area/acos(-1));
+                break;
                 
             }
-            l=l+max;
+        }
 
-        }
-        // if the distance between  is smaller than the
-        for ( std::vector<ExcludedVolumeBeads>::iterator it = m_ExcludeBeads.begin(); it != m_ExcludeBeads.end(); it++ )
+//==== if there is an overlap between this protein and others that have been placed
+        Vec3D XR1 =temPoint->GetPos();
+        for ( std::vector<ExcludedVolumeBeads>::iterator it = ExcludeBeads.begin(); it != ExcludeBeads.end(); it++ )
         {
-            Vec3D XP1 = it->X;
-            double R1 = it->R;
-            
-            Vec3D XP2 =temPoint->GetPos();
-            if(XP2.dot((XP2-XP1),(XP2-XP1))<(R1+R)*(R1+R))
+            double dist = it->R + Rpro; // R1 (it->R); R1+ Rpro is the minimum distance between two proteins
+            Vec3D dR =it->X-XR1;   // dx between the chosen random point (a point to place protein) and the other selelected points
+            if(dR.dot(dR,dR)<dist*dist)  // R1+R will be the minimum distance between two proteins
                 accept = false;
+            
+            if(accept == true ) // check if in PBC the problems happens
+            {
+                for(int i=0;i<3;i++)
+                    if(fabs((*pBox)(i))-fabs(dR(i))<fabs(dR(i)))
+                        dR(i) = fabs((*pBox)(i))-fabs(dR(i));
+                if(dR.dot(dR,dR)<dist*dist)  // R1+R will be the minimum distance between two proteins
+                    accept = false;
+            }
         }
         
-        //======================
-        
+// create the inclusion in the position of the selected point if everything was fine
         if(accept==true)
         {
             double d1= double(rand()%1000)/1000;
@@ -401,16 +403,16 @@ std::vector<inclusion> BackMap::CreateRandomInclusion(std::vector<point*> &pPoin
             D=LG*D;
             //
             id++;
-        inclusion inc(id, tid,pointid,D);
-        RandomInc.push_back(inc);
+            inclusion inc(id, tid,pointid,D);
+            RandomInc.push_back(inc);
             totcreated++;
-            (m_map_IncID2ProteinLists.at(tid)).created = (m_map_IncID2ProteinLists.at(tid)).created +1;
+            pRandomProList->created = pRandomProList->created +1;
             
             
             ExcludedVolumeBeads Ex;
             Ex.X =temPoint->GetPos();
-            Ex.R = R;
-            m_ExcludeBeads.push_back(Ex);
+            Ex.R = Rpro;
+            ExcludeBeads.push_back(Ex);
         }
     }
     
@@ -547,8 +549,6 @@ void BackMap::ExcludePointsUsingExclusion(std::vector<exclusion*> &pExc, std::ve
                     (*it1)->UpdateArea(0);
 
                 }
-
-                
             }
             for ( std::vector<point*>::iterator it1 = m_pPointDown.begin(); it1 != m_pPointDown.end(); it1++ )
             {
@@ -836,49 +836,7 @@ std::string BackMap::InfoDomain(std::vector<Domain*> pAllDomain)
     message+= "        |-------------------------------------------------- \n";
     return message;
 }
-/*double BackMap::dist2between2Points(Vec3D X1,Vec3D X2, Vec3D *pBox)
-{
-    
-    double dist2=0;
-    
-    double x1=X1(0);
-    double y1=X1(1);
-    double z1=X1(2);
-    
-    double x2=X2(0);
-    double y2=X2(1);
-    double z2=X2(2);
-    
-    
-    double dx=x2-x1;
-    double dy=y2-y1;
-    double dz=z2-z1;
-    
-    if(fabs(dx)>(*pBox)(0)/2.0)
-    {
-        if(dx<0)
-            dx=(*pBox)(0)+dx;
-        else if(dx>0)
-            dx=dx-(*pBox)(0);
-    }
-    if(fabs(dy)>(*pBox)(1)/2.0)
-    {
-        if(dy<0)
-            dy=(*pBox)(1)+dy;
-        else if(dy>0)
-            dy=dy-(*pBox)(1);
-    }
-    if(fabs(dz)>(*pBox)(2)/2.0)
-    {
-        if(dz<0)
-            dz=(*pBox)(2)+dz;
-        else if(dz>0)
-            dz=dz-(*pBox)(2);
-    }
 
-    dist2=dx*dx+dy*dy+dz*dz;
-    return dist2;
-}*/
 
 #endif
 
