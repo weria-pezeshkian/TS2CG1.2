@@ -14,10 +14,11 @@ Argument::Argument(std::vector <std::string> argument)
     std::string Arg1;
     m_In_GroFileName   =  "Input.gro";
     m_Out_GroFileName  =  "Output.gro";
-    m_Tem_GroFileName  = "W.gro";
+    m_Tem_GroFileName  =  "W.gro";
+    m_NegName          = "CL";
+    m_PosName          = "NA";
     m_Seed             = 9474;
     m_RCutOff          = 0.4;
-    m_Health             = true;
     m_DB                = 0.05;
     m_UCELLSize         = 2;
     m_Ion.push_back(0);
@@ -26,9 +27,9 @@ Argument::Argument(std::vector <std::string> argument)
     if (m_Argument.size()>300)
     {
         std::cout << "Error: to many argument ";
-        std::cout<<"\n"<<"For more information and tips execute MCL -h"<<"\n";
-       m_ArgCon=0;
-        m_Health = false;
+        std::cout<<"\n"<<"For more information and tips execute SOL -h"<<"\n";
+        m_ArgCon=0;
+        exit(0);
         
     }
     else if (m_Argument.size() == 2)
@@ -40,7 +41,7 @@ Argument::Argument(std::vector <std::string> argument)
         // help message should be made
             help helpmessage(m_Argument.at(0));
             m_ArgCon=0;
-            m_Health = false;
+            exit(0);
         }
 
     }
@@ -90,21 +91,15 @@ Argument::Argument(std::vector <std::string> argument)
             else
             {
                 std::cout << "Error: wrong command :"<<Arg1;
-                std::cout<<"\n"<<"For more information and tips execute ./DMC -h"<<"\n";
+                std::cout<<"\n"<<"For more information and tips execute ./SOL -h"<<"\n";
                 m_ArgCon=0;
-                m_Health = false;
+                exit(0);
             }
         }
         
     }
     
 }
-
-
-
-
-
-
 Argument::~Argument()
 {
    

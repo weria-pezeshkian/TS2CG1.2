@@ -184,56 +184,42 @@ void GroFile::ReadGroFile(std::string file)
     }
     
 }
-
-void GroFile::WriteGroFile(std::string file)
-{
-
-    if(file.size()<4)
-    {
-        file=file+".gro";
-    }
-    else if(file.at(file.size()-1)=='o' && file.at(file.size()-2)=='r' && file.at(file.size()-3)=='g')
-    {
-        
-    }
-    else
-    {
-        file=file+".gro";
+void GroFile::WriteGroFile(std::string file) {
+    if (file.size() < 4) {
+        file = file + ".gro";
+    } else if (file.at(file.size() - 1) == 'o' && file.at(file.size() - 2) == 'r' && file.at(file.size() - 3) == 'g') {
+        // Do nothing
+    } else {
+        file = file + ".gro";
     }
 
-    
     FILE *fgro;
     fgro = fopen(file.c_str(), "w");
-    
-    
-    /// resid  res name   noatom   x   y   z
-    const char* Title="dmc gmx file handler";
-    int Size=m_AllBeads.size();
-    
-    fprintf(fgro,  "%s\n",Title);
-    fprintf(fgro, "%5d\n",Size);
-    int i=0;
-    for (std::vector<bead>::iterator it = m_AllBeads.begin() ; it != m_AllBeads.end(); ++it)
-    {
-        
-        i++;
-        double x=(*it).GetXPos();
-        double y=(*it).GetYPos();
-        double z=(*it).GetZPos();
-        
-        i=i%100000;
-        
-        const char* A1=((*it).GetResName()).c_str();
-        const char* A2=((*it).GetBeadName()).c_str();
-        int resid=(*it).GetResid();
-        resid = resid%100000;
-        fprintf(fgro, "%5d%5s%5s%5d%8.3f%8.3f%8.3f\n",resid,A1,A2,i,x,y,z );
 
+    if (!fgro) {
+        std::cerr << "Error opening file: " << file << std::endl;
+        return;
     }
-    
 
-    fprintf(fgro,  "%10.5f%10.5f%10.5f\n",m_Box(0),m_Box(1),m_Box(2) );
+    const char* Title = "dmc gmx file handler";
+    int Size = m_AllBeads.size();
+
+    fprintf(fgro, "%s\n", Title);
+    fprintf(fgro, "%5d\n", Size);
+
+    int i = 0;
+    for (std::vector<bead>::iterator it = m_AllBeads.begin(); it != m_AllBeads.end(); ++it) {
+        i++;
+        double x = (*it).GetXPos();
+        double y = (*it).GetYPos();
+        double z = (*it).GetZPos();
+        i = i % 100000;
+       // int resid = (*it).GetResid();
+       // resid = resid % 100000;
+        fprintf(fgro, "%5d%5s%5s%5d%8.3f%8.3f%8.3f\n", i, ((*it).GetResName()).c_str(), ((*it).GetBeadName()).c_str(), i, x, y, z);
+    }
+
+    fprintf(fgro, "%10.5f%10.5f%10.5f\n", m_Box(0), m_Box(1), m_Box(2));
     fclose(fgro);
 }
-
 

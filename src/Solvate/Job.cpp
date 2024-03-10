@@ -18,8 +18,7 @@ Argument a(argument);
     char L2 = exacutable.at(n-2);
     char L3 = exacutable.at(n-3);
     bool condition = true;
-if(a.GetHealth()==true )
-{
+
     if (n>3)
     {
         char L4 = exacutable.at(n-4);
@@ -44,11 +43,6 @@ if(a.GetHealth()==true )
         
     }
 
-}
-else
-{
-std::cout<<" Error in input data \n";
-}
 
 }
 Job::~Job()

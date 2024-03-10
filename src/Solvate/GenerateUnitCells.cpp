@@ -161,7 +161,7 @@ m=0;
         double y=(*it1)->GetYPos();
         double z=(*it1)->GetZPos();
         
-        if((*m_pBox)(0)>x && (*m_pBox)(1)>y && (*m_pBox)(2)>z && x>0 && y>0 && z>0)
+        if((*m_pBox)(0)>x && (*m_pBox)(1)>y && (*m_pBox)(2)>z && x>=0 && y>=0 && z>=0)
         {
             int nx=int(x/m_CNTCellSize.at(0));
             int ny=int(y/m_CNTCellSize.at(1));

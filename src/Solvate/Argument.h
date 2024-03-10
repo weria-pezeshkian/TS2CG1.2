@@ -20,10 +20,11 @@ public:
     inline const std::string GetTemplateFileName()                  const {return m_Tem_GroFileName;}
     inline const double GetRCutOff()                                const {return m_RCutOff;}
     inline const int GetSeed()                                      const {return m_Seed;}
-    inline const bool GetHealth()                                   const {return m_Health;}
     inline const double GetDB()                                     const {return m_DB;}
-    inline const double GetUCELLSize()                                     const {return m_UCELLSize;}
-    inline const std::vector<int> GetIon()                                     const {return m_Ion;}
+    inline const double GetUCELLSize()                              const {return m_UCELLSize;}
+    inline const std::vector<int> GetIon()                          const {return m_Ion;}
+    inline std::string GetNegativeIonName()                          const {return m_NegName;}
+    inline std::string GetPositiveIonName()                          const {return m_PosName;}
 
 private:
     std::vector <std::string> m_Argument;
@@ -33,12 +34,14 @@ private:
     int m_Seed;
     double m_RCutOff;
     int m_ArgCon;
-    bool m_Health;
     std::string m_SoftWareVersion;
     double m_DB;
     double m_UCELLSize;
     std::vector<int> m_Ion;
 
+public:
+    std::string m_NegName; // 
+    std::string m_PosName; //
 
 
 

@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 #include "bead.h"
-//#include "links.h"
 bead::bead(int id, std::string name, std::string type, std::string resname, int resid, double x, double y, double z)
 {
 
@@ -51,22 +50,15 @@ m_pBox=x;
 }
 void bead::UpdateXPos(double x)
 {
-
 		m_X=x;
-
-    
 }
 void bead::UpdateYPos(double x)
 {
-
 		m_Y=x;
-
 }
 void bead::UpdateZPos(double x)
 {
-    
     m_Z=x;
-
 }
 void bead::UpdatePos(Vec3D* B, double x, double y, double z)
 {
@@ -74,16 +66,12 @@ void bead::UpdatePos(Vec3D* B, double x, double y, double z)
     this->UpdateXPos(x);
     this->UpdateYPos(y);
     this->UpdateZPos(z);
-
-
 }
 void bead::UpdatePos(double x, double y, double z)
 {
     this->UpdateXPos(x);
     this->UpdateYPos(y);
     this->UpdateZPos(z);
-    
-    
 }
 void bead::UpdateBeadUnitCell(UnitCell * z)
 {

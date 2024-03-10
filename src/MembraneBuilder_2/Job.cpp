@@ -18,8 +18,7 @@ Job::Job(std::vector <std::string> argument)
     
         std::string function = a.GetFunction();
         bool condition = true;
-if(a.GetHealth()==true )
-{
+
     if (n>3)
     {
         char L4 = exacutable.at(n-4);
@@ -48,10 +47,6 @@ if(a.GetHealth()==true )
         }
         
     }
-
-}
-
-
 }
 Job::~Job()
 {
