@@ -19,8 +19,8 @@ public:
 
 
 private:
+    std::string SubstringFromRight(const std::string& input);
 
-   // std::string m_FileName;
    std::vector <std::string> m_Argument;
 
 };

@@ -18,6 +18,7 @@
 #define Enabled                 1
 #define Disabled                2
 #define SoftWareVersion         "1.2"
+#define ExecutableName          "PCG"
 #define SoftWareName            "CG Membrane builder"
 #define LIBExt                  "LIB"
 #define STRExt                  "str"

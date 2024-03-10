@@ -5,51 +5,36 @@
 #include "Job.h"
 #include "Nfunction.h"
 #include "BackMap.h"
-
-Job::Job(std::vector <std::string> argument)
-{
-
-    Argument a(argument);
-        std::string exacutable=argument.at(0);
-        int  n=exacutable.size();
-        char L1 = exacutable.at(n-1);
-        char L2 = exacutable.at(n-2);
-        char L3 = exacutable.at(n-3);
-    
-        std::string function = a.GetFunction();
-        bool condition = true;
-
-    if (n>3)
-    {
-        char L4 = exacutable.at(n-4);
-        if (L4!='/')
-        {
-            condition = false;
-            std::cout<<argument.at(0)<<" 1. executable is unknown \n";
+// this class does not do much, it is just an extra check in case in future we want to diversify.
+// this class just get the arguments and call BackMap class. 
+Job::Job(std::vector<std::string> argument) {
+    Argument arg(argument);
+    std::string executable = SubstringFromRight(argument.at(0));
+    std::string function = arg.GetFunction();
+//-- checking if the ExecutableName is PCG and also if the type of fuctions known,
+    if (executable==ExecutableName) { // ExecutableName = PCG
+        if (function == "backmap" || function == "analytical_shape") {
+            BackMap B(&arg); // call Backmap class
+        } else {
+            std::cout << function << "---> function is not recognized \n";
+            std::exit(0);
         }
-        
     }
-    if(condition == true)
-    {
-        if( L3 == 'P' && L2 == 'C' && L1 == 'G')
-        {
-            if(function=="backmap" || function=="analytical_shape")
-            BackMap B(&a);
-            else
-            std::cout<<function<<" function is not regognized \n";
-
-            
-        }
-        else if(n<3)
-        {
-            condition  = false;
-            std::cout<<argument.at(0)<<"2. executable is unknownt \n";
-        }
-        
+    else {
+        std::cout << "---> error executable name <"<<executable<<">  is wrong \n";
+        std::exit(0);
     }
 }
 Job::~Job()
 {
     
 }
-
+std::string Job::SubstringFromRight(const std::string& input) {
+    size_t pos = input.find_last_of('/');
+    if (pos != std::string::npos) {
+        return input.substr(pos + 1);
+    } else {
+        // If there is no '/' in the string, return the entire string
+        return input;
+    }
+}
