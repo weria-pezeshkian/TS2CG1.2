@@ -1,6 +1,7 @@
 /* This code was developed by Weria Pezeshkian at Univeristy of Groningen,
  updated in 2023 at the Univeristy of Copenhagen
  Copyright (c) Weria Pezeshkian
+ email: weria.pezeshkian@gmail.com
  */
 #include "Def.h"
 #include "Job.h"
@@ -18,5 +19,4 @@ int main(int argc, char* argv[])
         Job job(argument);
 
     return 0;
-
 }
