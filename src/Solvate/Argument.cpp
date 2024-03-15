@@ -52,8 +52,8 @@ Argument::Argument(std::vector<std::string> argument) {
         } else if (Arg1 == "-Rcutoff") {
             m_RCutOff = f.String_to_Double(m_Argument.at(i + 1));
         } else {
-            std::cout << "---> Error: Wrong command: " << Arg1;
-            std::cout << "\n" << "For more information and tips execute ./SOL -h" << "\n";
+            std::cout << "---> error: Wrong command: " << Arg1;
+            std::cout << "\n" << "For more information and tips execute SOL -h" << "\n";
             m_ArgCon = 0;
             exit(0);
         }

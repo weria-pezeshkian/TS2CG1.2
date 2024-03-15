@@ -19,7 +19,7 @@ help::help(std::string exe) {
     std::cout << "  option            type        default            description " << "\n";
     std::cout << "-------------------------------------------------------------------------------" << "\n";
     std::cout << "  -in              string       input.gro          name of the file to be solvated " << "\n";
-    std::cout << "  -ion             integers     0 0                generating ions; two integers " << "\n";
+    std::cout << "  -ion             integers     0 0                generating ions; two integers number of positive and negativer ions" << "\n";
     std::cout << "  -db              double       0.05               the distance between each copy when propagating the water box" << "\n";
     std::cout << "  -o               string       output.gro         output file name " << "\n";
     std::cout << "  -Rcutoff         double       0.4                cutoff distance " << "\n";
@@ -27,9 +27,9 @@ help::help(std::string exe) {
     std::cout << "  -nname           string      CL                  name of the negative ions" << "\n";
     std::cout << "  -pname           string      NA                  name of the positive ions" << "\n";
     std::cout << "  -seed            integer     9474                seed for ion placement " << "\n";
-
+    std::cout << "  -unsize          double      2                   size of the unitcells for overlap checking, smaller numbers are faster but needs more RAM, should not be smaller than Rcutoff  " << "\n";
     std::cout << "example: " << "\n";
-    std::cout << ExcName << "   -in in.gro -o out.gro -ion 20 20 " << "\n";
+    std::cout << ExcName << "   -in in.gro -o out.gro -ion 20 20  -tem water.gro" << "\n";
 }
 
 help::~help() {

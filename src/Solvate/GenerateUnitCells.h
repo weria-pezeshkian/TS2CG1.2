@@ -10,28 +10,15 @@
 class GenerateUnitCells
 {
 public:
-    
 
 	GenerateUnitCells(std::vector< bead* > bead,Argument *pArgu,Vec3D *pBox, double cuttoff, double usize );
 	~GenerateUnitCells();
-
-
-
-
-      //  inline  std::vector<std::vector <std::vector<UnitCell> >  > GetAllCNTCells()           {return m_AllCNTCells;}
-  //  inline std::vector <double> GetCNTCellSize()        {return m_CNTCellSize;}
-   // inline std::vector <int> GetCNTCellNo()        {return m_CNTCellNo;}
-
-
-
 
 public:
     bool anythingaround (Vec3D PX);
 
 int IDFromIndex(int,int,int);
-//  void AddtoVertexList(vertex * z);
 
-  //  void Generate();
 
 private:
     Argument *m_pArgu;
@@ -55,11 +42,6 @@ int m_Nz;
 
     double m_Cutoff;
     
-
-
-
-
-
 };
 
 

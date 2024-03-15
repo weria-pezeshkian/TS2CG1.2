@@ -1,7 +1,7 @@
 #include <iostream>
 #include "GroFile.h"
 #include "Nfunction.h"
-
+// a class that has functions to read and write gro files
 GroFile::GroFile(std::string gmxfilename) {
     m_GroFileName = gmxfilename;
     ReadGroFile(m_GroFileName);

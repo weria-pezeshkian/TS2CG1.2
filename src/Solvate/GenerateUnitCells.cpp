@@ -1,25 +1,19 @@
-
-
 #include <stdio.h>
 #include "GenerateUnitCells.h"
 #include "Nfunction.h"
-//#include "links.h"
 GenerateUnitCells::GenerateUnitCells(std::vector< bead* > Allbead,Argument *pArgu,Vec3D *pBox, double cuttoff, double usize)
 {
-	m_pBox=pBox;
+    m_pBox=pBox;
     m_pAllBead=Allbead;
     m_pArgu=pArgu;
     m_CNTSize=usize;
     m_Cutoff = cuttoff*cuttoff;
     Generate();
 }
-
-
 GenerateUnitCells::~GenerateUnitCells()
 {
     
 }
-
 int GenerateUnitCells::IDFromIndex(int i,int j,int k)
 {
 
@@ -34,30 +28,17 @@ void GenerateUnitCells::Generate()
     m_AllCNTCells.clear();
     m_CNTCellSize.clear();
     m_CNTCellNo.clear();
-    
-    
-    
-    
-    //==================
-    //====
-    //==================
     Nfunction f;
     std::vector <double> Box;
     Box.push_back((*m_pBox)(0));
     Box.push_back((*m_pBox)(1));
     Box.push_back((*m_pBox)(2));
-    
     double CNTSize=m_CNTSize;
-    
-    
-    
     /// The CNT cell should not be smaller then one; for dynamic box we should be carefull
     
     m_Nx=int(Box.at(0)/CNTSize);
     m_Ny=int(Box.at(1)/CNTSize);
     m_Nz=int(Box.at(2)/CNTSize);
-    
-
 
     if(Box.at(0)/double(m_Nx)==CNTSize)
     {
@@ -65,7 +46,7 @@ void GenerateUnitCells::Generate()
     }
     else
     {
-        //m_Nx=m_Nx+1; this is wrong it makes the box smaller 
+        //m_Nx=m_Nx+1; this is wrong it makes the box smaller
         std::string A="CNT cell in x direction has the size of "+f.Int_to_String(Box.at(0)/double(m_Nx));
        // std::cout<<A<<"\n";
 
@@ -191,7 +172,6 @@ bool GenerateUnitCells::anythingaround (Vec3D PX)
     
     for (int i=-1;i<2;i++)
     {
-      //  std::cout<<i<<"\n";
         for (int j=-1;j<2;j++)
         {
             for (int k=-1;k<2;k++)
@@ -199,11 +179,7 @@ bool GenerateUnitCells::anythingaround (Vec3D PX)
                 int mx=(nx+i+m_CNTCellNo.at(0))%(m_CNTCellNo.at(0));
                 int my=(ny+j+m_CNTCellNo.at(1))%(m_CNTCellNo.at(1));
                 int mz=(nz+k+m_CNTCellNo.at(2))%(m_CNTCellNo.at(2));
-                
                 UnitCell* Tcell = ((m_pAllCNTCells.at(mx)).at(my)).at(mz);
-
-
-
                 std::vector<bead*> cbeads = Tcell->GetBeadList();
                 for (std::vector<bead *>::iterator it2 = cbeads.begin() ; it2 != cbeads.end(); ++it2)
                 {
@@ -272,5 +248,3 @@ double GenerateUnitCells::dist2between2Points(Vec3D X1,Vec3D X2)
     dist2=dx*dx+dy*dy+dz*dz;
     return dist2;
 }
-
-
