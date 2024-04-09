@@ -33,6 +33,7 @@ help::help(std::string exe)
      std::cout<<" -iter             double       4                    the number of point selection is iter*number of the point  "<<"\n";
      std::cout<<" -incdirtype       string       Global               the type of protein direction data (Local/Global)  "<<"\n";
      std::cout<<" -Wall             ------       off                  a flag to create a wall around the membrane  "<<"\n";
+     std::cout<<" -function         string       backmap              backmap/analytical_shape  "<<"\n";
      std::cout<<" -WallBName        string       WL                   Name of the Wall beads  "<<"\n\n";
 //analytical_shape
     

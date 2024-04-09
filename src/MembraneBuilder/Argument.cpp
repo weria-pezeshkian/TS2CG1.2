@@ -38,10 +38,17 @@ Argument::Argument(std::vector <std::string> argument)
             Arg1 = m_Argument.at(i);
             if(Arg1=="-dts") //  "-dts"
             {
-                m_DTSFolder = m_Argument.at(i+1);
+                if(m_Argument.size()>i+1){
+                    m_DTSFolder = m_Argument[i+1];
+                }
+                else{
+                    std::cout<<"---> error: 332 \n";
+                    exit(0);
+                }
             }
             else if (Arg1==FunctionType) // (Arg1=="-function")
             {
+                if(m_Argument.size()>i+1)
                 m_Function = m_Argument.at(i+1);
                 if(m_Function=="1dsin")
                 {
@@ -60,13 +67,18 @@ Argument::Argument(std::vector <std::string> argument)
             }
             else if(Arg1=="-defout")
             {
-                m_GeneralOutputFilename = m_Argument.at(i+1);
+                if(m_Argument.size()>i+1){
+                    m_GeneralOutputFilename = m_Argument.at(i+1);
+                }
+                else{
+                    std::cout<<"---> error: 332 \n";
+                    exit(0);
+                }
             }
             else if(Arg1=="-h")
             {
                 help helpmessage(m_Argument.at(0));
-                m_Health = false;
-                break;
+                exit(0);
             }
             else if(Arg1=="-renorm")
             {

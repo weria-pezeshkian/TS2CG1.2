@@ -436,9 +436,8 @@ bool BackMap::FindProteinList(std::string filename)
     while (true)
     {
         std::getline (strfile,str);
-        if(strfile.eof())
-        {
-            return false;
+        if(strfile.eof()){
+            break;
         }
         str = f.trim(str);
         str.erase(std::remove(str.begin(), str.end(), '['), str.end());
