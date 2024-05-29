@@ -75,7 +75,7 @@ std::vector<point> Sphere::CalculateArea_MakePoints(int layer, double APL,double
     double DT = FindDeltaTheta(Npoints);
     double T=0;
     double R=m_R+double(layer)*H;
-    for (int i=0;i<PI/DT;i++)
+    for (int i=0;i<=PI/DT;i++)
     {
         T+=DT;
         int M=2*PI*sin(T)/DT;
@@ -93,8 +93,8 @@ std::vector<point> Sphere::CalculateArea_MakePoints(int layer, double APL,double
             Vec3D BoxC(m_Box(0)/2, m_Box(1)/2, m_Box(2)/2 );
             Pos=BoxC+Pos+N*(DL);
             
-            Vec3D P1(1,0,0);
-            Vec3D P2(0,1,1);
+            Vec3D P1(-N(1),N(0),0);
+            Vec3D P2=N*P1;
             
             
             point p(beadid, APL, Pos, N, P1, P2 , Curv);

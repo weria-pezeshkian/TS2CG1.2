@@ -49,6 +49,7 @@ private:
     int m_ResID;
     double m_Iter;
     std::string m_InclusionDirectionType;
+    Vec3D *m_pBox;
 
 
 private:  // function members 

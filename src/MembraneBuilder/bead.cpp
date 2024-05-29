@@ -32,28 +32,45 @@ m_Z=0;
 
 }
 
-bead::~bead()
-{
+bead::~bead() {
     
 }
 
 
-void bead::UpdateBox(Vec3D *x)
-{
+void bead::UpdateBox(Vec3D *x) {
 m_pBox=x;
 }
-void bead::UpdateXPos(double x)
-{
-
+void bead::UpdateXPos(double x) {
 		m_X=x;
-
-    
 }
-void bead::UpdateYPos(double x)
-{
+void bead::UpdateYPos(double x){
 
 		m_Y=x;
+}
+void bead::BringBeadInBox(Vec3D *pBox) {
+    double boxX = (*pBox)(0);
+    double boxY = (*pBox)(1);
+    double boxZ = (*pBox)(2);
 
+    // Adjust X position if it's outside the box bounds
+    if (m_X >= boxX) {
+        m_X = m_X - boxX;
+    } else if (m_X < 0) {
+        m_X = m_X + boxX;
+    }
+    
+    if (m_Y >= boxY) {
+        m_Y = m_Y - boxY;
+    } else if (m_Y < 0) {
+        m_Y = m_Y + boxY;
+    }
+    
+    if (m_Z >= boxZ) {
+        m_Z = m_Z - boxZ;
+    } else if (m_Z < 0) {
+        m_Z = m_Z + boxZ;
+    }
+    
 }
 void bead::UpdateZPos(double x)
 {
@@ -78,12 +95,10 @@ void bead::UpdatePos(double x, double y, double z)
     
     
 }
-void bead::UpdateBeadUnitCell(UnitCell * z)
-{
+void bead::UpdateBeadUnitCell(UnitCell * z) {
     m_BeadUnitCell = z;
 }
-void bead::UpdateHasMol(bool z)
-{
+void bead::UpdateHasMol(bool z) {
     m_hasMol = z;
 }
 

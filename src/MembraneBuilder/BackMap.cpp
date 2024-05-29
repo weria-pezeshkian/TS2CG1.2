@@ -44,6 +44,7 @@ BackMap::BackMap(Argument *pArgu)
     std::vector<inclusion*>  pInc = SurfDataPoint.m_pInc;
     std::vector<exclusion*>  pExc = SurfDataPoint.m_pExc;
     Vec3D *pBox = SurfDataPoint.m_pBox;
+    m_pBox = pBox;
     Wall *pWall = SurfDataPoint.m_pWall;
     m_monolayer = SurfDataPoint.m_monolayer; // if pPointDown is empty, m_monolayer is false,
     //if m_monolayer is not true, we check the PCG option and see if monolayer is defined
@@ -205,6 +206,7 @@ void BackMap::GenLipid(MolType moltype, int listid, Vec3D Pos, Vec3D Normal, Vec
                 Vec3D vX = LG*BPos+ Pos;
                 int beadid = (m_FinalBeads.size()+1);
                 bead TemB(beadid, (*it).GetBeadName(), (*it).GetBeadType(), (*it).GetResName(), m_ResID, vX(0), vX(1),vX(2));
+                TemB.BringBeadInBox(m_pBox);
                 m_FinalBeads.push_back(TemB);
             }
     
@@ -238,6 +240,7 @@ void BackMap::GenProtein(MolType moltype, int listid, Vec3D Pos, Vec3D Normal, V
             Vec3D vX = LG*(Rot*BPos)+ Pos+DH;
             int beadid = (m_FinalBeads.size()+1);
             bead TemB(beadid, (*it).GetBeadName(), (*it).GetBeadType(), (*it).GetResName(), m_ResID, vX(0), vX(1),vX(2));
+            TemB.BringBeadInBox(m_pBox);
             m_FinalBeads.push_back(TemB);
         }
         m_ResID++;
@@ -642,10 +645,10 @@ bool BackMap::PlaceProteins(std::vector<point*> &pPointUp, std::vector<inclusion
     
     return true;
 }
-bool BackMap::RemovePointsCloseToBeadList(std::vector<point*> &pPointUp, std::vector<point*> &pPointDown, std::vector<bead*> vpbeads, double RCutOff, Vec3D* m_pBox)
+bool BackMap::RemovePointsCloseToBeadList(std::vector<point*> &pPointUp, std::vector<point*> &pPointDown, std::vector<bead*> vpbeads, double RCutOff, Vec3D* pBox)
 {
     
-    GenerateUnitCells GCNT(vpbeads, m_pBox,RCutOff,1.0);
+    GenerateUnitCells GCNT(vpbeads, pBox,RCutOff,1.0);
     GCNT.Generate();
     // Here, we try to remove the points that are covered by the proteins. We do it by setting the A=0
   

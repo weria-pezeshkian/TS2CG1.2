@@ -29,7 +29,7 @@ public:
 
 
 public:
-    
+  void BringBeadInBox(Vec3D *pBox);
   void UpdateXPos(double x);    // a function for changing the x position of a bead
   void UpdateYPos(double y);
   void UpdateZPos(double z);
