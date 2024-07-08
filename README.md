@@ -19,7 +19,7 @@ https://github.com/marrink-lab/TS2CG1.1
 ### Prerequisites
 
 TS2CG is implemented in C++ and includes three separate scripts. *Pointillism* (PLM) and *Membrane
-Builder*(PCG) and *Solvate* (SOL).
+Builder* (PCG) and *Solvate* (SOL).
 
 The minimum installation requirements are:
 - Up-to-date *C++ compilers*.
