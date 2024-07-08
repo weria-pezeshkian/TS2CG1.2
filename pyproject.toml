@@ -5,8 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "TS2CG"
 version = "1.2.0"
-description = "A Python wrapper for TS2CG C++ code"
+description = "TS2CG: converts triangulated surfaces to coarse-grained membrane models"
 requires-python = ">=3.6"
+authors = [
+    {name = "Weria Pezeshkian", email = "weria.pezeshkian@nbi.ku.dk"},
+    {name = "Jan Stevens", email = "j.a.stevens@rug.nl"},
+]
+license = {file = "LICENSE"}
 
 [tool.setuptools]
 packages = ["TS2CG"]
