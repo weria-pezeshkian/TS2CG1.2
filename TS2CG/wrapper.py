@@ -1,4 +1,5 @@
 import subprocess
+from sys import stderr
 import argparse
 from pathlib import Path
 
@@ -14,7 +15,7 @@ def run_binary(binary_name, args):
 
     print(result.stdout)
     if result.stderr:
-        print("Errors:", result.stderr)
+        print("Errors:", result.stderr, file=stderr)
 
     return result.returncode
 
