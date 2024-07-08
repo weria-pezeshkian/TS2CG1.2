@@ -9,7 +9,7 @@ to take electron microscopy tomography data and build structures for molecular d
 
 ## State
 
-NOTE: this version is under development and might be associated with errors and bugs.
+**NOTE**: this version is under development and might be associated with errors and bugs.
 Please use the previous version if you are not in direct contact with the developers.
 Previous version can be found
 https://github.com/marrink-lab/TS2CG1.1
@@ -18,13 +18,13 @@ https://github.com/marrink-lab/TS2CG1.1
 
 ### Prerequisites
 
-TS2CG is implemented in C++ and includes three separate scripts. Pointillism (PLM) and CG Membrane
-Builder (PCG) and Solvate (SOL).
+TS2CG is implemented in C++ and includes three separate scripts. *Pointillism* (PLM) and *Membrane
+Builder*(PCG) and *Solvate* (SOL).
 
 The minimum installation requirements are:
-- Up-to-date C and C++ compilers.
-- Python 3.6 or later.
-- CMake version 3.10 or later.
+- Up-to-date *C++ compilers*.
+- *Python* 3.6 or later.
+- *CMake* version 3.10 or later.
 
 TS2CG builds with the CMake build system, requiring at least version 3.10. You can check whether
 CMake is installed, and what version it is, with
@@ -37,17 +37,7 @@ If you need to install CMake, then first check whether your platform’s package
 provides a suitable version, or visit the [CMake installation](https://cmake.org/resources/) page
 for pre-compiled binaries, source code and installation instructions.
 
-### Install _TS2CG__ through _pip_ directly
-
-If you don't care about peeking into the sources and just want access to the
-program, this is the quickest option.
-
-```console
-python3 -m venv venv && source venv/bin/activate # Not required, but often convenient.
-pip3 install git+https://github.com/weria-pezeshkian/TS2CG1.2
-```
-
-### From source
+### Install _TS2CG_ from source
 
 ```console
 git clone https://github.com/weria-pezeshkian/TS2CG1.2
@@ -62,18 +52,19 @@ pip3 install .
 TS2CG --help
 ```
 
-*Pointillism*
+### Pointillism
 ...
 ```console
 TS2CG PLM -h
 ```
 
-*Membrane Builder*
+### Membrane Builder
 ...
 ```console
 TS2CG PCG -h
 ```
-*Solvate*
+
+### Solvate
 ...
 ```console
 TS2CG SOL -h
