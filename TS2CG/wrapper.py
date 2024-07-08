@@ -1,7 +1,8 @@
+import argparse
 import subprocess
 from sys import stderr
-import argparse
 from pathlib import Path
+from importlib.metadata import version
 
 def run_binary(binary_name, args):
     current_dir = Path(__file__).parent
@@ -21,9 +22,29 @@ def run_binary(binary_name, args):
 
 def main():
 
-    parser = argparse.ArgumentParser(description='TS2CG: converts triangulated surfaces (TS) to coarse-grained membrane models')
-    parser.add_argument('module', choices=['SOL', 'PLM', 'PCG'], help='Choice of which module to run')
-    parser.add_argument('args', nargs=argparse.REMAINDER, help='Arguments for the chosen module')
+    parser = argparse.ArgumentParser(
+        description='TS2CG: converts triangulated surfaces (TS) to coarse-grained membrane models',
+        prog='TS2CG',
+        )
+
+    parser.add_argument(
+            'module',
+            choices=['SOL', 'PLM', 'PCG'],
+            help='Choice of which module to run'
+            )
+
+    parser.add_argument(
+            'args',
+            nargs=argparse.REMAINDER,
+            help='Arguments for the chosen module'
+            )
+
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=f'%(prog)s {version("TS2CG")}'
+    )
 
     args = parser.parse_args()
 
