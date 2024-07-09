@@ -37,8 +37,16 @@ If you need to install CMake, then first check whether your platform’s package
 provides a suitable version, or visit the [CMake installation](https://cmake.org/resources/) page
 for pre-compiled binaries, source code and installation instructions.
 
-### Install _TS2CG_ from source
-
+### Install _TS2CG_
+#### From PyPi
+```console
+pip3 install TS2CG
+```
+#### Directly from GitHub
+```console
+pip3 install git+https://github.com/jan-stevens/TS2CG1.2@python_wrapper
+```
+#### From source
 ```console
 git clone https://github.com/weria-pezeshkian/TS2CG1.2
 cd TS2CG1.2
