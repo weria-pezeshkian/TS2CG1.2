@@ -30,7 +30,7 @@ TS2CG builds with the CMake build system, requiring at least version 3.10. You c
 CMake is installed, and what version it is, with
 
 ```console
-cmake --version.
+cmake --version
 ```
 
 If you need to install CMake, then first check whether your platform’s package management system
@@ -44,7 +44,7 @@ pip3 install TS2CG
 ```
 #### Directly from GitHub
 ```console
-pip3 install git+https://github.com/jan-stevens/TS2CG1.2@python_wrapper
+pip3 install git+https://github.com/weria-pezeshkian/TS2CG1.2
 ```
 #### From source
 ```console
