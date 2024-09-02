@@ -409,21 +409,6 @@ class point():
                         f.write(line)
 
 
-
-                
-
-
-
-        
-
-            
-
-
-
-
-
-
-
 if __name__=="__main__":
     pass
     #a=point(path="../../../point_python/point/")

@@ -3,16 +3,20 @@ import subprocess
 from sys import stderr
 from pathlib import Path
 from importlib.metadata import version
+from PointUpdaterClass import PUC as PUC
 
 def run_binary(binary_name, args):
     current_dir = Path(__file__).parent
     binary_path = current_dir / binary_name
 
-    if not binary_path.exists():
-        raise FileNotFoundError(f"Binary {binary_name} not found at {binary_path}")
+    if binary_name != "PUC":
+        if not binary_path.exists():
+            raise FileNotFoundError(f"Binary {binary_name} not found at {binary_path}")
 
-    cmd = [str(binary_path)] + args
-    result = subprocess.run(cmd, capture_output=True, text=True)
+        cmd = [str(binary_path)] + args
+        result = subprocess.run(cmd, capture_output=True, text=True)
+    else:
+        PUC(args)
 
     print(result.stdout)
     if result.stderr:
@@ -29,7 +33,7 @@ def main():
 
     parser.add_argument(
             'module',
-            choices=['SOL', 'PLM', 'PCG'],
+            choices=['SOL', 'PLM', 'PCG',"PUC"],
             help='Choice of which module to run'
             )
 
