@@ -72,6 +72,9 @@ class point():
             for i,row in enumerate(self.raw):
                 self.get_data[names[i]]=row
 
+    class points():
+        
+
 
     def __init__(self, path="point/"):
         """

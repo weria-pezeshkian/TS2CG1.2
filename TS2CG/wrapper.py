@@ -3,7 +3,7 @@ import subprocess
 from sys import stderr
 from pathlib import Path
 from importlib.metadata import version
-from PointUpdaterClass import PUC as PUC
+from .PointUpdaterClass import PUC as PUC
 
 def run_binary(binary_name, args):
     current_dir = Path(__file__).parent
@@ -15,14 +15,15 @@ def run_binary(binary_name, args):
 
         cmd = [str(binary_path)] + args
         result = subprocess.run(cmd, capture_output=True, text=True)
+        print(result.stdout)
+        if result.stderr:
+            print("Errors:", result.stderr, file=stderr)
+
+        return result.returncode
     else:
         PUC(args)
 
-    print(result.stdout)
-    if result.stderr:
-        print("Errors:", result.stderr, file=stderr)
-
-    return result.returncode
+    
 
 def main():
 
