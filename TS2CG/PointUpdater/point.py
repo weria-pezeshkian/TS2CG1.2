@@ -10,6 +10,12 @@ class point():
     The point class is the class equivalent to the point folder created by TS2CG. The accepted parameters are discussed in the corresponding __init__.
     In short, each of the four files receives its own subclass. Additionally, some manipulating and saving routines are provided.
     """
+
+    def get_box(self,file):
+        with open(file,"r",encoding="UTF8") as f:
+            self.box=file.readline()
+
+
     def read_BM(self,file,coords=True):
         """
         read_BM reads the files in the point folder to return it to the class.
@@ -24,6 +30,7 @@ class point():
                 return data.T
             except ValueError:
                 data=np.loadtxt(file,skiprows=4)
+                self.get_box(file)
                 return data.T
         else:
             try:
@@ -106,6 +113,7 @@ class point():
 
         :param path: (default="point/)") gives the path to the point folder to be read out.
         """
+        self.box="box XXX XXX XXX"
         if path[-1]=="/":
             self.path=path
         else:
@@ -202,7 +210,9 @@ class point():
         """
         with open(input_file,"r",encoding="UTF8") as f:
             lines=f.readlines()
-            lines=[line[:line.find(";")].split() for line in lines if line[0] != ";"]
+            lines=[line.strip() for line in lines]
+            lines=[line for line in lines if line]
+            lines=[line[:line.find(";")].split() for line in lines if line[0] != ";"]     
             if location=="outer":
                 N=len(self.outer.get_data["id"])
                 locations=[self.outer]
@@ -229,7 +239,7 @@ class point():
             for loc in locations:
                 lipids={}
                 for item in lines:
-                    lipids[item[0]]=[round(float(item[2])*N,0),float(item[3])]
+                    lipids[item[0]]=[round(float(item[2])*N,0)+1,float(item[3])]
                 for index in randomizer:
                     domain=0
                     lipid_probabilities={}
@@ -363,15 +373,20 @@ class point():
                 all_in_one=self._cat_to_one(savers[key])
                 fmt="".join(['%10d','%5d']+['%10.3f']*4+['%8.3f']*11)
                 header=f"< Point NoPoints       {all_in_one.shape[0]}>\n< id domain_id area X Y Z Nx Ny Nz P1x P1y P1z P2x P2y P2z C1 C2  >\n< {key[:5]} >"
+                if "Outer" in key:
+                    header=self.box+"\n"+header
                 np.savetxt(self.path+key,np.round(all_in_one,3),header=header,encoding="UTF8",fmt=fmt)
             elif key =="ExcData.dat":
                 pass
                 #TODO: need to find out what to do with the ExcData
             elif key =="IncData.dat":
-                all_in_one=self._cat_to_one(savers[key])
-                header=f"< Inclusion NoInc       {all_in_one.shape[0]}   >\n< id typeid pointid lx ly lz  >"
-                fmt="".join(['%12d']*3+['%8.3f']*3)
-                np.savetxt(self.path+key,np.round(all_in_one,3),header=header,encoding="UTF8",fmt=fmt)
+                try:
+                    all_in_one=self._cat_to_one(savers[key])
+                    header=f"< Inclusion NoInc       {all_in_one.shape[0]}   >\n< id typeid pointid lx ly lz  >"
+                    fmt="".join(['%12d']*3+['%8.3f']*3)
+                    np.savetxt(self.path+key,np.round(all_in_one,3),header=header,encoding="UTF8",fmt=fmt)
+                except KeyError:
+                    pass
 
     def write_input_str(self,output_file="input.str",input_file=None,ts2cg_input_str=None):
         """
