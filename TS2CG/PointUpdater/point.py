@@ -11,9 +11,13 @@ class point():
     In short, each of the four files receives its own subclass. Additionally, some manipulating and saving routines are provided.
     """
 
-    def get_box(self,file):
+    def _get_box(self,file):
         with open(file,"r",encoding="UTF8") as f:
-            self.box=file.readline()
+            lines=f.readlines()[:4]
+            for line in lines:
+                if "Box" in line:
+                    self.box=line
+                    break
 
 
     def read_BM(self,file,coords=True):
@@ -25,12 +29,12 @@ class point():
         :return: the data contained in the file in a transposed manner to be used in the appropriate subclasses.
         """
         if coords:
+            self._get_box(file)
             try:
                 data=np.loadtxt(file,skiprows=3)
                 return data.T
             except ValueError:
                 data=np.loadtxt(file,skiprows=4)
-                self.get_box(file)
                 return data.T
         else:
             try:
@@ -113,7 +117,7 @@ class point():
 
         :param path: (default="point/)") gives the path to the point folder to be read out.
         """
-        self.box="box XXX XXX XXX"
+        self.box="Box XXX XXX XXX"
         if path[-1]=="/":
             self.path=path
         else:
@@ -374,7 +378,7 @@ class point():
                 fmt="".join(['%10d','%5d']+['%10.3f']*4+['%8.3f']*11)
                 header=f"< Point NoPoints       {all_in_one.shape[0]}>\n< id domain_id area X Y Z Nx Ny Nz P1x P1y P1z P2x P2y P2z C1 C2  >\n< {key[:5]} >"
                 if "Outer" in key:
-                    header=self.box+"\n"+header
+                    header=self.box+header
                 np.savetxt(self.path+key,np.round(all_in_one,3),header=header,encoding="UTF8",fmt=fmt)
             elif key =="ExcData.dat":
                 pass
