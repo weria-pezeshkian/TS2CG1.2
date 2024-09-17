@@ -19,8 +19,14 @@ class point():
         :return: the data contained in the file in a transposed manner to be used in the appropriate subclasses.
         """
         if coords:
-            data=np.loadtxt(file,skiprows=3)
-            return data.T
+            try:
+                data=np.loadtxt(file,skiprows=3)
+                return data.T
+            except ValueError:
+                data=np.loadtxt(file,skiprows=4)
+                return data.T
+            finally:
+                return None
         else:
             try:
                 data=np.loadtxt(file,skiprows=2)
@@ -96,7 +102,10 @@ class point():
 
         :param path: (default="point/)") gives the path to the point folder to be read out.
         """
-        self.path=path
+        if path[-1]=="/":
+            self.path=path
+        else:
+            self.path=path+"/"
         self.input_file=None
         try:
             self.inner=self.InnerOrOuter(self.read_BM(self.path+"InnerBM.dat"))
