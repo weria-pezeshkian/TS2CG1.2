@@ -22,14 +22,15 @@ def PUC(args):
     parser.add_argument('-l','--location',default='both',help="Choose which monolayer is altered: both, upper, lower")
     parser.add_argument('-ni','--new_TS2CG',default=None,help="Path to write a new TS2CG input file.")
     parser.add_argument('-oi','--old_TS2CG',default=None,help="Supply a path to the TS2CG input.str")
+    parser.add_argument('-I','--Ignore_lipid_number',action='store_true',default=False,help="Set to ignore the number of lipids given in the input file.")
 
     args=parser.parse_args(args)
     
     PointFolder=p.point(args.path)
     if args.c12:
-        PointFolder.assign_by_c12(args.input,location=args.location)
+        PointFolder.assign_by_c12(args.input,location=args.location,unspecified_Number=args.Ignore_lipid_number)
     else:
-        PointFolder.assign_by_c0(args.input,location=args.location)
+        PointFolder.assign_by_c0(args.input,location=args.location,unspecified_Number=args.Ignore_lipid_number)
     if args.new_TS2CG is not None:
         PointFolder.write_input_str(output_file=args.new_TS2CG,input_file=args.input,ts2cg_input_str=args.old_TS2CG)
     PointFolder.write_folder()

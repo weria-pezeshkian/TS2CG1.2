@@ -72,9 +72,6 @@ class point():
             for i,row in enumerate(self.raw):
                 self.get_data[names[i]]=row
 
-    class points():
-        
-
 
     def __init__(self, path="point/"):
         """
@@ -177,7 +174,7 @@ class point():
         except KeyError:
             pass
     
-    def assign_by_c0(self,input_file,location="both"):
+    def assign_by_c0(self,input_file,location="both",unspecified_Number=False):
         """
         the function assign_by_c0 reads an input file of form (axample)
             ; domain lipid percentage c0 density
@@ -236,11 +233,11 @@ class point():
                     domain=np.random.choice(list(lipid_probabilities.keys()),1,p=list(lipid_probabilities.values()))[0]
 
                     for key in lipids:
-                        if domain==int(key):
+                        if domain==int(key) and not unspecified_Number:
                             lipids[key][0]=lipids[key][0]-1
                     loc.get_data["domain_id"][index]=domain
 
-    def assign_by_c12(self,input_file,location="both"):
+    def assign_by_c12(self,input_file,location="both",unspecified_Number=False):
         """
         the function assign_by_c12 reads an input file of form (axample)
             ; domain lipid percentage c1 c2 density
@@ -293,7 +290,7 @@ class point():
                             distance=np.linalg.norm(Cs-Cs_input)
                             domain=int(key)
                     for key in lipids:
-                        if domain==int(key):
+                        if domain==int(key) and not unspecified_Number:
                             lipids[key][0]=lipids[key][0]-1
                     loc.get_data["domain_id"][index]=domain
               
