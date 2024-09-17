@@ -25,13 +25,11 @@ class point():
             except ValueError:
                 data=np.loadtxt(file,skiprows=4)
                 return data.T
-            finally:
-                return None
         else:
             try:
                 data=np.loadtxt(file,skiprows=2)
                 return data.T
-            except ValueError:
+            except (ValueError,FileNotFoundError):
                 return None
 
     class InnerOrOuter():
@@ -61,8 +59,11 @@ class point():
             names="id typeid pointid lx ly lz".split()
             self.get_data={}
             self.raw=data
-            for i,row in enumerate(self.raw):
-                self.get_data[names[i]]=row
+            try:
+                for i,row in enumerate(self.raw):
+                    self.get_data[names[i]]=row
+            except TypeError:
+                pass
 
     class Exclusions():
         """
@@ -75,8 +76,11 @@ class point():
             names="id  pointid r".split()
             self.get_data={}
             self.raw=data
-            for i,row in enumerate(self.raw):
-                self.get_data[names[i]]=row
+            try:
+                for i,row in enumerate(self.raw):
+                    self.get_data[names[i]]=row
+            except TypeError:
+                pass
 
 
     def __init__(self, path="point/"):
