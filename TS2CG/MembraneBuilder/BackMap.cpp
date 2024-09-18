@@ -82,6 +82,7 @@ BackMap::BackMap(Argument *pArgu)
         std::exit(0);
     
 
+    std::vector<inclusion> RandomInc;
     if(pInc.size()!=0)
     {
         //== I do not know why do we need this
@@ -99,7 +100,7 @@ BackMap::BackMap(Argument *pArgu)
     }
     else  // if the inclusion file is empty, we generate proteins according to the data in the str file
     {
-        std::vector<inclusion> RandomInc = CreateRandomInclusion(pPointUp, pBox);
+        RandomInc = CreateRandomInclusion(pPointUp, pBox);
         for (std::vector<inclusion>::iterator it2 = RandomInc.begin() ; it2 != RandomInc.end(); ++it2)
             pInc.push_back(&(*it2));
     }
@@ -280,7 +281,7 @@ void BackMap::WriteFinalGroFile(Vec3D *pBox)
 }
 Tensor2 BackMap::Rz(double cos, double sin)
 {
-    Tensor2  R;
+    Tensor2  R('O');
     R(0,0) = cos;
     R(0,1) = -sin;
     R(1,0) = sin;
