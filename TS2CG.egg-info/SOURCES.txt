@@ -4,7 +4,10 @@ MANIFEST.in
 README.md
 pyproject.toml
 setup.py
+TS2CG/PCG
+TS2CG/PLM
 TS2CG/PointUpdaterClass.py
+TS2CG/SOL
 TS2CG/__init__.py
 TS2CG/wrapper.py
 TS2CG.egg-info/PKG-INFO

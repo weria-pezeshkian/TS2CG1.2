@@ -214,8 +214,7 @@ class point():
         """
         with open(input_file,"r",encoding="UTF8") as f:
             lines=f.readlines()
-            lines=[line.strip() for line in lines]
-            lines=[line for line in lines if line]
+            lines=[line for line in lines if line.strip()]
             lines=[line[:line.find(";")].split() for line in lines if line[0] != ";"]     
             if location=="outer":
                 N=len(self.outer.get_data["id"])
@@ -249,19 +248,28 @@ class point():
                     lipid_probabilities={}
                     Cs=np.asarray([loc.get_data["C1"][index],loc.get_data["C2"][index]])
                     for key in lipids:
-                        Cs_input=np.asarray([lipids[key][1:]])
+                        Cs_input=np.asarray([lipids[key][1]])[0]
                         lipid_probabilities[key]=np.exp(-self.k*(Cs[0]+Cs[1]-Cs_input)**2)
                     
                     normalizer=np.sum(np.asarray(list(lipid_probabilities.values())))
+                    if normalizer==0:
+                        for key in lipid_probabilities:
+                            lipid_probabilities[key]=1/len(lipid_probabilities.keys())
+                            normalizer=1
+
                     
                     for key in lipid_probabilities:
                         lipid_probabilities[key]=lipid_probabilities[key]/normalizer
-                        lipid_probabilities[key]=lipid_probabilities[key][0][0]
                     domain=np.random.choice(list(lipid_probabilities.keys()),1,p=list(lipid_probabilities.values()))[0]
-
+                    deleter=None
                     for key in lipids:
-                        if domain==int(key) and not unspecified_Number:
+                        if int(domain)==int(key) and not unspecified_Number:
                             lipids[key][0]=lipids[key][0]-1
+                            if lipids[key][0]==0 and len(lipids.keys())>1:
+                                deleter=key
+                    if deleter is not None:
+                        del lipids[deleter]
+                        deleter=None
                     loc.get_data["domain_id"][index]=domain
 
     def assign_by_c12(self,input_file,location="both",unspecified_Number=False):
@@ -388,11 +396,11 @@ class point():
                     all_in_one=self._cat_to_one(savers[key])
                     header=f"< Inclusion NoInc       {all_in_one.shape[0]}   >\n< id typeid pointid lx ly lz  >"
                     fmt="".join(['%12d']*3+['%8.3f']*3)
-                    np.savetxt(self.path+key,np.round(all_in_one,3),header=header,encoding="UTF8",fmt=fmt)
+                    np.savetxt(self.path+key,np.round(all_in_one,3),header=header,comments='',encoding="UTF8",fmt=fmt)
                 except KeyError:
                     pass
 
-    def write_input_str(self,output_file="input.str",input_file=None,ts2cg_input_str=None):
+    def write_input_str(self,output_file="input_from_PUC.str",input_file=None,ts2cg_input_str=None):
         """
         write_input_str writes a input.str file that is readable by TS2CG to continue the workflow.
 
@@ -405,6 +413,11 @@ class point():
         additional parts like inclusions or exclusions are given in the file, they will be reintroduced to the new input.str
         with the updated domains. If only the [Lipids List] section is used in the old input.str, the inclusion here is redundant.
         """
+        if os.path.isdir(output_file):
+            if output_file[:-1]=="/":
+                output_file=output_file+"input_from_PUC.str"
+            else:
+                output_file=output_file+"/input_from_PUC.str"
         path=self._backup_path(output_file)
         if path!=output_file:
             shutil.copy(output_file,path)
@@ -417,6 +430,7 @@ class point():
             * the path with the input_file parameter."))
         with open(self.input_file,"r",encoding="UTF8") as f:
             lines=f.readlines()
+            lines=[line for line in lines if line.strip()]
             lines=[line[:line.find(";")].split() for line in lines if line[0] != ";"]
         
         with open(output_file,"w",encoding="UTF8") as f:
