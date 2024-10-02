@@ -42,6 +42,7 @@ public:
         inline bool  GetMonolayer()                                     const {return m_Monolayer;}
 
     // // =================
+    bool m_WPointDir;
 
 private:
     std::vector <std::string> m_Argument;
@@ -63,7 +64,6 @@ private:
     std::string m_Function;
     Wall m_Wall;
     Shape_1DSin m_1DSinState;
-
 };
 
 #endif

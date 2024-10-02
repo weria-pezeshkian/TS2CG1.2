@@ -12,6 +12,7 @@ Argument::Argument(std::vector <std::string> argument)
     m_BondL              = 0.1;
     m_Health             = true;
     m_Monolayer          = false;
+    m_WPointDir          = false;
     m_DTSFolder            = "point";
     m_LipidLibrary          = "no";
     m_GeneralOutputFilename	 = "output";
@@ -122,6 +123,11 @@ Argument::Argument(std::vector <std::string> argument)
             else if(Arg1=="-WallBName")
             {
                 m_Wall.UpdateBeadName(m_Argument.at(i+1));
+            }
+            else if(Arg1=="-WPointDir")
+            {
+                m_WPointDir = true;
+                i=i-1;
             }
             else if(Arg1=="-WallH")
             {

@@ -35,7 +35,11 @@ help::help(std::string exe)
      std::cout<<" -Wall             ------       off                  a flag to create a wall around the membrane  "<<"\n";
      std::cout<<" -function         string       backmap              backmap/analytical_shape  "<<"\n";
      std::cout<<" -WallBName        string       WL                   Name of the Wall beads  "<<"\n\n";
+     std::cout<<" -WPointDir        bool         false                Just write the folder  "<<"\n\n";
+
 //analytical_shape
+     
+     
     
      std::cout<< "basic example: PCG -dts point -str input.str -seed 39234  -Bondlength 0.15 "<<"\n\n";
 

@@ -96,6 +96,16 @@ PointBasedBlueprint::PointBasedBlueprint(Argument *pArgu)
     if(m_PointDown.size()==0)
     m_monolayer = true;
     
+    if(pArgu->m_WPointDir == true){
+        
+        ///Fabian write the point folder
+        
+        
+        std::cout<<"---> the point folder has been written \n";
+        exit(0);
+    }
+    
+    
     //==== puting the read data in a pointer container
         m_pBox =&m_Box;
      for (std::vector<point>::iterator it = m_PointUp.begin() ; it != m_PointUp.end(); ++it)
