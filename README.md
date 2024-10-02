@@ -80,6 +80,6 @@ TS2CG SOL -h
 
 ## Quick references
 [About TS2CG](https://github.com/weria-pezeshkian/TS2CG1.2/wiki/About-TS2CG) \
-[Tutorials](http://cgmartini.nl/index.php/2021-martini-online-workshop/tutorials/558-9-ts2cg) \
+[Tutorials](https://cgmartini.nl/docs/tutorials/Martini3/TS2CG/) \
 [New Updates](https://github.com/weria-pezeshkian/TS2CG1.2/wiki/Updates-of-this-version)
 
