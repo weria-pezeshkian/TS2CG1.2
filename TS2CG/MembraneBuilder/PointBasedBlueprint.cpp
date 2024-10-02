@@ -96,10 +96,25 @@ PointBasedBlueprint::PointBasedBlueprint(Argument *pArgu)
     if(m_PointDown.size()==0)
     m_monolayer = true;
     
+    std::string  Folder = "point";
     if(pArgu->m_WPointDir == true){
         
-        ///Fabian write the point folder
+        const int dir_err = system(("mkdir -p "+ Folder).c_str());
+        if (-1 == dir_err)
+        {
+            std::cout<<"error--> creating directory  "<<Folder<<"\n";
+            exit(1);
+        }
         
+        ///Fabian write the point folder
+        std::string     UFUpper = Folder+"/OuterBM.dat";
+        std::string     UFInner = Folder+"/InnerBM.dat";
+        
+        WritePointFile(1, UFUpper, m_PointUp, m_Box);
+        WritePointFile(-1, UFInner, m_PointDown, m_Box);
+
+        
+
         
         std::cout<<"---> the point folder has been written \n";
         exit(0);
@@ -267,6 +282,59 @@ std::string PointBasedBlueprint::functiontype(std::string filename)
     
 
     return ftype;
+}
+void PointBasedBlueprint::WritePointFile(int layer, std::string filename, std::vector<point> &allpoint, Vec3D box){
+
+    FILE *BMFile;
+    BMFile = fopen(filename.c_str(), "w");
+    if (BMFile == nullptr) {
+        // Handle file open error
+        perror("Error opening file");
+        return;
+    }
+
+    const char* Cbox = "Box";
+    if (layer == 1)
+    fprintf(BMFile, "%s%12.3f%12.3f%12.3f\n", Cbox, box(0), box(1), box(2));
+    
+    const char* STR1 = "< Point NoPoints";
+    const char* STR2 = ">";
+    int NoPoints = allpoint.size();
+    fprintf(BMFile, "%s%10d%s\n", STR1, NoPoints, STR2);
+    
+    const char* Cont = "< id domain_id area X Y Z Nx Ny Nz P1x P1y P1z P2x P2y P2z C1 C2  >";
+    fprintf(BMFile, "%s\n", Cont);
+    
+    if (layer == 1)
+        fprintf(BMFile, "%s\n", "< Outer >");
+    else
+        fprintf(BMFile, "%s\n", "< Inner >");
+    
+    for (std::vector<point>::iterator it = allpoint.begin(); it != allpoint.end(); ++it) {
+        Vec3D pos = it->GetPos();
+        Vec3D normal = it->GetNormal();
+        double area = it->GetArea();
+        int id = it->GetID();
+        Vec3D GD1 = it->GetP1();
+        Vec3D GD2 = it->GetP2();
+        std::vector<double> Cur = it->GetCurvature();
+        int domain = it->GetDomainID();
+
+        // Ensure curvature vector has at least 2 elements
+        double Cur1 = (Cur.size() > 0) ? Cur[0] : 0.0;
+        double Cur2 = (Cur.size() > 1) ? Cur[1] : 0.0;
+
+        // Print to file
+        fprintf(BMFile, "%10d%5d%10.3f%10.3f%10.3f%10.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f\n",
+                id, domain, area, pos(0), pos(1), pos(2),
+                normal(0), normal(1), normal(2),
+                GD1(0), GD1(1), GD1(2),
+                GD2(0), GD2(1), GD2(2),
+                Cur1, Cur2);
+    }
+
+    fclose(BMFile);
+    return;
 }
 
 

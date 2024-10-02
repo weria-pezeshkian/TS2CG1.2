@@ -56,6 +56,8 @@ private:
 
 private:
     std::string functiontype(std::string filename);
+    
+    void WritePointFile(int layer, std::string filename, std::vector<point>& allpoint, Vec3D box);
 };
 
 
