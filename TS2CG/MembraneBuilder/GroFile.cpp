@@ -1,28 +1,101 @@
 
 
 #include <stdio.h>
+#include <algorithm>
 #include "GroFile.h"
 #include "Nfunction.h"
 
-GroFile::GroFile(std::string gmxfilename)
-{
-
+GroFile::GroFile(std::string gmxfilename) {
     m_GroFileName = gmxfilename;
     ReadGroFile(m_GroFileName);
 
 }
 
 
-GroFile::~GroFile()
-{
+GroFile::~GroFile() {
     
 }
 
-void GroFile::AddBead(bead b)
-{
+void GroFile::AddBead(bead b) {
 
     m_AllBeads.push_back(b);
 }
+
+
+#if GroRead2024 == Enabled
+
+void GroFile::ReadGroFile(std::string file) {
+    
+    if (Nfunction::SubstringFromRight(file,'.') != "gro"){
+        file = file + ".gro";
+    }
+    
+    std::ifstream FGRO(file.c_str());
+    if (!FGRO.is_open()) {
+        std::cerr << "---> Error: Could not open the file: " << file << std::endl;
+        exit(0);  // Return on error instead of throwing an exception
+    }
+    getline (FGRO,m_Title);
+    m_Title.erase(std::remove(m_Title.begin(), m_Title.end(), ' '), m_Title.end());
+    
+    std::string str,line;
+    int NoBeads;
+    FGRO>>NoBeads;
+    getline (FGRO,str);
+
+    double x,y,z,v1,v2,v3;
+    int resid, secondInt;
+    std::string firstStr, secondStr;
+        
+    for (int i=0; i<NoBeads; i++) {
+        
+        getline (FGRO,line);
+        resid = std::stoi(line.substr(0, 5));  // First integer (column 0-4)
+        firstStr = line.substr(5, 5);             // First string (column 5-9)
+        secondStr = line.substr(10, 5);           // Second string (column 10-14)
+        secondInt = std::stoi(line.substr(15, 5)); // Second integer (column 15-19)
+        firstStr.erase(std::remove(firstStr.begin(), firstStr.end(), ' '), firstStr.end());
+        secondStr.erase(std::remove(secondStr.begin(), secondStr.end(), ' '), secondStr.end());
+        std::istringstream iss(line.substr(20));
+        iss >> x >> y >> z >> v1 >> v2 >> v3;
+        
+        bead make_Bead(i, secondStr, secondStr, firstStr, resid, x, y, z);
+        m_AllBeads.push_back(make_Bead);
+        
+    }
+    float Lx,Ly,Lz;
+    FGRO>>Lx>>Ly>>Lz;
+    FGRO.close();
+    
+    m_Box(0)=Lx; m_Box(1)=Ly; m_Box(2)=Lz;
+    m_pBox = &m_Box;
+    double xcm =0;
+    double ycm =0;
+    double zcm =0;
+    
+    double no_beads = double(m_AllBeads.size());
+    for (std::vector<bead>::iterator it = m_AllBeads.begin() ; it != m_AllBeads.end(); ++it) {
+        (*it).UpdateBox(m_pBox);
+        xcm += (*it).GetXPos()/no_beads;
+        ycm += (*it).GetYPos()/no_beads;
+        zcm += (*it).GetZPos()/no_beads;
+    }
+    
+    for (std::vector<bead>::iterator it = m_AllBeads.begin() ; it != m_AllBeads.end(); ++it) {
+        (*it).UpdateBox(m_pBox);
+        (*it).UpdateXPos((*it).GetXPos()-xcm);
+        (*it).UpdateYPos((*it).GetYPos()-ycm);
+        (*it).UpdateZPos((*it).GetZPos()-zcm);
+    }
+    
+    
+    for (std::vector<bead>::iterator it = m_AllBeads.begin() ; it != m_AllBeads.end(); ++it) {
+        m_pAllBeads.push_back(&(*it));
+    }
+    
+    return;
+}
+#elif
 void GroFile::ReadGroFile(std::string file)
 {
     Nfunction f;
@@ -168,6 +241,8 @@ void GroFile::ReadGroFile(std::string file)
     }
     
 }
+#endif
+
 /*void GroFile::ReadGroFile(std::string file)
 {
     Nfunction f;
@@ -265,22 +340,11 @@ void GroFile::ReadGroFile(std::string file)
 }
  */
 
-void GroFile::WriteGroFile(std::string file)
-{
+void GroFile::WriteGroFile(std::string file) {
 
-    if(file.size()<4)
-    {
-        file=file+".gro";
+    if (Nfunction::SubstringFromRight(file,'.') != "gro"){
+        file = file + ".gro";
     }
-    else if(file.at(file.size()-1)=='o' && file.at(file.size()-2)=='r' && file.at(file.size()-3)=='g')
-    {
-        
-    }
-    else
-    {
-        file=file+".gro";
-    }
-
     
     FILE *fgro;
     fgro = fopen(file.c_str(), "w");
