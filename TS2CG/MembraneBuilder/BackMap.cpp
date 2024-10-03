@@ -775,6 +775,8 @@ bool BackMap::GenTopologyFile(std::vector<Domain*> pdomains, int WBead_no)
             Topgro <<" ;  in the lower monolayer \n";
             for ( std::vector<DomainLipid>::iterator it2 = DL.begin(); it2 != DL.end(); it2++ )
             {
+                if((*it2).no_created == 0)
+                    Topgro <<"   ;  ";
                 Topgro <<"     "<<(*it2).Name<<"  "<<(*it2).no_created<<"     "<<std::endl ;
                 
             }
