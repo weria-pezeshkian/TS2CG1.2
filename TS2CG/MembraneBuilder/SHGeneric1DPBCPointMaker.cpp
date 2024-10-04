@@ -41,8 +41,7 @@ SHGeneric1DPBCPointMaker::SHGeneric1DPBCPointMaker(Argument *pArgu)
     m_WallPoint2 = CalculateArea_MakePoints(-1, 1/m_WallDensitydown,m_Thickness/2+Hwall,true);
 
 }
-SHGeneric1DPBCPointMaker::~SHGeneric1DPBCPointMaker()
-{
+SHGeneric1DPBCPointMaker::~SHGeneric1DPBCPointMaker() {
     
 }
 std::vector<point> SHGeneric1DPBCPointMaker::CalculateArea_MakePoints(int layer, double APL,double H, bool wall)
@@ -219,28 +218,34 @@ Vec3D SHGeneric1DPBCPointMaker::F(double t, int layer,double H)
     Vec3D F;
     F(0) =t;
     F(2) = (*m_pBox)(2)/2;
-    for (std::vector<Vec3D >::iterator it = m_Modes.begin() ; it != m_Modes.end(); ++it)
-    {
-        Vec3D f;
-        double w = it->at(1)*2*pi/m_Box(0);
-        double phi =it->at(2)*pi/180;
-        F(2) = F(2)+it->at(0)*cos(w*t+phi);
+    for (std::vector<Vec3D>::iterator modeIt = m_Modes.begin(); modeIt != m_Modes.end(); ++modeIt) {
+        Vec3D mode = *modeIt;  // Store dereferenced object in a temporary variable for clarity
+        double frequency = mode(1) * 2 * pi / m_Box(0);  // Calculate the frequency
+        double phase = mode(2) * pi / 180;  // Convert phase angle to radians
+
+        // Update F(2) using the frequency, time, and phase
+        F(2) += mode(0) * cos(frequency * t + phase);
     }
     F = F + Normal(t)*(H*double(layer)/(Normal(t)).norm());
     return F;
 }
-Vec3D SHGeneric1DPBCPointMaker::Normal(double t)/// normal function to the mid surface at point denotaed by t
+Vec3D SHGeneric1DPBCPointMaker::Normal(double t)  // Normal function to the mid-surface at point denoted by t
 {
-    double pi = acos(-1);
-    Vec3D N;
-    N(2) =-1;
-    for (std::vector<Vec3D >::iterator it = m_Modes.begin() ; it != m_Modes.end(); ++it)
-    {
-        double w = it->at(1)*2*pi/m_Box(0);
-        double phi =it->at(2)*pi/180;
-        N(0) =N(0)-w*(it->at(0))*sin(w*t+phi);
+    double pi = acos(-1);  // More descriptive constant for pi
+    Vec3D normalVector;
+    normalVector(2) = -1;  // Set initial value of the Z component
+
+    for (std::vector<Vec3D>::iterator modeIt = m_Modes.begin(); modeIt != m_Modes.end(); ++modeIt) {
+        Vec3D mode = *modeIt;  // Temporary variable to hold the dereferenced mode
+
+        double frequency = mode(1) * 2 * pi / m_Box(0);  // Calculate the frequency
+        double phase = mode(2) * pi / 180;  // Convert phase to radians
+
+        // Update the X component of the normal vector
+        normalVector(0) -= frequency * mode(0) * sin(frequency * t + phase);
     }
-    return N;
+
+    return normalVector;
 }
 void SHGeneric1DPBCPointMaker::Initialize(std::string filename)
 {

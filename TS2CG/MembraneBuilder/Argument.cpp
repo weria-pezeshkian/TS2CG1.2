@@ -4,33 +4,43 @@
 #include "Nfunction.h"
 
 Argument::Argument(std::vector <std::string> argument)
+         :  m_Argument(argument),
+            m_BondL(0.1),
+            m_Seed(9474),
+            m_Health(true),
+            m_Monolayer(false),
+            m_WPointDir(false),
+            m_DTSFolder("point"),
+            m_LipidLibrary("no"),
+            m_GeneralOutputFilename("output"),
+            m_InclusionDirectionType("Global"),
+            m_Function("backmap"),
+            m_RCutOff(0.5),
+            m_Iter(5),
+            m_Renorm(false)
 {
-    m_Argument=argument;
 
-    Nfunction f;
-    
-    m_BondL              = 0.1;
-    m_Health             = true;
-    m_Monolayer          = false;
-    m_WPointDir          = false;
-    m_DTSFolder            = "point";
-    m_LipidLibrary          = "no";
-    m_GeneralOutputFilename	 = "output";
+
     m_SoftWareVersion = SoftWareVersion;
-    m_InclusionDirectionType = "Global";
-    m_ArgCon=1;
+    m_ArgCon = 1;
     std::string Arg1;
-    m_Seed = 9474;
-    m_Renorm = false;
-    m_Iter = 4;
-    m_RCutOff = 0.5;
-    m_Function = "backmap";
-    std::ofstream log;
-    log.open("pcg.log");
+
     
-    for (long i=0;i<m_Argument.size();i++)
+                
+    Nfunction f;
+
+    std::ofstream log("pcg.log");  // Open the file directly in the constructor
+    if (log.is_open())  // Ensure the file opened successfully
     {
-        log<<m_Argument.at(i)<<"  ";
+        for (long i = 0; i < m_Argument.size(); i++)
+        {
+            log << m_Argument[i] << "  ";  // Use array-style indexing
+        }
+        log.close();  // Close the file after writing
+    }
+    else
+    {
+        std::cerr << "Error: Could not open log file for writing.\n";
     }
 
 
@@ -53,15 +63,15 @@ Argument::Argument(std::vector <std::string> argument)
                 m_Function = m_Argument.at(i+1);
                 if(m_Function=="1dsin")
                 {
-                    m_1DSinState.Lx =f.String_to_Double(m_Argument.at(i+2));
-                    m_1DSinState.Ly =f.String_to_Double(m_Argument.at(i+3));
-                    m_1DSinState.Lz =f.String_to_Double(m_Argument.at(i+4));
-                    m_1DSinState.Omega =f.String_to_Double(m_Argument.at(i+5));
-                    m_1DSinState.A =f.String_to_Double(m_Argument.at(i+6));
-                    m_1DSinState.H =f.String_to_Double(m_Argument.at(i+7));
+                    m_1DSinState.Lx = Nfunction::String_to_Double(m_Argument.at(i+2));
+                    m_1DSinState.Ly = Nfunction::String_to_Double(m_Argument.at(i+3));
+                    m_1DSinState.Lz = Nfunction::String_to_Double(m_Argument.at(i+4));
+                    m_1DSinState.Omega = Nfunction::String_to_Double(m_Argument.at(i+5));
+                    m_1DSinState.A = Nfunction::String_to_Double(m_Argument.at(i+6));
+                    m_1DSinState.H = Nfunction::String_to_Double(m_Argument.at(i+7));
                     
-                    m_1DSinState.APL =f.String_to_Double(m_Argument.at(i+8));
-                    m_1DSinState.APW =f.String_to_Double(m_Argument.at(i+9));
+                    m_1DSinState.APL = Nfunction::String_to_Double(m_Argument.at(i+8));
+                    m_1DSinState.APW = Nfunction::String_to_Double(m_Argument.at(i+9));
                     i=i+8;
 
                 }
@@ -166,16 +176,14 @@ Argument::Argument(std::vector <std::string> argument)
                     m_StrFileName = m_StrFileName + "." + STRExt;
                 }
             }
-            else if(Arg1==GET_SEED) // "-seed"
+            else if(Arg1 == GET_SEED) // "-seed"
             {
                 m_Seed = f.String_to_Double(m_Argument.at(i+1));
             }
-            else if(Arg1=="-Rcutoff")
-            {
+            else if(Arg1 == "-Rcutoff") {
                 m_RCutOff = f.String_to_Double(m_Argument.at(i+1));
             }
-            else if(Arg1=="-Bondlength")
-            {
+            else if(Arg1 == "-Bondlength") {
                 m_BondL = f.String_to_Double(m_Argument.at(i+1));
             }
             else
@@ -202,13 +210,6 @@ Argument::Argument(std::vector <std::string> argument)
         }
  
 }
-
-
-
-
-
-
-Argument::~Argument()
-{
+Argument::~Argument() {
    
 }
