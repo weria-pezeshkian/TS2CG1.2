@@ -1,8 +1,9 @@
-from pathlib import Path
-import argparse
-import shutil
 import numpy as np
-from typing import Optional, List, Dict, Union
+import sys
+import traceback
+from inspect import cleandoc as cd
+import os,shutil
+import argparse
 
 class PointUpdaterClass():
     """
@@ -472,7 +473,7 @@ class PointUpdaterClass():
 
         args=parser.parse_args(args)
 
-        PointFolder=p.point(args.path)
+        PointFolder=cls(args.path)
         if args.c12:
             PointFolder.assign_by_c12(args.input,location=args.location,unspecified_Number=args.Ignore_lipid_number)
         else:
