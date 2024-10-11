@@ -1,0 +1,3 @@
+/data/users/fabian/TS2CG/TS2CG_editable/build/lib.linux-x86_64-cpython-38/TS2CG/SOL
+/data/users/fabian/TS2CG/TS2CG_editable/build/lib.linux-x86_64-cpython-38/TS2CG/PLM
+/data/users/fabian/TS2CG/TS2CG_editable/build/lib.linux-x86_64-cpython-38/TS2CG/PCG
