@@ -58,7 +58,7 @@ class point():
                 self.get_data[names[i]]=row
             for name in ["id","domain_id"]:
                 self.get_data[name]=np.asarray(self.get_data[name],dtype=int)
-    
+
     class Inclusions():
         """
         Represents the IncData.dat from the point folder.
@@ -96,7 +96,7 @@ class point():
 
     def __init__(self, path="point/"):
         """
-        Initliazes the point class to represent the point folder in the python framework. It creates the necessary 
+        Initliazes the point class to represent the point folder in the python framework. It creates the necessary
         subclasses for the whole folder named
             inner
             outer
@@ -198,7 +198,7 @@ class point():
             self.outer.get_data["domain_id"]=domains["Outer"]
         except KeyError:
             pass
-    
+
     def assign_by_c0(self,input_file,location="both",unspecified_Number=False):
         """
         the function assign_by_c0 reads an input file of form (axample)
@@ -215,7 +215,7 @@ class point():
         with open(input_file,"r",encoding="UTF8") as f:
             lines=f.readlines()
             lines=[line for line in lines if line.strip()]
-            lines=[line[:line.find(";")].split() for line in lines if line[0] != ";"]     
+            lines=[line[:line.find(";")].split() for line in lines if line[0] != ";"]
             if location=="outer":
                 N=len(self.outer.get_data["id"])
                 locations=[self.outer]
@@ -250,14 +250,14 @@ class point():
                     for key in lipids:
                         Cs_input=np.asarray([lipids[key][1]])[0]
                         lipid_probabilities[key]=np.exp(-self.k*(Cs[0]+Cs[1]-Cs_input)**2)
-                    
+
                     normalizer=np.sum(np.asarray(list(lipid_probabilities.values())))
                     if normalizer==0:
                         for key in lipid_probabilities:
                             lipid_probabilities[key]=1/len(lipid_probabilities.keys())
                             normalizer=1
 
-                    
+
                     for key in lipid_probabilities:
                         lipid_probabilities[key]=lipid_probabilities[key]/normalizer
                     domain=np.random.choice(list(lipid_probabilities.keys()),1,p=list(lipid_probabilities.values()))[0]
@@ -328,8 +328,8 @@ class point():
                         if domain==int(key) and not unspecified_Number:
                             lipids[key][0]=lipids[key][0]-1
                     loc.get_data["domain_id"][index]=domain
-              
-           
+
+
     def _backup_path(self,path):
         """
         _backup_path is a helper function to create sensible backups for the methods that actually write out files, or folders. It should
@@ -432,7 +432,7 @@ class point():
             lines=f.readlines()
             lines=[line for line in lines if line.strip()]
             lines=[line[:line.find(";")].split() for line in lines if line[0] != ";"]
-        
+
         with open(output_file,"w",encoding="UTF8") as f:
             f.write("[Lipids List]\n")
             for line in lines:
