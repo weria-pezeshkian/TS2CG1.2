@@ -3,7 +3,7 @@ import subprocess
 from sys import stderr
 from pathlib import Path
 from importlib.metadata import version
-from TS2CG.PointUpdaterClass import PUC as PUC
+from .PointUpdaterClass import PUC as PUC
 
 def run_binary(binary_name, args):
     current_dir = Path(__file__).parent
