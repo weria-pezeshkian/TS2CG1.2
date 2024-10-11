@@ -19,4 +19,4 @@ dependencies = ["numpy"]
 packages = ["TS2CG"]
 
 [project.scripts]
-TS2CG = "TS2CG.wrapper:main"
+TS2CG = "TS2CG.run_modules:main"
