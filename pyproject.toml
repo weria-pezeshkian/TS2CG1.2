@@ -9,6 +9,7 @@ description = "TS2CG: converts triangulated surfaces to coarse-grained membrane 
 requires-python = ">=3.6"
 authors = [
     {name = "Weria Pezeshkian", email = "weria.pezeshkian@nbi.ku.dk"},
+    {name = "Fabian Schuhmann", email = "fabian.schuhmann@nbi.ku.dk"},
     {name = "Jan Stevens", email = "j.a.stevens@rug.nl"},
 ]
 license = {file = "LICENSE"}
