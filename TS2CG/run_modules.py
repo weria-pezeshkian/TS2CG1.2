@@ -5,8 +5,7 @@ from importlib.metadata import version
 
 from TS2CG.PointUpdaterClass.PointUpdaterClass import *
 
-
-def run_python_module(module_name: str, args: list[str]):
+def run_python_module(module_name, args):
     """
     run the specified python module with given arguments.
     """
@@ -16,7 +15,7 @@ def run_python_module(module_name: str, args: list[str]):
         print(f"Unknown Python module: {module_name}")
 
 
-def run_cpp_module(module_name: str, args: list[str]) -> int:
+def run_cpp_module(module_name, args):
     """
     run the specified cpp module with given arguments.
     """
@@ -72,10 +71,11 @@ def main():
 
     # call the right subroutine based on the module type
     if args.module in cpp_modules:
-        return run_cpp_module(args.module, args.args)
+        run_cpp_module(args.module, args.args)
     elif args.module in python_modules:
-        return run_python_module(args.module, args.args)
+        run_python_module(args.module, args.args)
+
+    sys.exit()
 
 if __name__ == '__main__':
     main()
-

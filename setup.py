@@ -40,7 +40,7 @@ class CMakeBuild(build_ext):
 setup(
     name='TS2CG',
     version='1.2.2',
-    packages=find_packages(),
+    packages=find_packages(include=['TS2CG', 'TS2CG.*']),
     ext_modules=[CMakeExtension('TS2CG')],
     cmdclass={'build_ext': CMakeBuild},
     package_data={
@@ -50,7 +50,7 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'TS2CG=TS2CG.wrapper:main',
+            'TS2CG=TS2CG.run_modules:main',
         ],
     },
 )
