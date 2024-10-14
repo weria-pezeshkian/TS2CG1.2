@@ -1,4 +1,4 @@
-import TS2CG.PointUpdater.point as p
+from TS2CG.PointUpdater import point as p
 import argparse
 from inspect import cleandoc as cd
 
@@ -17,16 +17,18 @@ def PUC(args):
         0 POPC .3 0.179 0.64
         1 POPD .4 0.613 0.64
         2 POPG .3 0.629 0.64""")
+    parser.add_argument('-k','--k',default=1,help="Sets the factor in the exponent for the c0 approach")
     parser.add_argument('-c','--c12',action='store_true',help="Use the c12 approach to set the domains instead of the default c0 approach.")
     parser.add_argument('-p','--path',default="point/",help="Specify the path to the point folder")
     parser.add_argument('-l','--location',default='both',help="Choose which monolayer is altered: both, upper, lower")
     parser.add_argument('-ni','--new_TS2CG',default=None,help="Path to write a new TS2CG input file.")
     parser.add_argument('-oi','--old_TS2CG',default=None,help="Supply a path to the TS2CG input.str")
     parser.add_argument('-I','--Ignore_lipid_number',action='store_true',default=False,help="Set to ignore the number of lipids given in the input file.")
+    parser.add_argument('-n','--new',action='store_true',help='Set new to initialize a new point folder from scratch, will fail if the folder already exists')
 
     args=parser.parse_args(args)
     
-    PointFolder=p.point(args.path)
+    PointFolder=p.point(path=args.path,k=args.k,new=args.new)
     if args.c12:
         PointFolder.assign_by_c12(args.input,location=args.location,unspecified_Number=args.Ignore_lipid_number)
     else:
