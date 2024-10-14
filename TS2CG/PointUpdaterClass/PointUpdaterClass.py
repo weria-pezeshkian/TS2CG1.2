@@ -73,11 +73,7 @@ class PointUpdaterClass():
             else:
                 self.get_data=dict.fromkeys(names,None)
 
-<<<<<<< HEAD:TS2CG/PointUpdater/point.py
-    
-=======
 
->>>>>>> pointupdater:TS2CG/PointUpdaterClass/PointUpdaterClass.py
     class Inclusions():
         """
         Represents the IncData.dat from the point folder.
@@ -98,15 +94,9 @@ class PointUpdaterClass():
             self.raw=data
             self.NoInc=len(data)
             self.make_data(self.raw)
-<<<<<<< HEAD:TS2CG/PointUpdater/point.py
-            
-
-        
-=======
 
 
 
->>>>>>> pointupdater:TS2CG/PointUpdaterClass/PointUpdaterClass.py
 
     class Exclusions():
         """
@@ -298,11 +288,7 @@ class PointUpdaterClass():
                     for key in lipids:
                         Cs_input=np.asarray([lipids[key][1]])[0]
                         lipid_probabilities[key]=np.exp(-self.k*(turn*(Cs[0]+Cs[1])-Cs_input)**2)
-<<<<<<< HEAD:TS2CG/PointUpdater/point.py
-                    
-=======
 
->>>>>>> pointupdater:TS2CG/PointUpdaterClass/PointUpdaterClass.py
                     normalizer=np.sum(np.asarray(list(lipid_probabilities.values())))
                     if normalizer==0:
                         for key in lipid_probabilities:
@@ -380,11 +366,7 @@ class PointUpdaterClass():
                         if domain==int(key) and not unspecified_Number:
                             lipids[key][0]=lipids[key][0]-1
                     loc.get_data["domain_id"][index]=domain
-<<<<<<< HEAD:TS2CG/PointUpdater/point.py
-                       
-=======
 
->>>>>>> pointupdater:TS2CG/PointUpdaterClass/PointUpdaterClass.py
     def _backup_path(self,path):
         """
         _backup_path is a helper function to create sensible backups for the methods that actually write out files, or folders. It should
@@ -508,132 +490,12 @@ class PointUpdaterClass():
                         block=False
                     elif not block and "Lipids List" not in line:
                         f.write(line)
-    
-    def _wiggle(self,xyz,wiggle):
-        random_perturbation=np.random.uniform(-wiggle,wiggle,xyz.shape)
-        xyz=xyz[0]+random_perturbation[0]
-
-        return xyz/np.linalg.norm(xyz)
-
-
-    def _corrected(self,to_check,reference):
-        while len(to_check)<len(reference):
-            to_check=to_check+[0]
-        return to_check
-
-    def set_protein_inclusion_number(self,number,Type=None,collision_Distance=0,domain=None, n_Vector=[0,0,0],wiggle=0):
-        """
-        Use this method to set the number of protein copies to a specified value in the Inclusions section. 
-        The id corresponds to the id in the outer membrane.
-
-        :param number: The number of proteins there should be in the inclusions. Can also be a list.
-        :param Type: (default=None) If a type is set, the number will correspond to number of type 1 as specified
-        in the inclusion file. If no type is set, the number is split over all types according to the ratio of their
-        appearance in the inclusion file.
-        :param collision_Distance: (default=0) The placement will be restricted so a protein is not placed within
-        this value to another protein. Additionally a list can be given to collision_Distance, which would contain
-        the distance per protein type, i.e. [5,3,2] would say, that type 1 needs minimum space of 5 nm, 2 of 3, etc.
-        :param domain: (default=None) If a domain is set, the inclusions will only be placed in that domain. Here, 
-        also a list of domains is possible to allow placement in multiple domains.
-        :param n_Vector: (default=[0,0,0]) The relative position of the protein type is set. Set n_Vector to None
-        to take the n_Vector from the inclusion file.
-        :param wiggle: (default=0) The relative position is wiggled a little per inclusion.
-        """
-
-        #Make everything a list to unify the code disregarding if the paramters are lists or not
-        if not isinstance(Type,list):
-            Type=[Type]
-        if not isinstance(number,list):
-            number=[number]
-        if not isinstance(collision_Distance,list):
-            collision_Distance=[collision_Distance]
-        if not isinstance(domain,list):
-            domain=[domain]
-        if n_Vector is not None:
-            if not any(isinstance(item,list) for item in n_Vector):
-                n_Vector=[n_Vector]
-        if not isinstance(wiggle,list):
-            wiggle=[wiggle]
-        number=self._corrected(number,Type)
-        collision_Distance=self._corrected(collision_Distance,Type)
-        wiggle=self._corrected(wiggle,Type)
-        
-        #baseline items will have the form [typeid,desired number,averaged position,the allowed wiggle]
-        baseline=np.zeros((len(Type),7))
-        ratio=[]
-        inc_baseline=[]
-        for i,item in enumerate(Type):
-            baseline[i][0]=item
-            ratio.append(self.inclusions.raw.T[self.inclusions.raw.T[:,1]==item])
-            mean=np.mean(self.inclusions.raw.T[self.inclusions.raw.T[:,1]==item][:,3:],axis=0)
-            baseline[i][4:]=mean
-            baseline[i][1]=number[i]
-            baseline[i][2]=wiggle[i]
-            baseline[i][3]=collision_Distance[i]
-
-            inc_baseline=inc_baseline+([item]*number[i])
-
-
-        outer_baseline=self.outer.raw.T[:,[0,1,3,4,5]]
-        outer_baseline=outer_baseline[np.isin(outer_baseline[:,1],domain)]
-        outer_baseline=outer_baseline[np.random.permutation(outer_baseline.shape[0])]
-        inc_baseline=np.asarray(inc_baseline)[np.random.permutation(len(inc_baseline))]
-            
-
-        collisions=[]
-        colliding_distances=[]
-        new_raw=[]
-        index=0
-
-        for item in outer_baseline:
-            placeable=True
-            for i in range(len(collisions)):        
-                if np.linalg.norm(item[2:]-collisions[i])<(baseline[baseline[:,0]==inc_baseline[index]][:,3]+colliding_distances[i])/2:
-                    placeable=False
-                    break
-            if placeable:
-                collisions.append(item[2:])
-                colliding_distances.append(baseline[baseline[:,0]==inc_baseline[index]][:,3])
-                wiggled=self._wiggle(xyz=baseline[baseline[:,0]==inc_baseline[index]][:,4:],wiggle=baseline[baseline[:,0]==inc_baseline[index]][:,2])
-                new_raw.append([index,inc_baseline[index],item[0],wiggled[0],wiggled[1],wiggled[2]])
-                index+=1
-            if index==len(inc_baseline):
-                break
-        
-        self.inclusions.make_data(np.asarray(new_raw).T)
-            
-
-
-
-
-
-
-
-        
-
-        
-
-        
-
-
-
 
     def _wiggle(self,xyz,wiggle):
         random_perturbation=np.random.uniform(-wiggle,wiggle,xyz.shape)
         xyz=xyz[0]+random_perturbation[0]
 
-<<<<<<< HEAD:TS2CG/PointUpdater/point.py
-if __name__=="__main__":
-    a=point(path="/home/fabian/Downloads/ts2cgtest/TS2CG1.2/Tutorials/files/point_test",new=True)
-    #a=point(path="/home/fabian/Downloads/ts2cgtest/TS2CG1.2/Tutorials/files/point")
-    #a.write_input_str(output_file="input.str",input_file="domain_input.txt",ts2cg_input_str="../../../MobiusMembrane/input.str")
-    #a.assign_domains_by_C("domain_input.txt",n_Vector="both",c0=True)
-    
-    #a.set_protein_inclusion_number(number=[10,5],Type=[1,2],wiggle=[5,4],domain=0,collision_Distance=[1.4,3])
-    #a.write_folder()
-=======
         return xyz/np.linalg.norm(xyz)
->>>>>>> pointupdater:TS2CG/PointUpdaterClass/PointUpdaterClass.py
 
 
     def _corrected(self,to_check,reference):
