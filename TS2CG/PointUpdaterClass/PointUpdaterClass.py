@@ -5,12 +5,6 @@ from inspect import cleandoc as cd
 import os,shutil
 import argparse
 
-import numpy as np
-import sys
-import traceback
-from inspect import cleandoc as cd
-import os,shutil
-
 
 class PointUpdaterClass():
     """
