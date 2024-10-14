@@ -1,4 +1,6 @@
 import argparse
+from argparse import RawTextHelpFormatter
+
 import subprocess
 from pathlib import Path
 from importlib.metadata import version
@@ -45,9 +47,22 @@ def main():
     python_modules = ['PUC']
 
     # parse arguments before a calling module
+    description = """
+    ==========================================================================================================
+
+    -- TS2CG:  converts triangulated surfaces (ts) to coarse-grained membrane models
+    -- Version:  version 1.2
+    -- Groningen Biomolecular Sciences and Biotechnology Institute and Zernike Institute for Advanced Materials,
+    -- University of Groningen, Groningen, Netherlands
+    -- For more information contact Weria Pezeshkian: weria.pezeshkian@gmail.com
+    -- citation: Pezeshkian, W. et al. Backmapping triangulated surfaces to coarse-grained membrane models. Nat Commun 11, 2296 (2020).
+
+    ==========================================================================================================
+    """
     parser = argparse.ArgumentParser(
-        description='ts2cg: converts triangulated surfaces (ts) to coarse-grained membrane models',
-        prog='ts2cg',
+        description=description,
+        prog='TS2CG',
+        formatter_class=RawTextHelpFormatter
     )
 
     parser.add_argument(

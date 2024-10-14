@@ -587,7 +587,14 @@ class PointUpdaterClass():
     @classmethod
     def from_args(cls, args):
         parser=argparse.ArgumentParser()
-        parser = argparse.ArgumentParser(description="A tool to directly alter the domains to place lipids according to a preferred curvature",formatter_class=argparse.RawTextHelpFormatter)
+        description="""
+        ==========================================================================================================
+
+        -- Point Updater Class (PUC): A tool to place lipids according to a preferred curvature
+
+        ==========================================================================================================
+        """
+        parser = argparse.ArgumentParser(description=description,formatter_class=argparse.RawTextHelpFormatter)
 
         parser.add_argument('-i','--input',type=str,default="domain.txt",help="""A path to the domain_input.txt input file. A file could for instance, look like this:
             ; domain lipid percentage c0 density
