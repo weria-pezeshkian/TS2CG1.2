@@ -86,7 +86,10 @@ class PointUpdaterClass():
             :param data: The data of the appropriate dat file as has been read by read_BM()
             """
             self.raw=data
-            self.NoInc=len(data)
+            try:
+                self.NoInc=len(data)
+            except TypeError:
+                self.NoInc=0
             self.make_data(self.raw)
 
 
