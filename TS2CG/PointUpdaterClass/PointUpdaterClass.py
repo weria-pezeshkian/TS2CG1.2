@@ -126,13 +126,8 @@ class PointUpdaterClass():
             0 POPC .3 0.179 0.64
             1 POPD .4 0.613 0.64
             2 POPG .3 0.629 0.64
-        or
-            ; domain lipid percentage c1 c2 density
-            0 POPC .3 0.179 0.150 0.64
-            1 POPD .4 0.613 0.481 0.64
-            2 POPG .3 0.629 0.472 0.64
         depending on the alteration planned later.
-        If necessarry k can be adjusted to correct the exponent in the formula, if c0 is used to sort lipids by curvature.
+        If necessarry k can be adjusted to correct the exponent in the assign_by_c0 formula.
 
         :param path: (default="point/)") gives the path to the point folder to be read out.
         """
@@ -141,30 +136,19 @@ class PointUpdaterClass():
             self.path=path
         else:
             self.path=path+"/"
-        if not os.path.exists(self.path) and not new:
+        try:
+            self.inner=self.InnerOrOuter(self.read_BM(self.path+"InnerBM.dat"),h_Name="inner")
+            self.outer=self.InnerOrOuter(self.read_BM(self.path+"OuterBM.dat"),h_Name="outer")
+            self.inclusions=self.Inclusions(self.read_BM(self.path+"IncData.dat",coords=False))
+            self.exclusions=self.Exclusions(self.read_BM(self.path+"ExcData.dat",coords=False))
+        except:
             print(traceback.format_exc())
-            sys.exit(cd("The point folder you are trying to read does not exist and you did not set\n\
-            the new variable to initialize a new one. There is nothing to do here."))
-        elif os.path.exists(self.path) and new:
-            print(traceback.format_exc())
-            sys.exit(cd("The point folder you are trying to initialize already exists, but you set the\n\
-            new variable. This is conflicting information and the program is aboarded to protect the data."))
-        elif os.path.exists(self.path) and not new:
-            try:
-                self.inner=self.InnerOrOuter(self.read_BM(self.path+"InnerBM.dat"),h_Name="inner")
-                self.outer=self.InnerOrOuter(self.read_BM(self.path+"OuterBM.dat"),h_Name="outer")
-                self.inclusions=self.Inclusions(self.read_BM(self.path+"IncData.dat",coords=False))
-                self.exclusions=self.Exclusions(self.read_BM(self.path+"ExcData.dat",coords=False))
-            except:
-                print(traceback.format_exc())
-                sys.exit(cd("Something went wrong initializing the point class. Please make sure that\n\
-                * path is set to the point folder\n\
-                * the point folder contains the files InnerBM.dat, OuterBM.dat, IncData.dat, and ExcData.dat"))
-        else:
-            from TS2CG.PointUpdater.initialize_Point import builder
-            self.inner, self.outer, self.inclusions, self.exclusions = builder()
+            sys.exit(cd("Something went wrong initializing the point class. Please make sure that\n\
+            * path is set to the point folder\n\
+            * the point folder contains the files InnerBM.dat, OuterBM.dat, IncData.dat, and ExcData.dat"))
         self.input_file=None
         self.k=k
+        self.protein_altered=False
 
     def update_domains(self,**kwargs):
         """
@@ -307,18 +291,17 @@ class PointUpdaterClass():
                         deleter=None
                     loc.get_data["domain_id"][index]=domain
 
-    def assign_by_c12(self,input_file,location="both",unspecified_Number=False):
+    def assign_by_function(self,input_file,method,location="both",unspecified_Number=False):
         """
-        the function assign_by_c12 reads an input file of form (axample)
-            ; domain lipid percentage c1 c2 density
-            0 POPC .3 0.179 0.150 0.64
-            1 POPD .4 0.613 0.481 0.64
-            2 POPG .3 0.629 0.472 0.64
-        which would set domains 0, 1, 2 for the lipids randomly with their corresponding percentage such that the given c1, c2 values are
-        closest to the c1, c2 values of the membrane in an Euclidean distance for the yet to be occupied spaces.
+        the function assign_by_function assigns placement probabilities based on a method. The method only needs to be able
+        to return a number per lipid.
 
-        :param input_file: path to the input file
+        :param input_file: The input file contains the number per lipid type, etc. And might be a good place to define
+        additional parameters for the method.
+        :param method: a method that sorts the sorting probabilities
         :param location: (default="both") allows the alteration of just the *upper*,*lower*, or *both* monolayer.
+        :param unspecified_Number: (default=False) If set, it will disregard
+        
         """
         with open(input_file,"r",encoding="UTF8") as f:
             lines=f.readlines()
@@ -347,21 +330,40 @@ class PointUpdaterClass():
                 randomizer=np.random.permutation(self.outer.get_data["id"])
 
             for loc in locations:
+                if loc.h_Name=="inner":
+                    turn=-1
+                else:
+                    turn=1
                 lipids={}
                 for item in lines:
-                    lipids[item[0]]=[round(float(item[2])*N,0),float(item[3]),float(item[4])]
+                    lipids[item[0]]=[round(float(item[2])*N,0)+1,float(item[3])]
                 for index in randomizer:
                     domain=0
-                    distance=np.inf
+                    lipid_probabilities={}
                     Cs=np.asarray([loc.get_data["C1"][index],loc.get_data["C2"][index]])
                     for key in lipids:
-                        Cs_input=np.asarray([lipids[key][1:]])
-                        if lipids[key][0]!=0 and np.linalg.norm(Cs-Cs_input)<distance: #find a smarter idea than cartesian distance for curvature
-                            distance=np.linalg.norm(Cs-Cs_input)
-                            domain=int(key)
+                        Cs_input=np.asarray([lipids[key][1]])[0]
+                        lipid_probabilities[key]=method
+
+                    normalizer=np.sum(np.asarray(list(lipid_probabilities.values())))
+                    if normalizer==0:
+                        for key in lipid_probabilities:
+                            lipid_probabilities[key]=1/len(lipid_probabilities.keys())
+                            normalizer=1
+
+
+                    for key in lipid_probabilities:
+                        lipid_probabilities[key]=lipid_probabilities[key]/normalizer
+                    domain=np.random.choice(list(lipid_probabilities.keys()),1,p=list(lipid_probabilities.values()))[0]
+                    deleter=None
                     for key in lipids:
-                        if domain==int(key) and not unspecified_Number:
+                        if int(domain)==int(key) and not unspecified_Number:
                             lipids[key][0]=lipids[key][0]-1
+                            if lipids[key][0]==0 and len(lipids.keys())>1:
+                                deleter=key
+                    if deleter is not None:
+                        del lipids[deleter]
+                        deleter=None
                     loc.get_data["domain_id"][index]=domain
 
     def _backup_path(self,path):
@@ -423,7 +425,6 @@ class PointUpdaterClass():
                 np.savetxt(self.path+key,np.round(all_in_one,3),header=header,comments='',encoding="UTF8",fmt=fmt)
             elif key =="ExcData.dat":
                 pass
-                #TODO: need to find out what to do with the ExcData
             elif key =="IncData.dat":
                 try:
                     all_in_one=self._cat_to_one(savers[key])
@@ -581,18 +582,41 @@ class PointUpdaterClass():
 
         self.inclusions.make_data(np.asarray(new_raw).T)
 
+    def _protein_from_input(self,Config):
+        future_kwargs={"number":None,"Type":None,"collision_Distance":0,"domain":None,"n_Vector":[0,0,0],"wiggle":0}
+        with open(Config,"r",encoding="UTF8") as f:
+            lines=f.readlines()
+            lines=[line for line in lines if line.strip()]
+            lines=[line[:line.find(";")].split() for line in lines if line[0] != ";"]
+
+            for key in future_kwargs:
+                for item in lines:
+                    if key in item:
+                        future_kwargs[key]=line[line.find(":")+1:].strip().split(",")
+                        for i,value in enumerate(future_kwargs[key]):
+                            try:
+                                future_kwargs[key][i]=int(value)
+                            except ValueError:
+                                future_kwargs[key][i]=float(value)
+        if future_kwargs["number"] is None:
+            print(''.join(traceback.format_stack()))
+            sys.exit(cd(f"The minimum requirement is supplying an amount for a protein type"))
+
+
+
+
+
     @classmethod
-    def from_args(cls, args):
+    def DOP(cls, args):
         parser=argparse.ArgumentParser()
         parser = argparse.ArgumentParser(description="A tool to directly alter the domains to place lipids according to a preferred curvature",formatter_class=argparse.RawTextHelpFormatter)
 
-        parser.add_argument('-i','--input',type=str,default="domain.txt",help="""A path to the domain_input.txt input file. A file could for instance, look like this:
+        parser.add_argument('-i','--input',type=str,default="domain.txt",help="""A path to the domain.txt input file. A file could for instance, look like this:
             ; domain lipid percentage c0 density
             0 POPC .3 0.179 0.64
             1 POPD .4 0.613 0.64
             2 POPG .3 0.629 0.64""")
         parser.add_argument('-k','--k',default=1,help="Sets the factor in the exponent for the c0 approach")
-        parser.add_argument('-c','--c12',action='store_true',help="Use the c12 approach to set the domains instead of the default c0 approach.")
         parser.add_argument('-p','--path',default="point/",help="Specify the path to the point folder")
         parser.add_argument('-l','--location',default='both',help="Choose which monolayer is altered: both, upper, lower")
         parser.add_argument('-ni','--new_TS2CG',default=None,help="Path to write a new TS2CG input file.")
@@ -603,10 +627,35 @@ class PointUpdaterClass():
         args=parser.parse_args(args)
 
         PointFolder=cls(path=args.path,k=args.k,new=args.new)
-        if args.c12:
-            PointFolder.assign_by_c12(args.input,location=args.location,unspecified_Number=args.Ignore_lipid_number)
-        else:
-            PointFolder.assign_by_c0(args.input,location=args.location,unspecified_Number=args.Ignore_lipid_number)
+        PointFolder.assign_by_c0(args.input,location=args.location,unspecified_Number=args.Ignore_lipid_number)
         if args.new_TS2CG is not None:
             PointFolder.write_input_str(output_file=args.new_TS2CG,input_file=args.input,ts2cg_input_str=args.old_TS2CG)
         PointFolder.write_folder()
+
+    def INU(cls, args):
+        parser=argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(description="A tool to directly alter the domains to place lipids according to a preferred curvature",formatter_class=argparse.RawTextHelpFormatter)
+
+        parser.add_argument('-i','--input',type=str,default="proteins.txt",help="""A path to the proteins.txt input file. The file needs to contain
+        the parameters for the protein placement. The input file should read like:
+            ; this is a comment
+            number: 1,2,3
+            Type: 3,4  ; default is None
+            collision_Distance: 4.5 ;default is 0
+            domain: 4,5 ; default is None
+            n_Vector: 1,3,4 ; xyz coordinates of a vector that will be normalized later. Default is 0,0,0
+            wiggle: 11.2 ; A value that wiggles in a normal distribution around n_vector for some variance in protein orientation. Default is 0
+            """)
+        parser.add_argument('-p','--path',default="point/",help="Specify the path to the point folder")
+        parser.add_argument('-ni','--new_TS2CG',default=None,help="Path to write a new TS2CG input file.")
+        parser.add_argument('-oi','--old_TS2CG',default=None,help="Supply a path to the TS2CG input.str")
+       
+        PointFolder=cls(path=args.path,k=args.k,new=args.new)
+        input_args=PointFolder.protein_from_input(args.input)
+        PointFolder._set_protein_inclusion_number(self,**input_args)
+        PointFolder.protein_altered=True
+        if args.new_TS2CG is not None:
+            PointFolder.write_input_str(output_file=args.new_TS2CG,input_file=args.input,ts2cg_input_str=args.old_TS2CG)
+        PointFolder.write_folder()
+        
+
