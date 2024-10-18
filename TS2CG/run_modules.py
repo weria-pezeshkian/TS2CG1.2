@@ -9,8 +9,10 @@ def run_python_module(module_name, args):
     """
     run the specified python module with given arguments.
     """
-    if module_name == 'PUC':
-        PointUpdaterClass.from_args(args)
+    if module_name == 'DOP':
+        PointUpdaterClass.DOP(args)
+    if module_name == 'INU':
+        PointUpdaterClass.INU(args)
     else:
         print(f"Unknown Python module: {module_name}")
 
