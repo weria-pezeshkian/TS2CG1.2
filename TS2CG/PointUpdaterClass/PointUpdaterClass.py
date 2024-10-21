@@ -619,12 +619,16 @@ class PointUpdaterClass():
 
 
     def domain_around_inclusion(self,radius,Type,domain=1,layer="both",dummy_Prot=""):
-        Types=self.inclusions.raw[1]
-        pointids=self.inclusions.raw[2]
-        interest=np.asarray(pointids[Types==int(Type)],dtype=np.int32)
-        print(interest)
+        try:
+            Types=self.inclusions.raw[1]
+            pointids=self.inclusions.raw[2]
+            interest=np.asarray(pointids[Types==int(Type)],dtype=np.int32)
+        except TypeError:
+            Types=[]
+            pointids=[]
+            interest=[]
+        
         interest=np.concatenate((interest,self._find_dummies(dummy_Prot)))
-        print(interest)
         interest_coords=[]
         for Id in interest:
             interest_coords.append(self.outer.raw.T[int(Id),3:6])
@@ -717,7 +721,7 @@ class PointUpdaterClass():
     @classmethod
     def DAI(cls, args):
         parser=argparse.ArgumentParser()
-        parser = argparse.ArgumentParser(description="A tool to directly alter the domain composition circular around inclusions.",formatter_class=argparse.RawTextHelpFormatter)
+        parser = argparse.ArgumentParser(description="A tool to directly alter the domain composition circular around inclusions or dummy inclusions.",formatter_class=argparse.RawTextHelpFormatter)
 
         parser.add_argument('-p','--path',default="point/",help="Specify the path to the point folder")
         parser.add_argument('-ni','--new_TS2CG',default=None,help="Path to write a new TS2CG input file.")
