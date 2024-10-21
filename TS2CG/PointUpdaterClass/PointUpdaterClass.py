@@ -607,11 +607,24 @@ class PointUpdaterClass():
             print(''.join(traceback.format_stack()))
             sys.exit(cd(f"The minimum requirement is supplying an amount for a protein type"))
 
+    def _find_dummies(self,dummys):
+        dummys=dummys.split(",")
+        for i,index in enumerate(dummys):
+            try:
+                dummys[i]=int(index)
+            except ValueError:
+                print("WARNING: a dummy protein could not be parsed.")
+        print(dummys)
+        return np.asarray(dummys)
 
-    def domain_around_inclusion(self,radius,Type,domain=1,layer="both"):
+
+    def domain_around_inclusion(self,radius,Type,domain=1,layer="both",dummy_Prot=""):
         Types=self.inclusions.raw[1]
         pointids=self.inclusions.raw[2]
-        interest=pointids[Types==int(Type)]
+        interest=np.asarray(pointids[Types==int(Type)],dtype=np.int32)
+        print(interest)
+        interest=np.concatenate((interest,self._find_dummies(dummy_Prot)))
+        print(interest)
         interest_coords=[]
         for Id in interest:
             interest_coords.append(self.outer.raw.T[int(Id),3:6])
@@ -709,16 +722,17 @@ class PointUpdaterClass():
         parser.add_argument('-p','--path',default="point/",help="Specify the path to the point folder")
         parser.add_argument('-ni','--new_TS2CG',default=None,help="Path to write a new TS2CG input file.")
         parser.add_argument('-oi','--old_TS2CG',default=None,help="Supply a path to the TS2CG input.str")
-        parser.add_argument('-r','--radius',default=1,help="The radius around a protein in which domains should be changed.")
-        parser.add_argument('-T','--Type',default=1,help="The protein type around which domains should be changed.")
-        parser.add_argument('-d','--Domain',default=1,help="The domain number that should be set around the protein.")
+        parser.add_argument('-r','--radius',default=1,type=float,help="The radius around a protein in which domains should be changed.")
+        parser.add_argument('-T','--Type',default=1,type=int,help="The protein type around which domains should be changed.")
+        parser.add_argument('-d','--Domain',default=1,type=int,help="The domain number that should be set around the protein.")
         parser.add_argument('-L','--Layer',default="both",help="Choose which membrane layer to alter. Default is both")
+        parser.add_argument('-dummy','--dummy',default="",help="Crate a dummy protein to place a circular domain around it. Excepts pointids like 3,7,22")
 
 
         args=parser.parse_args(args)
        
         PointFolder=cls(path=args.path)
-        input_args=PointFolder.domain_around_inclusion(args.radius,args.Type,args.Domain,args.Layer)
+        input_args=PointFolder.domain_around_inclusion(args.radius,args.Type,args.Domain,args.Layer,args.dummy)
         if args.new_TS2CG is not None:
             PointFolder.write_input_str(output_file=args.new_TS2CG,input_file=args.input,ts2cg_input_str=args.old_TS2CG)
         PointFolder.write_folder()
