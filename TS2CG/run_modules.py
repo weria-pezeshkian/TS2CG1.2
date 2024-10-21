@@ -13,6 +13,8 @@ def run_python_module(module_name, args):
         PointUpdaterClass.DOP(args)
     if module_name == 'INU':
         PointUpdaterClass.INU(args)
+    if module_name == 'DAI':
+        PointUpdaterClass.DAI(args)
     else:
         print(f"Unknown Python module: {module_name}")
 
@@ -43,7 +45,7 @@ def main():
     cpp_modules = ['SOL', 'PLM', 'PCG']
 
     # define the python based modules
-    python_modules = ['PUC']
+    python_modules = ['DOP','INU','DAI']
 
     # parse arguments before a calling module
     parser = argparse.ArgumentParser(

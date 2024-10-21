@@ -48,11 +48,19 @@ class PointUpdaterClass():
         """
         The InnerOrOuter class provides the framework to read InnerBM.dat and OuterBM.dat
         """
+
+        def make_dict(self):
+            names="id domain_id area X Y Z Nx Ny Nz P1x P1y P1z P2x P2y P2z C1 C2".split()
+            for i,row in enumerate(self.raw):
+                    self.get_data[names[i]]=row
+            for name in ["id","domain_id"]:
+                self.get_data[name]=np.asarray(self.get_data[name],dtype=int)
+
         def __init__(self,data=None,h_Name="",init=False):
             """
             :param data: The data of the appropriate dat file as has been read by read_BM()
             """
-            names="id domain_id area X Y Z Nx Ny Nz P1x P1y P1z P2x P2y P2z C1 C2".split()
+            
             self.h_Name=h_Name
             self.get_data={}
             if not init:
@@ -60,10 +68,7 @@ class PointUpdaterClass():
                     print(traceback.format_exc())
                     sys.exit(cd("No data was passed to the Inner our Outer segment. Nothing can be done."))
                 self.raw=data
-                for i,row in enumerate(self.raw):
-                    self.get_data[names[i]]=row
-                for name in ["id","domain_id"]:
-                    self.get_data[name]=np.asarray(self.get_data[name],dtype=int)
+                self.make_dict()
             else:
                 self.get_data=dict.fromkeys(names,None)
 
@@ -490,7 +495,7 @@ class PointUpdaterClass():
                         f.write(line)
 
     def _wiggle(self,xyz,wiggle):
-        random_perturbation=np.random.uniform(-wiggle,wiggle,xyz.shape)
+        random_perturbation=np.random.uniform(xyz-wiggle,xyz+wiggle,xyz.shape)
         xyz=xyz[0]+random_perturbation[0]
 
         return xyz/np.linalg.norm(xyz)
@@ -507,7 +512,7 @@ class PointUpdaterClass():
         The id corresponds to the id in the outer membrane.
 
         :param number: The number of proteins there should be in the inclusions. Can also be a list.
-        :param Type: (default=None) If a type is set, the number will correspond to number of type 1 as specified
+        :param Type: (default=None) If a type is set, the number will correspond to the number of protein type as specified
         in the inclusion file. If no type is set, the number is split over all types according to the ratio of their
         appearance in the inclusion file.
         :param collision_Distance: (default=0) The placement will be restricted so a protein is not placed within
@@ -603,7 +608,42 @@ class PointUpdaterClass():
             sys.exit(cd(f"The minimum requirement is supplying an amount for a protein type"))
 
 
+    def domain_around_inclusion(self,radius,Type,domain=1,layer="both"):
+        Types=self.inclusions.raw[1]
+        pointids=self.inclusions.raw[2]
+        interest=pointids[Types==int(Type)]
+        interest_coords=[]
+        for Id in interest:
+            interest_coords.append(self.outer.raw.T[int(Id),3:6])
 
+        if layer=="both":
+            raw_trans=self.outer.raw.T
+            raw_trans_inner=self.inner.raw.T
+        elif layer=="inner":
+            raw_trans=self.inner.raw.T
+        else:
+            raw_trans=self.outer.raw.T
+
+        for location in interest_coords:
+            for i,line in enumerate(raw_trans):
+                coords=line[3:6]
+                if np.linalg.norm(coords-location)<float(radius):
+                    print("domain changed")
+                    raw_trans[i,1]=domain
+                    if layer=="both":
+                        raw_trans_inner[i,1]=domain
+
+        if layer=="both":
+            self.outer.raw=raw_trans.T
+            self.inner.raw=raw_trans_inner.T
+            self.inner.make_dict()
+            self.outer.make_dict()
+        elif layer=="inner":
+            self.inner.raw=raw_trans.T
+            self.inner.make_dict()
+        else:
+            self.outer.raw=raw_trans.T
+            self.outer.make_dict()
 
 
     @classmethod
@@ -632,16 +672,17 @@ class PointUpdaterClass():
             PointFolder.write_input_str(output_file=args.new_TS2CG,input_file=args.input,ts2cg_input_str=args.old_TS2CG)
         PointFolder.write_folder()
 
+    @classmethod
     def INU(cls, args):
         parser=argparse.ArgumentParser()
-        parser = argparse.ArgumentParser(description="A tool to directly alter the domains to place lipids according to a preferred curvature",formatter_class=argparse.RawTextHelpFormatter)
+        parser = argparse.ArgumentParser(description="A tool to directly alter the number of protein inclusions in the membrane",formatter_class=argparse.RawTextHelpFormatter)
 
         parser.add_argument('-i','--input',type=str,default="proteins.txt",help="""A path to the proteins.txt input file. The file needs to contain
         the parameters for the protein placement. The input file should read like:
             ; this is a comment
             number: 1,2,3
             Type: 3,4  ; default is None
-            collision_Distance: 4.5 ;default is 0
+            collision_Distance: 4.5,6.2 ;default is 0
             domain: 4,5 ; default is None
             n_Vector: 1,3,4 ; xyz coordinates of a vector that will be normalized later. Default is 0,0,0
             wiggle: 11.2 ; A value that wiggles in a normal distribution around n_vector for some variance in protein orientation. Default is 0
@@ -649,11 +690,35 @@ class PointUpdaterClass():
         parser.add_argument('-p','--path',default="point/",help="Specify the path to the point folder")
         parser.add_argument('-ni','--new_TS2CG',default=None,help="Path to write a new TS2CG input file.")
         parser.add_argument('-oi','--old_TS2CG',default=None,help="Supply a path to the TS2CG input.str")
+
+        args=parser.parse_args(args)
        
-        PointFolder=cls(path=args.path,k=args.k,new=args.new)
+        PointFolder=cls(path=args.path)
         input_args=PointFolder.protein_from_input(args.input)
         PointFolder._set_protein_inclusion_number(self,**input_args)
         PointFolder.protein_altered=True
+        if args.new_TS2CG is not None:
+            PointFolder.write_input_str(output_file=args.new_TS2CG,input_file=args.input,ts2cg_input_str=args.old_TS2CG)
+        PointFolder.write_folder()
+
+    @classmethod
+    def DAI(cls, args):
+        parser=argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(description="A tool to directly alter the domain composition circular around inclusions.",formatter_class=argparse.RawTextHelpFormatter)
+
+        parser.add_argument('-p','--path',default="point/",help="Specify the path to the point folder")
+        parser.add_argument('-ni','--new_TS2CG',default=None,help="Path to write a new TS2CG input file.")
+        parser.add_argument('-oi','--old_TS2CG',default=None,help="Supply a path to the TS2CG input.str")
+        parser.add_argument('-r','--radius',default=1,help="The radius around a protein in which domains should be changed.")
+        parser.add_argument('-T','--Type',default=1,help="The protein type around which domains should be changed.")
+        parser.add_argument('-d','--Domain',default=1,help="The domain number that should be set around the protein.")
+        parser.add_argument('-L','--Layer',default="both",help="Choose which membrane layer to alter. Default is both")
+
+
+        args=parser.parse_args(args)
+       
+        PointFolder=cls(path=args.path)
+        input_args=PointFolder.domain_around_inclusion(args.radius,args.Type,args.Domain,args.Layer)
         if args.new_TS2CG is not None:
             PointFolder.write_input_str(output_file=args.new_TS2CG,input_file=args.input,ts2cg_input_str=args.old_TS2CG)
         PointFolder.write_folder()
