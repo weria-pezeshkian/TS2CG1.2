@@ -45,7 +45,7 @@ setup(
     cmdclass={'build_ext': CMakeBuild},
     package_data={
         'TS2CG': ['SOL', 'PLM', 'PCG', 'CMakeLists.txt',
-                  'Solvate/*', 'Pointillism/*', 'MembraneBuilder/*'],
+                  'Solvate/*', 'Pointillism/*', 'MembraneBuilder/*', 'PointUpdaterClass/*'],
     },
     include_package_data=True,
     entry_points={

@@ -611,7 +611,7 @@ class PointUpdaterClass():
 
     def _find_dummies(self,dummys):
         dummys=dummys.split(",")
-        if dummy.split():
+        if dummys.split():
             for i,index in enumerate(dummys):
                 try:
                     dummys[i]=int(index)
