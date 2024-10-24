@@ -634,6 +634,7 @@ class PointUpdaterClass():
         
         interest=np.concatenate((interest,self._find_dummies(dummy_Prot)))
         interest_coords=[]
+        interest=list(filter(None, interest))
         for Id in interest:
             interest_coords.append(self.outer.raw.T[int(Id),3:6])
 
