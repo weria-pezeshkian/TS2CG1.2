@@ -611,13 +611,15 @@ class PointUpdaterClass():
 
     def _find_dummies(self,dummys):
         dummys=dummys.split(",")
-        for i,index in enumerate(dummys):
-            try:
-                dummys[i]=int(index)
-            except ValueError:
-                print("WARNING: a dummy protein could not be parsed.")
-        print(dummys)
-        return np.asarray(dummys)
+        if dummy.split():
+            for i,index in enumerate(dummys):
+                try:
+                    dummys[i]=int(index)
+                except ValueError:
+                    print("WARNING: a dummy protein could not be parsed.")
+            return np.asarray(dummys)
+        else:
+            return np.asarray([])
 
 
     def domain_around_inclusion(self,radius,Type,domain=1,layer="both",dummy_Prot=""):
