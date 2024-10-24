@@ -610,8 +610,8 @@ class PointUpdaterClass():
         return future_kwargs
 
     def _find_dummies(self,dummys):
-        dummys=dummys.split(",")
-        if dummys.split():
+        dummys=dummys.strip().split(",")
+        if dummys:
             for i,index in enumerate(dummys):
                 try:
                     dummys[i]=int(index)
