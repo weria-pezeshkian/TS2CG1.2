@@ -11,9 +11,9 @@ def run_python_module(module_name, args):
     """
     if module_name == 'DOP':
         PointUpdaterClass.DOP(args)
-    if module_name == 'INU':
+    elif module_name == 'INU':
         PointUpdaterClass.INU(args)
-    if module_name == 'DAI':
+    elif module_name == 'DAI':
         PointUpdaterClass.DAI(args)
     else:
         print(f"Unknown Python module: {module_name}")

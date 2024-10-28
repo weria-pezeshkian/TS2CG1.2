@@ -60,7 +60,7 @@ class PointUpdaterClass():
             """
             :param data: The data of the appropriate dat file as has been read by read_BM()
             """
-            
+            names="id domain_id area X Y Z Nx Ny Nz P1x P1y P1z P2x P2y P2z C1 C2".split()
             self.h_Name=h_Name
             self.get_data={}
             if not init:
@@ -152,7 +152,12 @@ class PointUpdaterClass():
             * path is set to the point folder\n\
             * the point folder contains the files InnerBM.dat, OuterBM.dat, IncData.dat, and ExcData.dat"))
         self.input_file=None
-        self.k=k
+        try:
+            self.k=float(k)
+        except ValueError:
+            print(traceback.format_exc())
+            sys.exit(cd("The k value provided cannot be parsed to a rational number."))
+
         self.protein_altered=False
 
     def update_domains(self,**kwargs):
@@ -274,7 +279,7 @@ class PointUpdaterClass():
                     for key in lipids:
                         Cs_input=np.asarray([lipids[key][1]])[0]
                         lipid_probabilities[key]=np.exp(-self.k*(turn*(Cs[0]+Cs[1])-Cs_input)**2)
-
+                    
                     normalizer=np.sum(np.asarray(list(lipid_probabilities.values())))
                     if normalizer==0:
                         for key in lipid_probabilities:
