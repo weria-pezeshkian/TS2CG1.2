@@ -597,7 +597,7 @@ class PointUpdaterClass():
         with open(Config,"r",encoding="UTF8") as f:
             lines=f.readlines()
             lines=[line for line in lines if line.strip()]
-            lines=[line[:line.find(";")].split() for line in lines if line[0] != ";"]
+#            lines=[line[:line.find(";")].replace(":"," ").split() for line in lines if line[0] != ";"]
 
             for key in future_kwargs:
                 for line in lines:
@@ -607,7 +607,11 @@ class PointUpdaterClass():
                             try:
                                 future_kwargs[key][i]=int(value)
                             except ValueError:
-                                future_kwargs[key][i]=float(value)
+                                try:
+                                    future_kwargs[key][i]=float(value)
+                                except ValueError:
+                                    future_kwargs[key][i]=value
+
         if future_kwargs["number"] is None:
             print(''.join(traceback.format_stack()))
             sys.exit(cd(f"The minimum requirement is supplying an amount for a protein type"))
