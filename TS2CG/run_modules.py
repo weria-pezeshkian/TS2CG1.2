@@ -79,7 +79,5 @@ def main():
     elif args.module in python_modules:
         run_python_module(args.module, args.args)
 
-    sys.exit()
-
 if __name__ == '__main__':
     main()
