@@ -227,18 +227,34 @@ class Point:
         except (ValueError, FileNotFoundError):
             return None
 
-    def save(self, backup: bool = True):
+    @staticmethod
+    def _ensure_path(path: Optional[Union[str, Path]]) -> Optional[Path]:
+        """Convert string path to Path object if needed."""
+        if path is None:
+            return None
+        return Path(path) if isinstance(path, str) else path
+
+    def save(self, output_path: Optional[Union[str, Path]] = None):
         """
-        Save membrane structure back to files.
+        Save membrane structure to files.
 
         Args:
-            backup: Whether to create a backup before saving
+            output_path: Path where to save the point folder. If None, saves to original location.
+                        Backup is only created if saving to the original location.
         """
-        if backup:
+        output_path = self._ensure_path(output_path) if output_path else self.path
+
+        # Create backup only if we're overwriting the original folder
+        if output_path == self.path:
             self._create_backup()
 
-        self._save_membranes()
-        self._save_modifications()
+        # Create output directory if it doesn't exist
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        self._save_membranes(output_path)
+        self._save_modifications(output_path)
+
+        logger.info(f"Saved point data to: {output_path}")
 
     def _create_backup(self):
         """Create a backup of the point folder."""
@@ -246,8 +262,13 @@ class Point:
         shutil.copytree(self.path, backup_path)
         logger.info(f"Created backup at: {backup_path}")
 
-    def _save_membranes(self):
-        """Save membrane data to files."""
+    def _save_membranes(self, output_path: Path):
+        """
+        Save membrane data to files.
+
+        Args:
+            output_path: Path where to save the files
+        """
         for name, membrane in [("InnerBM.dat", self.inner), ("OuterBM.dat", self.outer)]:
             data = np.zeros((17, len(membrane.ids)))  # 17 columns as per format
             data[0] = membrane.ids
@@ -276,14 +297,14 @@ class Point:
             header = '\n'.join(headers)
 
             np.savetxt(
-                self.path / name,
+                output_path / name,
                 data.T,
                 header=header,
                 comments='',
                 fmt = ['%10d', '%4d', '%9.3f'] + ['%9.3f']*3 + ['%7.3f']*11
             )
 
-    def _save_modifications(self):
+    def _save_modifications(self, output_path: Path):
         """Save inclusion and exclusion data to files."""
         # Save inclusions
         if self.inclusions.points:
@@ -308,13 +329,12 @@ class Point:
             data = np.zeros((3, len(self.exclusions.points)))
             for i, point in enumerate(self.exclusions.points):
                 data[0:3, i] = [point['id'], point['type_id'], point['radius']]
-                print([point['id'], point['type_id'], point['radius']])
 
             header = f"< Exclusion NoExc {len(self.exclusions.points)} >\n"
             header += "< id typeid radius >"
 
             np.savetxt(
-                self.path / "ExcData.dat",
+                output_path / "ExcData.dat",
                 data.T,
                 header=header,
                 comments='',
