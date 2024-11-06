@@ -31,6 +31,8 @@ class CMakeBuild(build_ext):
         build_args = ['--config', 'Release', '--', f'-j{num_cores}']
 
         os.chdir(build_temp)
+        print(sourcedir, cmake_args)
+
         self.spawn(['cmake', sourcedir] + cmake_args)
         if not self.dry_run:
             self.spawn(['cmake', '--build', '.'] + build_args)

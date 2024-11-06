@@ -16,7 +16,7 @@ license = {file = "LICENSE"}
 dependencies = ["numpy"]
 
 [tool.setuptools]
-packages = ["TS2CG"]
+packages = ["TS2CG", "TS2CG.core", "TS2CG.tools", "TS2CG.cpp"]
 
 [project.scripts]
 TS2CG = "TS2CG.run_modules:main"

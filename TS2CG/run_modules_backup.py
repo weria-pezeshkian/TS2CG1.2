@@ -4,14 +4,6 @@ from pathlib import Path
 from importlib.metadata import version
 
 from TS2CG.tools.domain_placer import DOP
-from .cpp import PCG, PLM, SOL
-
-
-from typing import List, Union, Optional
-import logging
-import os
-
-logger = logging.getLogger(__name__)
 
 def run_python_module(module_name, args):
     """
@@ -22,23 +14,22 @@ def run_python_module(module_name, args):
     else:
         print(f"Unknown Python module: {module_name}")
 
-def run_cpp_module(module_name, args):
-    """Run the specified CPP module with given arguments."""
-    cpp_modules = {
-        'PCG': PCG(),
-        'PLM': PLM(),
-        'SOL': SOL()
-    }
 
-    try:
-        module = cpp_modules[module_name]
-        module(*args)
-    except KeyError:
-        logger.error(f"Unknown CPP module: {module_name}")
-        raise ValueError(f"Unknown CPP module: {module_name}")
-    except Exception as e:
-        logger.error(f"Failed to run {module_name}: {e}")
-        raise
+def run_cpp_module(module_name, args):
+    """
+    run the specified cpp module with given arguments.
+    """
+    current_dir = Path(__file__).parent
+    module_binary_path = current_dir / module_name
+
+    # verify if module binary exists
+    if not module_binary_path.exists():
+        raise filenotfounderror(f"binary {binary_name} not found at {binary_path}")
+
+    # run the module and catch possible errors
+    result = subprocess.run([module_binary_path] + args)
+    if result.stderr:
+        print("errors:", result.stderr, file=subprocess.sys.stderr)
 
 def main():
     """
@@ -54,8 +45,8 @@ def main():
 
     # parse arguments before a calling module
     parser = argparse.ArgumentParser(
-        description='TS2CG: converts triangulated surfaces (ts) to coarse-grained membrane models',
-        prog='TS2CG',
+        description='ts2cg: converts triangulated surfaces (ts) to coarse-grained membrane models',
+        prog='ts2cg',
     )
 
     parser.add_argument(
