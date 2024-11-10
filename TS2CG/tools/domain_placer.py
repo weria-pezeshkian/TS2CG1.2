@@ -119,11 +119,13 @@ def assign_domains(membrane: Point, lipids: Sequence[LipidSpec], layer: str = "b
                   k_factor: float = 1.0) -> None:
     """Assign lipids to domains based on curvature preferences"""
     layers = [membrane.outer]
-    if not membrane.monolayer and layer.lower() in ["both", "inner"]:
-        if layer.lower() == "both":
-            layers.append(membrane.inner)
-        elif layer.lower() == "inner":
-            layers = [membrane.inner]
+
+    if membrane.monolayer or layer.lower() == "outer":
+        layers = [membrane.outer]
+    elif layer.lower() == "inner":
+        layers = [membrane.inner]
+    else:
+        layers = [membrane.outer, membrane.inner]
 
     for membrane_layer in layers:
         layer_name = "outer" if membrane_layer is membrane.outer else "inner"
