@@ -344,10 +344,28 @@ class Point:
         logger.info(f"Saved point data to: {output_path}")
 
     def _create_backup(self):
-        """Create a backup of the point folder."""
-        backup_path = self.path.parent / f"#{self.path.name}#"
+        """
+        Create a backup of the point folder.
+        If #folder# exists, creates ##folder##, etc.
+        """
+        def get_backup_path(n_hashes: int) -> Path:
+            """Generate backup path with specified number of hashes."""
+            hashes = '#' * n_hashes
+            return self.path.parent / f"{hashes}{self.path.name}{hashes}"
+
+        # Start with one hash on each side
+        n_hashes = 1
+        backup_path = get_backup_path(n_hashes)
+
+        # Keep incrementing hashes until we find a non-existing path
+        while backup_path.exists():
+            n_hashes += 1
+            backup_path = get_backup_path(n_hashes)
+
         shutil.copytree(self.path, backup_path)
         logger.info(f"Created backup at: {backup_path}")
+
+        return backup_path
 
     def _save_membranes(self, output_path: Path):
         """Save membrane data to files."""
