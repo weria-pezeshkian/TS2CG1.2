@@ -50,28 +50,63 @@ def parse_lipid_file(file_path: Path) -> List[LipidSpec]:
     return lipids
 
 def write_input_str(lipids: Sequence[LipidSpec], output_file: Path, old_input: Optional[Path] = None) -> None:
-    """Write input.str file for TS2CG"""
-    existing_content = []
-    if old_input and old_input.exists():
-        with open(old_input) as f:
-            in_lipids = False
-            for line in f:
-                if "[Lipids List]" in line:
-                    in_lipids = True
-                elif in_lipids and line.strip().startswith("["):
-                    in_lipids = False
-                elif not in_lipids and line.strip():
-                    existing_content.append(line)
+    """
+    Write input.str file for TS2CG, preserving all comments and sections except [Lipids List].
+    Maintains exact formatting of the original file.
+    """
+    # If no old input exists, just write the lipids section
+    if not old_input or not old_input.exists():
+        with open(output_file, 'w') as f:
+            f.write("[Lipids List]\n")
+            for lipid in lipids:
+                f.write(f"Domain {lipid.domain_id}\n")
+                f.write(f"{lipid.name} 1 1 {lipid.density}\n")
+                f.write("End\n")
+        return
 
+    # Read the old file and process it section by section
+    with open(old_input) as f:
+        content = f.read()
+
+    # Split the content into sections
+    sections = []
+    current_section = []
+    in_lipids_section = False
+
+    for line in content.split('\n'):
+        # Detect section headers
+        if line.strip().startswith('['):
+            # If we were building a section, save it
+            if current_section:
+                sections.append('\n'.join(current_section) + '\n')
+                current_section = []
+
+            # Check if we're entering the lipids section
+            if '[Lipids List]' in line:
+                in_lipids_section = True
+                # Create new lipids section
+                new_section = ['[Lipids List]']
+                for lipid in lipids:
+                    new_section.extend([
+                        f"Domain {lipid.domain_id}",
+                        f"{lipid.name} 1 1 {lipid.density}",
+                        "End"
+                    ])
+                sections.append('\n'.join(new_section) + '\n')
+            else:
+                in_lipids_section = False
+                current_section.append(line)
+        # For non-header lines
+        elif not in_lipids_section:
+            current_section.append(line)
+
+    # Add the last section if it exists
+    if current_section and not in_lipids_section:
+        sections.append('\n'.join(current_section))
+
+    # Write everything back to the file
     with open(output_file, 'w') as f:
-        f.write("[Lipids List]\n")
-        for lipid in lipids:
-            f.write(f"Domain {lipid.domain_id}\n")
-            f.write(f"{lipid.name} 1 1 {lipid.density}\n")
-            f.write("End\n")
-        f.write("\n")
-        if existing_content:
-            f.writelines(existing_content)
+        f.write('\n'.join(sections))
 
 def calculate_curvature_weights(local_curvature: float, lipids: Sequence[LipidSpec],
                               k_factor: float) -> np.ndarray:
