@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 import logging
 from dataclasses import dataclass
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Dict
 
 from ..core.point import Point
 
@@ -51,7 +51,6 @@ def parse_lipid_file(file_path: Path) -> List[LipidSpec]:
 
 def write_input_str(lipids: Sequence[LipidSpec], output_file: Path, old_input: Optional[Path] = None) -> None:
     """Write input.str file for TS2CG"""
-    # Get existing content from old input if it exists
     existing_content = []
     if old_input and old_input.exists():
         with open(old_input) as f:
@@ -64,21 +63,27 @@ def write_input_str(lipids: Sequence[LipidSpec], output_file: Path, old_input: O
                 elif not in_lipids and line.strip():
                     existing_content.append(line)
 
-    # Write new file
     with open(output_file, 'w') as f:
         f.write("[Lipids List]\n")
         for lipid in lipids:
             f.write(f"Domain {lipid.domain_id}\n")
-            f.write(f"{lipid.name} 1 1 {lipi.density}\n")
+            f.write(f"{lipid.name} 1 1 {lipid.density}\n")
             f.write("End\n")
         f.write("\n")
         if existing_content:
             f.writelines(existing_content)
 
-def assign_domains(membrane: Point, lipids: Sequence[LipidSpec], layer: str = "both", k_factor: float = 1.0) -> None:
+def calculate_curvature_weights(local_curvature: float, lipids: Sequence[LipidSpec],
+                              k_factor: float) -> np.ndarray:
+    """Calculate Boltzmann weights for each lipid type at given curvature"""
+    delta_curvatures = np.array([local_curvature - lipid.curvature for lipid in lipids])
+    weights = np.exp(-k_factor * delta_curvatures * delta_curvatures)
+    return weights / np.sum(weights)
+
+def assign_domains(membrane: Point, lipids: Sequence[LipidSpec], layer: str = "both",
+                  k_factor: float = 1.0) -> None:
     """Assign lipids to domains based on curvature preferences"""
-    # Determine which layers to process
-    layers = [membrane.outer]  # Always process outer layer
+    layers = [membrane.outer]
     if not membrane.monolayer and layer.lower() in ["both", "inner"]:
         if layer.lower() == "both":
             layers.append(membrane.inner)
@@ -92,30 +97,39 @@ def assign_domains(membrane: Point, lipids: Sequence[LipidSpec], layer: str = "b
         n_points = len(membrane_layer.ids)
         curvatures = membrane_layer.mean_curvature
 
-        # Calculate target counts and initialize domains
-        target_counts = [int(lipid.percentage * n_points) for lipid in lipids]
-        target_counts[-1] += n_points - sum(target_counts)  # Adjust to match total points
+        # Flip curvature sign for inner membrane
+        if layer_name == "inner":
+            curvatures = -curvatures
+
+        # Initialize domain assignments and tracking
         new_domains = np.full(n_points, -1)
+        remaining_counts = {i: int(lipid.percentage * n_points)
+                          for i, lipid in enumerate(lipids)}
+        remaining_counts[len(lipids)-1] += n_points - sum(remaining_counts.values())
+        available_lipids = set(range(len(lipids)))
 
-        # Mask for tracking unassigned points
-        unassigned = np.ones(n_points, dtype=bool)
+        # Randomly process points
+        for idx in np.random.permutation(n_points):
+            local_curv = curvatures[idx]
 
-        # Assign domains
-        for i, (lipid, count) in enumerate(zip(lipids, target_counts)):
-            if count == 0:
-                continue
+            # Calculate weights only for available lipid types
+            valid_lipids = [i for i in available_lipids
+                          if remaining_counts[i] > 0]
 
-            # Calculate curvature preference scores for unassigned points
-            delta = curvatures[unassigned] - lipid.curvature
-            scores = np.exp(-k_factor * delta * delta)
+            if not valid_lipids:
+                logger.warning(f"No lipids available for point {idx}")
+                valid_lipids = list(range(len(lipids)))
 
-            # Select points with highest scores
-            best_indices = np.argpartition(scores, -count)[-count:]
-            points_to_assign = np.where(unassigned)[0][best_indices]
+            valid_specs = [lipids[i] for i in valid_lipids]
+            weights = calculate_curvature_weights(local_curv, valid_specs, k_factor)
 
-            # Assign domain and update mask
-            new_domains[points_to_assign] = lipid.domain_id
-            unassigned[points_to_assign] = False
+            # Choose lipid type and update bookkeeping
+            chosen_idx = np.random.choice(valid_lipids, p=weights)
+            new_domains[idx] = lipids[chosen_idx].domain_id
+            remaining_counts[chosen_idx] -= 1
+
+            if remaining_counts[chosen_idx] == 0:
+                available_lipids.remove(chosen_idx)
 
         # Update membrane
         membrane_layer.domain_ids = new_domains
@@ -140,7 +154,7 @@ def DOP(args: List[str]) -> None:
                        help='Scaling factor for curvature preference strength (default: 1.0)')
     parser.add_argument('-o', '--output', type=Path,
                        help='Output directory (defaults to input directory)')
-    parser.add_argument('-ni', '--new-input', type=Path, default="input.str",
+    parser.add_argument('-ni', '--new-input', type=Path, default="input_DOP.str",
                        help='Path for output input.str file (default: input.str)')
     parser.add_argument('-oi', '--old-input', type=Path,
                        help='Path to existing input.str to preserve additional sections')
