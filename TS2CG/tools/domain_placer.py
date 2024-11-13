@@ -14,6 +14,7 @@ import numpy as np
 import logging
 from dataclasses import dataclass
 from typing import List, Optional, Sequence, Dict
+from scipy.special import logsumexp
 
 from ..core.point import Point
 
@@ -109,11 +110,18 @@ def write_input_str(lipids: Sequence[LipidSpec], output_file: Path, old_input: O
         f.write('\n'.join(sections))
 
 def calculate_curvature_weights(local_curvature: float, lipids: Sequence[LipidSpec],
-                              k_factor: float) -> np.ndarray:
+                              k_factor: float, max_delta: float = 5.0) -> np.ndarray:
     """Calculate Boltzmann weights for each lipid type at given curvature"""
-    delta_curvatures = np.array([local_curvature - lipid.curvature for lipid in lipids])
-    weights = np.exp(-k_factor * delta_curvatures * delta_curvatures)
-    return weights / np.sum(weights)
+    # Calculate curvature differences
+    delta_curvatures = np.array([abs(2 * local_curvature - lipid.curvature) for lipid in lipids])
+
+    # Calculate log weights using the log-sum-exp trick for numerical stability
+    log_weights = -k_factor * delta_curvatures**2
+    max_log_weight = np.max(log_weights)
+    exp_weights = np.exp(log_weights - max_log_weight)
+    weights = exp_weights / np.sum(exp_weights)
+
+    return weights
 
 def assign_domains(membrane: Point, lipids: Sequence[LipidSpec], layer: str = "both",
                   k_factor: float = 1.0) -> None:
