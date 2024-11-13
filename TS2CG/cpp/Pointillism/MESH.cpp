@@ -3,24 +3,24 @@
 /*
  Weria Pezeshkian (weria.pezeshkian@gmail.com)
  Copyright (c) Weria Pezeshkian
-MESH class for quick access 
+MESH class for quick access
  */
 MESH::MESH()
 {
-    
-    
+
+
 }
 MESH::~MESH()
 {
-    
+
 }
 void MESH::GenerateMesh(MeshBluePrint meshblueprint)
 {
     m_Box = meshblueprint.simbox;
     m_pBox = &m_Box;
-    
-    
-    
+
+
+
     // Making vertices
     for (std::vector<Vertex_Map>::iterator it = (meshblueprint.bvertex).begin() ; it != (meshblueprint.bvertex).end(); ++it)
     {
@@ -36,7 +36,7 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
             m_Vertex.push_back(v);
     }
 //===== Make exclution [since June, 2023]
-       
+
        for (std::vector<vertex>::iterator it = m_Vertex.begin() ; it != m_Vertex.end(); ++it)
                    m_pActiveV.push_back(&(*it));
 
@@ -46,7 +46,7 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
     for (std::vector<Triangle_Map>::iterator it = (meshblueprint.btriangle).begin() ; it != (meshblueprint.btriangle).end(); ++it)
     {
         bool pr=true;
-        
+
         int vid1 = ((meshblueprint.btriangle).at(t)).v1;
         int vid2 = ((meshblueprint.btriangle).at(t)).v2;
         int vid3 = ((meshblueprint.btriangle).at(t)).v3;
@@ -88,7 +88,7 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
     }
     for (std::vector<exclusion>::iterator it = m_Exclusion.begin() ; it != m_Exclusion.end(); ++it)
         m_pExclusion.push_back(&(*it));
-    
+
     for (std::vector<inclusion>::iterator it = m_Inclusion.begin() ; it != m_Inclusion.end(); ++it)
         m_pInclusion.push_back(&(*it));
 
@@ -97,10 +97,10 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
         m_pActiveT.push_back(&(*it));
 
 // end Make exclution
-    
-    
+
+
     int li=-1;
-    
+
     for (std::vector<triangle*>::iterator it = m_pActiveT.begin() ; it != m_pActiveT.end(); ++it)
     {
         ((*it)->GetV1())->AddtoTraingleList((*it));
@@ -109,7 +109,7 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
         ((*it)->GetV2())->AddtoNeighbourVertex(((*it)->GetV3()));
         ((*it)->GetV3())->AddtoTraingleList((*it));
         ((*it)->GetV3())->AddtoNeighbourVertex(((*it)->GetV1()));
-        
+
         /// create links
         li++;
         int id1=li;
@@ -117,19 +117,19 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
         int id2=li;
         li++;
         int id3=li;
-        
+
         links l1(id1,(*it)->GetV1(),(*it)->GetV2(),(*it));
         l1.UpdateV3((*it)->GetV3());
-        
+
         links l2(id2,(*it)->GetV2(),(*it)->GetV3(),(*it));
         l2.UpdateV3((*it)->GetV1());
-        
+
         links l3(id3,(*it)->GetV3(),(*it)->GetV1(),(*it));
         l3.UpdateV3((*it)->GetV2());
         m_Links.push_back(l1);
         m_Links.push_back(l2);
         m_Links.push_back(l3);
-        
+
     }
     li=-1;
     for (std::vector<triangle*>::iterator it = m_pActiveT.begin() ; it != m_pActiveT.end(); ++it)
@@ -149,12 +149,12 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
         l2->UpdateNeighborLink2(l1);
         l3->UpdateNeighborLink1(l1);
         l3->UpdateNeighborLink2(l2);
-        
-        
+
+
         ((*it)->GetV1())->AddtoLinkList(l1);
         ((*it)->GetV2())->AddtoLinkList(l2);
         ((*it)->GetV3())->AddtoLinkList(l3);
-        
+
     }
     for (std::vector<links>::iterator it = m_Links.begin() ; it != m_Links.end(); ++it)
     {
@@ -169,7 +169,7 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
         {
             vertex *v1=it->GetV1();
             vertex *v2=it->GetV2();
-            
+
             std::vector<links*>  lList = v2->GetVLinkList();
             for (std::vector<links*>::iterator it2 = lList.begin() ; it2 != lList.end(); ++it2)
             {
@@ -189,7 +189,7 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
             m_pEdgeL.push_back(&(*it));
             it->m_LinkType = 1;
         }
-        
+
     }
     int edgelink=0;
     for (std::vector<links*>::iterator it = m_pEdgeL.begin() ; it != m_pEdgeL.end(); ++it)
@@ -203,7 +203,7 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
     }
     for (std::vector<links>::iterator it = m_Links.begin() ; it != m_Links.end(); ++it)
     {
-        
+
         m_pActiveL.push_back(&(*it));
     }
     //==== Getting the edge vertex from link
@@ -228,26 +228,26 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
     }
     for (std::vector<inclusion*>::iterator it = m_pInclusion.begin() ; it != m_pInclusion.end(); ++it)
         ((*it)->Getvertex())->UpdateInclusion((*it));
-    
+
     // =======
     // ==== info of the mesh
-    
 
-    
-    
+
+
+
     std::cout<<"---> active vertex "<<m_pActiveV.size()<<" surf vertex "<<m_pSurfV.size()<<"  edge vertex "<<m_pEdgeV.size()<<"";
     std::cout<<" inclusions "<<m_pInclusion.size()<<"  ";
     std::cout<<" total links "<<m_Links.size()<<"  ";
-    std::cout<<" trinagles "<<m_pActiveT.size()<<"  \n";
+    std::cout<<" triangles "<<m_pActiveT.size()<<"  \n";
 
 
 
 
-    
+
     //WritevtuFiles VTU(pState);
     //std::string file="ini_Mesh.vtu";
     //VTU.Writevtu(m_pAllV,m_pAllT,m_pAllLinks,file);
-    
+
 //==== checking the mesh; this can go to another function. for now we keep it here.
     int no_repeated_link = 0;
     for (std::vector<links>::iterator it = m_Links.begin() ; it != m_Links.end(); ++it)
@@ -257,9 +257,9 @@ void MESH::GenerateMesh(MeshBluePrint meshblueprint)
             if(it->GetV1()==it1->GetV1() && it->GetV2()==it1->GetV2())
             {
                 no_repeated_link++;
-                
+
             }
-            
+
         }
     }
     if(no_repeated_link!=0)
@@ -278,7 +278,7 @@ MeshBluePrint MESH::Convert_Mesh_2_BluePrint(MESH *mesh)
     std::vector<Triangle_Map> btriangle;   // a vector of all triangles (only the blueprint not the object) in the mesh
     std::vector<Inclusion_Map> binclusion; // a vector of all inclusions (only the blueprint not the object) in the mesh
     Vec3D simbox;
-    
+
     // vertex member of the blue print
     std::vector<vertex*> pV = mesh->m_pActiveV;
     for (std::vector<vertex *>::iterator it = pV.begin() ; it != pV.end(); ++it)
@@ -302,7 +302,7 @@ MeshBluePrint MESH::Convert_Mesh_2_BluePrint(MESH *mesh)
         ttm.id = (*it)->GetTriID();
         btriangle.push_back(ttm);
     }
-    
+
     // inclusion map member of the blue print
     std::vector<inclusion*> pInc = mesh->m_pInclusion;
     for (std::vector<inclusion *>::iterator it = pInc.begin() ; it != pInc.end(); ++it)
@@ -321,7 +321,7 @@ MeshBluePrint MESH::Convert_Mesh_2_BluePrint(MESH *mesh)
     BluePrint.btriangle = btriangle;
     BluePrint.binclusion = binclusion;
     BluePrint.simbox = *(mesh->m_pBox);
-    
+
     return BluePrint;
 }
 

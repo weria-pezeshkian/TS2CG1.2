@@ -4,7 +4,7 @@
 #include "ReadDTSFolder.h"
 ReadDTSFolder::ReadDTSFolder()
 {
-    
+
 }
 void ReadDTSFolder::Read(std::string foldername)
 {
@@ -29,13 +29,13 @@ void ReadDTSFolder::Read(std::string foldername)
     }
     if(FileExist(file3) == false)
     {
-        std::cout<<"--> no inclsuion file is provided, we will generate a random distribution of proteins if information is provided in STR file \n";
+        std::cout<<"--> no inclusion file is provided, we will generate a random distribution of proteins if information is provided in STR file \n";
     }
-    
+
     m_OuterPoint = ReadPointObjects(file1,1);
     if(monolayer==false)
     m_InnerPoint = ReadPointObjects(file2,-1);
-    
+
     if(FileExist(file3) == true)
     {
         std::cout<<"--> inclusion file is provided, we will generate proteins according to this file \n";
@@ -47,20 +47,20 @@ void ReadDTSFolder::Read(std::string foldername)
         std::cout<<"--> exclusion file is provided, meaning the system contains pores \n";
         m_Exclusion =  ReadExclusionObjects(file4);
     }
-    
+
 
 
 }
 ReadDTSFolder::~ReadDTSFolder()
 {
-    
+
 }
 
 
 
 std::vector<point> ReadDTSFolder::ReadPointObjects(std::string file, int lay)
 {
-    
+
 
    //  char str = new str[1000];
     char str1[256];
@@ -70,7 +70,7 @@ std::vector<point> ReadDTSFolder::ReadPointObjects(std::string file, int lay)
     fdtspoins = fopen(file.c_str(), "r");
     char layer[256];
     float Lx,Ly,Lz;
-    
+
 
     int NoPoints;
 
@@ -86,9 +86,9 @@ std::vector<point> ReadDTSFolder::ReadPointObjects(std::string file, int lay)
     m_Box(0) = Lx;
     m_Box(1) = Ly;
     m_Box(2) = Lz;
-    
-        
-    
+
+
+
     bool check = fgets(str1, sizeof(str1), fdtspoins);
     check = fgets(str1, sizeof(str1), fdtspoins);
     check = fgets(layer, sizeof(layer), fdtspoins);
@@ -107,7 +107,7 @@ std::vector<point> ReadDTSFolder::ReadPointObjects(std::string file, int lay)
     for (int i=0;i<NoPoints;i++)
     {
         check = fscanf(fdtspoins,"%d%d%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f",&id,&domainid,&area,&x,&y,&z,&nx,&ny,&nz,&p1x,&p1y,&p1z,&p2x,&p2y,&p2z,&c1,&c2);
-        
+
 
         if(area==0) {
             std::cout<<"point id "<<id<<"  has zero area \n";
@@ -126,7 +126,7 @@ std::vector<point> ReadDTSFolder::ReadPointObjects(std::string file, int lay)
         p.UpdateDomainID(domainid);
         AllPoint.push_back(p);
     }
-    
+
     return AllPoint;
 
 }
@@ -134,30 +134,30 @@ std::vector<inclusion> ReadDTSFolder::ReadInclusionObjects(std::string file)
 {
 //    inclusion(int id, int typeID, int pointid,Vec3D D );
 
-    
+
     //  char str = new str[1000];
     char str1[256];
     char str2[256];
-    
+
     FILE *fdtspoins;
     fdtspoins = fopen(file.c_str(), "r");
     char layer[256];
     float Lx,Ly,Lz;
     int NoPoints;
-    
+
     if (fdtspoins == NULL){
         printf(" Error: Could not open file %s",file.c_str());
     }
-    
+
     int readafile = fscanf(fdtspoins,"%s%s%s%d%s",str2,str2,str2,&NoPoints,str2);
-    
+
     bool  check = fgets(str1, sizeof(str1), fdtspoins);
     check = fgets(str1, sizeof(str1), fdtspoins);
 
-    
+
     std::vector<inclusion>  AllInc;
-    
-    
+
+
     float x,y,z;
 
     int id,tid,pid;
@@ -169,26 +169,26 @@ std::vector<inclusion> ReadDTSFolder::ReadInclusionObjects(std::string file)
         inclusion p(id, tid,pid,D);
         AllInc.push_back(p);
     }
-    
-    
+
+
     return AllInc;
-    
+
 }
 std::vector<exclusion> ReadDTSFolder::ReadExclusionObjects(std::string file)
 {
     //    exclusion(int id, int pointid, double radius );
-    
-    
+
+
     //  char str = new str[1000];
-    
+
     /// Read the header and find the number of the exclusion
     char str1[256];
     char str2[256];
-    
+
     FILE *fdtspoins;
     fdtspoins = fopen(file.c_str(), "r");
     int NoPoints;
-    
+
     if (fdtspoins == NULL){
         printf(" Error: Could not open file %s",file.c_str());
     }
@@ -197,12 +197,12 @@ std::vector<exclusion> ReadDTSFolder::ReadExclusionObjects(std::string file)
     bool  check = fgets(str1, sizeof(str1), fdtspoins);
     check = fgets(str1, sizeof(str1), fdtspoins);
     ///
-    
+
     std::vector<exclusion>  AllExc;
-    
-    
+
+
     float r;
-    
+
     int id,pid;
     for (int i=0;i<NoPoints;i++)
     {
@@ -210,10 +210,10 @@ std::vector<exclusion> ReadDTSFolder::ReadExclusionObjects(std::string file)
         exclusion p(id,pid,r);
         AllExc.push_back(p);
     }
-    
-    
+
+
     return AllExc;
-    
+
 }
 
 bool ReadDTSFolder::FileExist (const std::string& name)
