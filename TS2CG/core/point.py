@@ -265,8 +265,8 @@ class Point:
             self.inner = None if self.monolayer else self.Membrane(inner_data)
 
             # Load modifications data
-            inc_data = self._load_modification_file(self.path / "IncData.dat")
-            exc_data = self._load_modification_file(self.path / "ExcData.dat")
+            inc_data = self._load_modification_file("IncData.dat")
+            exc_data = self._load_modification_file("ExcData.dat")
             self.inclusions = self.Inclusion(inc_data)
             self.exclusions = self.Exclusion(exc_data)
 
