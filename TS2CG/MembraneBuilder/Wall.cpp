@@ -122,6 +122,11 @@ void Wall::Wall_itp()
     std::string file="Wall.itp";
     FILE *fitp;
     fitp = fopen(file.c_str(), "w");
+    
+    const char* Def_wall=" #idfef POSRES_WALL ";
+    const char* End_wall=" #endif ";
+
+    
     const char* atype=" [ atomtypes ] ";
     const char* AA=" A ";
     fprintf(fitp,  "%s\n",atype);
@@ -151,11 +156,14 @@ void Wall::Wall_itp()
         fprintf(fitp,  "%s\n",tem);
     }
     {
+        fprintf(fitp,  "%s\n",Def_wall);
         const char* tem1="[ position_restraints ]";
         fprintf(fitp,  "%s\n",tem1);
         const char* tem2="1    1 1000 1000 1000";
         fprintf(fitp,  "%s\n",tem2);
+        fprintf(fitp,  "%s\n",End_wall);
     }
+
     fclose (fitp);
 }
 /// This function creats a uniform bead distribution based on the given density
