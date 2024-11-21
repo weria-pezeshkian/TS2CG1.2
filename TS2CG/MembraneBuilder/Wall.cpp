@@ -123,7 +123,7 @@ void Wall::Wall_itp()
     FILE *fitp;
     fitp = fopen(file.c_str(), "w");
     
-    const char* Def_wall=" #idef POSRES_WALL ";
+    const char* Def_wall=" #ifdef POSRES_WALL ";
     const char* End_wall=" #endif ";
 
     
