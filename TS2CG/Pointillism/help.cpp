@@ -8,11 +8,7 @@ help::help(std::string version,std::string exe)
     if(exe.at(size-1)=='M' && exe.at(size-2)=='L' && exe.at(size-3)=='P')
     {
         std::cout<<"=========================================================================================================="<<"\n\n";
-        std::cout<<"-- Pointillism  "<<"\n";
-        std::cout<<"-- Version:  "<<SoftWareVersion<<"\n";
-        std::cout<<"-- Groningen Biomolecular Sciences and Biotechnology Institute and Zernike Institute for Advanced Materials,\n-- University of Groningen, Groningen, Netherlands"<<"\n";
-        std::cout<<"-- For more information contact Weria Pezeshkian: w.pezeshkian@rug.nl and weria.pezeshkian@gmail.com"<<"\n";
-        std::cout<<"-- citation: Pezeshkian, W., König, M., Wassenaar, T.A. et al. Backmapping triangulated surfaces to coarse-grained membrane models. Nat Commun 11, 2296 (2020)."<<"\n\n";
+        std::cout<<"-- Pointillism: generating double layer points from a closed triangulated surface   "<<"\n\n";
         std::cout<<"=========================================================================================================="<<"\n\n";
         std::cout<<"-- Pointillism (PLM), reads a triangulated surface input file e.g., typical outputs of dynamically \n-- triangulated surfaces simulations, and generates two sets of points that represent a two smooth surfaces \n-- (upper and lower monolayers of a bilayer). "<<"\n";
         std::cout<<"-- Simplest triangulated surfaces file that can be read by this script should be as: "<<"\n\n";
@@ -32,9 +28,6 @@ help::help(std::string version,std::string exe)
         std::cout<<"-- option -o allows you to specify a unique folder for the output files    "<<"\n";
         std::cout<<"-- option -smooth allows you to handle highly rough surfaces; However, try to avoid this option, since has it not been tested well yet.    "<<"\n";
         std::cout<<"-- option -monolayer allows you to generate a monolayer instead of bilayer. It should be either 1 or -1, which can invert the shape of the monolayer    "<<"\n\n";
-        std::cout<<"=========================================================================================================="<<"\n\n";
-        std::cout<<"-- Pointillism: generating double layer points from a closed trinagulated surface   "<<"\n\n";
-        std::cout<<"=========================================================================================================="<<"\n\n";
         std::cout<<"-------------------------------------------------------------------------------"<<"\n";
         std::cout<<"  option                type        default            description "<<"\n";
         std::cout<<"-------------------------------------------------------------------------------"<<"\n";
@@ -52,13 +45,13 @@ help::help(std::string version,std::string exe)
         std::cout<<"-- basic example: PLM  -TSfile Traj1.tsi -bilayerThickness 4  -rescalefactor 3 3 3 \n";
 
 
-        
+
     }
-    
+
 
 }
 
 help::~help()
 {
-    
+
 }

@@ -3,9 +3,16 @@ import sys
 import traceback
 from inspect import cleandoc as cd
 import os,shutil
+import argparse
+
+import numpy as np
+import sys
+import traceback
+from inspect import cleandoc as cd
+import os,shutil
 
 
-class point():
+class PointUpdaterClass():
     """
     The point class is the class equivalent to the point folder created by TS2CG. The accepted parameters are discussed in the corresponding __init__.
     In short, each of the four files receives its own subclass. Additionally, some manipulating and saving routines are provided.
@@ -47,34 +54,49 @@ class point():
         """
         The InnerOrOuter class provides the framework to read InnerBM.dat and OuterBM.dat
         """
-        def __init__(self,data):
+        def __init__(self,data=None,h_Name="",init=False):
             """
             :param data: The data of the appropriate dat file as has been read by read_BM()
             """
             names="id domain_id area X Y Z Nx Ny Nz P1x P1y P1z P2x P2y P2z C1 C2".split()
+            self.h_Name=h_Name
             self.get_data={}
-            self.raw=data
-            for i,row in enumerate(self.raw):
-                self.get_data[names[i]]=row
-            for name in ["id","domain_id"]:
-                self.get_data[name]=np.asarray(self.get_data[name],dtype=int)
-    
+            if not init:
+                if data is None:
+                    print(traceback.format_exc())
+                    sys.exit(cd("No data was passed to the Inner our Outer segment. Nothing can be done."))
+                self.raw=data
+                for i,row in enumerate(self.raw):
+                    self.get_data[names[i]]=row
+                for name in ["id","domain_id"]:
+                    self.get_data[name]=np.asarray(self.get_data[name],dtype=int)
+            else:
+                self.get_data=dict.fromkeys(names,None)
+
+
     class Inclusions():
         """
         Represents the IncData.dat from the point folder.
         """
+        def make_data(self,raw):
+            names="id typeid pointid lx ly lz".split()
+            self.get_data={}
+            try:
+                for i,row in enumerate(raw):
+                    self.get_data[names[i]]=row
+            except TypeError:
+                pass
+
         def __init__(self,data):
             """
             :param data: The data of the appropriate dat file as has been read by read_BM()
             """
-            names="id typeid pointid lx ly lz".split()
-            self.get_data={}
             self.raw=data
-            try:
-                for i,row in enumerate(self.raw):
-                    self.get_data[names[i]]=row
-            except TypeError:
-                pass
+            self.NoInc=len(data)
+            self.make_data(self.raw)
+
+
+
 
     class Exclusions():
         """
@@ -94,9 +116,9 @@ class point():
                 pass
 
 
-    def __init__(self, path="point/"):
+    def __init__(self, path="point/",k=1,new=False):
         """
-        Initliazes the point class to represent the point folder in the python framework. It creates the necessary 
+        Initliazes the point class to represent the point folder in the python framework. It creates the necessary
         subclasses for the whole folder named
             inner
             outer
@@ -122,18 +144,30 @@ class point():
             self.path=path
         else:
             self.path=path+"/"
-        self.input_file=None
-        try:
-            self.inner=self.InnerOrOuter(self.read_BM(self.path+"InnerBM.dat"))
-            self.outer=self.InnerOrOuter(self.read_BM(self.path+"OuterBM.dat"))
-            self.inclusions=self.Inclusions(self.read_BM(self.path+"IncData.dat",coords=False))
-            self.exclusions=self.Exclusions(self.read_BM(self.path+"ExcData.dat",coords=False))
-        except:
+        if not os.path.exists(self.path) and not new:
             print(traceback.format_exc())
-            sys.exit(cd("Something went wrong initializing the point class. Please make sure that\n\
-            * path is set to the point folder\n\
-            * the point folder contains the files InnerBM.dat, OuterBM.dat, IncData.dat, and ExcData.dat"))
-        self.k=1
+            sys.exit(cd("The point folder you are trying to read does not exist and you did not set\n\
+            the new variable to initialize a new one. There is nothing to do here."))
+        elif os.path.exists(self.path) and new:
+            print(traceback.format_exc())
+            sys.exit(cd("The point folder you are trying to initialize already exists, but you set the\n\
+            new variable. This is conflicting information and the program is aboarded to protect the data."))
+        elif os.path.exists(self.path) and not new:
+            try:
+                self.inner=self.InnerOrOuter(self.read_BM(self.path+"InnerBM.dat"),h_Name="inner")
+                self.outer=self.InnerOrOuter(self.read_BM(self.path+"OuterBM.dat"),h_Name="outer")
+                self.inclusions=self.Inclusions(self.read_BM(self.path+"IncData.dat",coords=False))
+                self.exclusions=self.Exclusions(self.read_BM(self.path+"ExcData.dat",coords=False))
+            except:
+                print(traceback.format_exc())
+                sys.exit(cd("Something went wrong initializing the point class. Please make sure that\n\
+                * path is set to the point folder\n\
+                * the point folder contains the files InnerBM.dat, OuterBM.dat, IncData.dat, and ExcData.dat"))
+        else:
+            from TS2CG.PointUpdater.initialize_Point import builder
+            self.inner, self.outer, self.inclusions, self.exclusions = builder()
+        self.input_file=None
+        self.k=k
 
     def update_domains(self,**kwargs):
         """
@@ -198,7 +232,7 @@ class point():
             self.outer.get_data["domain_id"]=domains["Outer"]
         except KeyError:
             pass
-    
+
     def assign_by_c0(self,input_file,location="both",unspecified_Number=False):
         """
         the function assign_by_c0 reads an input file of form (axample)
@@ -215,7 +249,7 @@ class point():
         with open(input_file,"r",encoding="UTF8") as f:
             lines=f.readlines()
             lines=[line for line in lines if line.strip()]
-            lines=[line[:line.find(";")].split() for line in lines if line[0] != ";"]     
+            lines=[line[:line.find(";")].split() for line in lines if line[0] != ";"]
             if location=="outer":
                 N=len(self.outer.get_data["id"])
                 locations=[self.outer]
@@ -240,6 +274,10 @@ class point():
                 randomizer=np.random.permutation(self.outer.get_data["id"])
 
             for loc in locations:
+                if loc.h_Name=="inner":
+                    turn=-1
+                else:
+                    turn=1
                 lipids={}
                 for item in lines:
                     lipids[item[0]]=[round(float(item[2])*N,0)+1,float(item[3])]
@@ -249,15 +287,15 @@ class point():
                     Cs=np.asarray([loc.get_data["C1"][index],loc.get_data["C2"][index]])
                     for key in lipids:
                         Cs_input=np.asarray([lipids[key][1]])[0]
-                        lipid_probabilities[key]=np.exp(-self.k*(Cs[0]+Cs[1]-Cs_input)**2)
-                    
+                        lipid_probabilities[key]=np.exp(-self.k*(turn*(Cs[0]+Cs[1])-Cs_input)**2)
+
                     normalizer=np.sum(np.asarray(list(lipid_probabilities.values())))
                     if normalizer==0:
                         for key in lipid_probabilities:
                             lipid_probabilities[key]=1/len(lipid_probabilities.keys())
                             normalizer=1
 
-                    
+
                     for key in lipid_probabilities:
                         lipid_probabilities[key]=lipid_probabilities[key]/normalizer
                     domain=np.random.choice(list(lipid_probabilities.keys()),1,p=list(lipid_probabilities.values()))[0]
@@ -328,8 +366,7 @@ class point():
                         if domain==int(key) and not unspecified_Number:
                             lipids[key][0]=lipids[key][0]-1
                     loc.get_data["domain_id"][index]=domain
-              
-           
+
     def _backup_path(self,path):
         """
         _backup_path is a helper function to create sensible backups for the methods that actually write out files, or folders. It should
@@ -367,7 +404,6 @@ class point():
             index+=1
         return result.T
 
-
     def write_folder(self):
         """
         write_folder takes the point class information and writes it back to the point folder it read it from. The method overwrites the folder only
@@ -387,7 +423,7 @@ class point():
                 header=f"< Point NoPoints       {all_in_one.shape[0]}>\n< id domain_id area X Y Z Nx Ny Nz P1x P1y P1z P2x P2y P2z C1 C2  >\n< {key[:5]} >"
                 if "Outer" in key:
                     header=self.box+header
-                np.savetxt(self.path+key,np.round(all_in_one,3),header=header,encoding="UTF8",fmt=fmt)
+                np.savetxt(self.path+key,np.round(all_in_one,3),header=header,comments='',encoding="UTF8",fmt=fmt)
             elif key =="ExcData.dat":
                 pass
                 #TODO: need to find out what to do with the ExcData
@@ -401,6 +437,7 @@ class point():
                     pass
 
     def write_input_str(self,output_file="input_from_PUC.str",input_file=None,ts2cg_input_str=None):
+
         """
         write_input_str writes a input.str file that is readable by TS2CG to continue the workflow.
 
@@ -432,7 +469,7 @@ class point():
             lines=f.readlines()
             lines=[line for line in lines if line.strip()]
             lines=[line[:line.find(";")].split() for line in lines if line[0] != ";"]
-        
+
         with open(output_file,"w",encoding="UTF8") as f:
             f.write("[Lipids List]\n")
             for line in lines:
@@ -454,11 +491,132 @@ class point():
                     elif not block and "Lipids List" not in line:
                         f.write(line)
 
+    def _wiggle(self,xyz,wiggle):
+        random_perturbation=np.random.uniform(-wiggle,wiggle,xyz.shape)
+        xyz=xyz[0]+random_perturbation[0]
 
-if __name__=="__main__":
-    pass
-    #a=point(path="../../../point_python/point/")
-    #a.write_input_str(output_file="input.str",input_file="domain_input.txt",ts2cg_input_str="../../../MobiusMembrane/input.str")
-    #a.assign_domains_by_C("domain_input.txt",location="both",c0=True)
-    #a.write_folder()
+        return xyz/np.linalg.norm(xyz)
 
+
+    def _corrected(self,to_check,reference):
+        while len(to_check)<len(reference):
+            to_check=to_check+[0]
+        return to_check
+
+    def set_protein_inclusion_number(self,number,Type=None,collision_Distance=0,domain=None, n_Vector=[0,0,0],wiggle=0):
+        """
+        Use this method to set the number of protein copies to a specified value in the Inclusions section.
+        The id corresponds to the id in the outer membrane.
+
+        :param number: The number of proteins there should be in the inclusions. Can also be a list.
+        :param Type: (default=None) If a type is set, the number will correspond to number of type 1 as specified
+        in the inclusion file. If no type is set, the number is split over all types according to the ratio of their
+        appearance in the inclusion file.
+        :param collision_Distance: (default=0) The placement will be restricted so a protein is not placed within
+        this value to another protein. Additionally a list can be given to collision_Distance, which would contain
+        the distance per protein type, i.e. [5,3,2] would say, that type 1 needs minimum space of 5 nm, 2 of 3, etc.
+        :param domain: (default=None) If a domain is set, the inclusions will only be placed in that domain. Here,
+        also a list of domains is possible to allow placement in multiple domains.
+        :param n_Vector: (default=[0,0,0]) The relative position of the protein type is set. Set n_Vector to None
+        to take the n_Vector from the inclusion file.
+        :param wiggle: (default=0) The relative position is wiggled a little per inclusion.
+        """
+
+        #Make everything a list to unify the code disregarding if the paramters are lists or not
+        if not isinstance(Type,list):
+            Type=[Type]
+        if not isinstance(number,list):
+            number=[number]
+        if not isinstance(collision_Distance,list):
+            collision_Distance=[collision_Distance]
+        if not isinstance(domain,list):
+            domain=[domain]
+        if n_Vector is not None:
+            if not any(isinstance(item,list) for item in n_Vector):
+                n_Vector=[n_Vector]
+        if not isinstance(wiggle,list):
+            wiggle=[wiggle]
+        number=self._corrected(number,Type)
+        collision_Distance=self._corrected(collision_Distance,Type)
+        wiggle=self._corrected(wiggle,Type)
+
+        #baseline items will have the form [typeid,desired number,averaged position,the allowed wiggle]
+        baseline=np.zeros((len(Type),7))
+        ratio=[]
+        inc_baseline=[]
+        for i,item in enumerate(Type):
+            baseline[i][0]=item
+            ratio.append(self.inclusions.raw.T[self.inclusions.raw.T[:,1]==item])
+            mean=np.mean(self.inclusions.raw.T[self.inclusions.raw.T[:,1]==item][:,3:],axis=0)
+            baseline[i][4:]=mean
+            baseline[i][1]=number[i]
+            baseline[i][2]=wiggle[i]
+            baseline[i][3]=collision_Distance[i]
+
+            inc_baseline=inc_baseline+([item]*number[i])
+
+
+        outer_baseline=self.outer.raw.T[:,[0,1,3,4,5]]
+        outer_baseline=outer_baseline[np.isin(outer_baseline[:,1],domain)]
+        outer_baseline=outer_baseline[np.random.permutation(outer_baseline.shape[0])]
+        inc_baseline=np.asarray(inc_baseline)[np.random.permutation(len(inc_baseline))]
+
+
+        collisions=[]
+        colliding_distances=[]
+        new_raw=[]
+        index=0
+
+        for item in outer_baseline:
+            placeable=True
+            for i in range(len(collisions)):
+                if np.linalg.norm(item[2:]-collisions[i])<(baseline[baseline[:,0]==inc_baseline[index]][:,3]+colliding_distances[i])/2:
+                    placeable=False
+                    break
+            if placeable:
+                collisions.append(item[2:])
+                colliding_distances.append(baseline[baseline[:,0]==inc_baseline[index]][:,3])
+                wiggled=self._wiggle(xyz=baseline[baseline[:,0]==inc_baseline[index]][:,4:],wiggle=baseline[baseline[:,0]==inc_baseline[index]][:,2])
+                new_raw.append([index,inc_baseline[index],item[0],wiggled[0],wiggled[1],wiggled[2]])
+                index+=1
+            if index==len(inc_baseline):
+                break
+
+        self.inclusions.make_data(np.asarray(new_raw).T)
+
+    @classmethod
+    def from_args(cls, args):
+        parser=argparse.ArgumentParser()
+        description="""
+        ==========================================================================================================
+
+        -- Point Updater Class (PUC): A tool to place lipids according to a preferred curvature
+
+        ==========================================================================================================
+        """
+        parser = argparse.ArgumentParser(description=description,formatter_class=argparse.RawTextHelpFormatter)
+
+        parser.add_argument('-i','--input',type=str,default="domain.txt",help="""A path to the domain_input.txt input file. A file could for instance, look like this:
+            ; domain lipid percentage c0 density
+            0 POPC .3 0.179 0.64
+            1 POPD .4 0.613 0.64
+            2 POPG .3 0.629 0.64""")
+        parser.add_argument('-k','--k',default=1,help="Sets the factor in the exponent for the c0 approach")
+        parser.add_argument('-c','--c12',action='store_true',help="Use the c12 approach to set the domains instead of the default c0 approach.")
+        parser.add_argument('-p','--path',default="point/",help="Specify the path to the point folder")
+        parser.add_argument('-l','--location',default='both',help="Choose which monolayer is altered: both, upper, lower")
+        parser.add_argument('-ni','--new_TS2CG',default=None,help="Path to write a new TS2CG input file.")
+        parser.add_argument('-oi','--old_TS2CG',default=None,help="Supply a path to the TS2CG input.str")
+        parser.add_argument('-I','--Ignore_lipid_number',action='store_true',default=False,help="Set to ignore the number of lipids given in the input file.")
+        parser.add_argument('-n','--new',action='store_true',help='Set new to initialize a new point folder from scratch, will fail if the folder already exists')
+
+        args=parser.parse_args(args)
+
+        PointFolder=cls(path=args.path,k=args.k,new=args.new)
+        if args.c12:
+            PointFolder.assign_by_c12(args.input,location=args.location,unspecified_Number=args.Ignore_lipid_number)
+        else:
+            PointFolder.assign_by_c0(args.input,location=args.location,unspecified_Number=args.Ignore_lipid_number)
+        if args.new_TS2CG is not None:
+            PointFolder.write_input_str(output_file=args.new_TS2CG,input_file=args.input,ts2cg_input_str=args.old_TS2CG)
+        PointFolder.write_folder()
