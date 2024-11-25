@@ -427,7 +427,7 @@ class Point:
             header += "< id typeid pointid lx ly lz >"
 
             np.savetxt(
-                self.path / "IncData.dat",
+                output_path / "IncData.dat",
                 data.T,
                 header=header,
                 comments='',
