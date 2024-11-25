@@ -160,9 +160,9 @@ class Point:
             """Number of protein inclusions."""
             return len(self.points)
 
-        def get_all(self) -> List[int]:
+        def get_all(self) -> List[dict]:
             """Get all points with protein inclusions."""
-            return [p['point_id'] for p in self.points]
+            return [p for p in self.points]
 
         def get_by_type(self, type_id: int) -> List[dict]:
             """Get all inclusions of a specific type."""
@@ -180,6 +180,8 @@ class Point:
             """
             if orientation is None:
                 orientation = np.array([0, 0, 1])
+
+            orientation=orientation/np.linalg.norm(orientation)
 
             point = {
                 'id': len(self.points),
