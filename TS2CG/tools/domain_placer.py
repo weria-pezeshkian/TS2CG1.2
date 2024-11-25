@@ -154,7 +154,7 @@ def assign_domains(membrane: Point, lipids: Sequence[LipidSpec], layer: str = "b
         available_lipids = set(range(len(lipids)))
 
         # Randomly process points
-        for idx in np.random.permutation(n_points):
+        for idx in rng.permuted(membrane_layer.ids):
             local_curv = curvatures[idx]
 
             # Calculate weights only for available lipid types
@@ -169,7 +169,7 @@ def assign_domains(membrane: Point, lipids: Sequence[LipidSpec], layer: str = "b
             weights = calculate_curvature_weights(local_curv, valid_specs, k_factor)
 
             # Choose lipid type and update bookkeeping
-            chosen_idx = np.random.choice(valid_lipids, p=weights)
+            chosen_idx = rng.choice(valid_lipids, p=weights)
             new_domains[idx] = lipids[chosen_idx].domain_id
             remaining_counts[chosen_idx] -= 1
 
@@ -208,8 +208,9 @@ def DOP(args: List[str]) -> None:
     args = parser.parse_args(args)
     logging.basicConfig(level=logging.INFO)
 
-    if args.seed is not None:
-        np.random.seed(args.seed)
+    # setup numpy random number generator
+    global rng
+    rng = np.random.default_rng(args.seed)
 
     try:
         membrane = Point(args.point_dir)
