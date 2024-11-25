@@ -169,7 +169,7 @@ class Point:
             return [p for p in self.points if p['type_id'] == type_id]
 
         def add_protein(self, type_id: int, point_id: int,
-                       orientation: Optional[np.ndarray] = None):
+                       orientation: Optional[np.ndarray] = np.array([1, 0, 0])):
             """
             Add a protein inclusion.
 
