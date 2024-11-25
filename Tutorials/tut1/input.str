@@ -1,0 +1,10 @@
+; Tutoria 1: Create Simple Vesicle
+[Lipids List]
+Domain  0  
+;lipidnname ratio_up ratio_down  APL
+POPC 1  1  0.64
+End
+
+
+
+
