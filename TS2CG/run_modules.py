@@ -4,6 +4,7 @@ from pathlib import Path
 from importlib.metadata import version
 
 from TS2CG.tools.domain_placer import DOP
+from TS2CG.tools.circular_domains import DAI
 from .cpp import PCG, PLM, SOL
 
 
@@ -19,6 +20,8 @@ def run_python_module(module_name, args):
     """
     if module_name == 'DOP':
         DOP(args)
+    elif module_name == 'DAI':
+        DAI(args)
     else:
         print(f"Unknown Python module: {module_name}")
 
@@ -50,7 +53,7 @@ def main():
     cpp_modules = ['SOL', 'PLM', 'PCG']
 
     # define the python based modules
-    python_modules = ['DOP']
+    python_modules = ['DOP', 'DAI']
 
     # parse arguments before a calling module
     parser = argparse.ArgumentParser(
