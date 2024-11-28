@@ -115,7 +115,7 @@ def _get_centers(membrane,Type,dummys):
 
 def _dijkstra_within_radius(distance_matrix, start_index, radius,percent=100):
     if percent != 100:
-        distance_matrix = distance_matrix[distance_matrix > np.percentile(distance_matrix,percent)] = 0
+        distance_matrix = distance_matrix[distance_matrix < np.percentile(distance_matrix,percent)] = 0
     G = nx.from_numpy_array(distance_matrix)
     shortest_paths = nx.single_source_dijkstra_path_length(G, start_index)
     reachable_nodes = [node for node, dist in shortest_paths.items() if dist < radius]
@@ -159,10 +159,10 @@ def DAI(args: List[str]) -> None:
                                    formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-p','--path',default="point/",help="Specify the path to the point folder")
     parser.add_argument('-r','--radius',default=1,type=float,help="The radius around a protein in which domains should be changed.")
-    parser.add_argument('-T','--Type',default=0,type=int,help="The protein type around which domains should be changed.")
+    parser.add_argument('-t','--type',default=0,type=int,help="The protein type around which domains should be changed.")
     parser.add_argument('-d','--Domain',default=1,type=int,help="The domain number that should be set around the protein.")
-    parser.add_argument('-L','--Layer',default="both",help="Choose which membrane layer to alter. Default is both")
-    parser.add_argument('-dummy','--dummy',default="",help="Crate a dummy protein to place a circular domain around it. Excepts pointids like 3,7,22")
+    parser.add_argument('-l','--leaflet',default="both",help="Choose which membrane leaflet to alter. Default is both")
+    parser.add_argument('-dummy','--dummy',default="",help="Create a dummy protein to place a circular domain around it. Excepts pointids like 3,7,22")
     parser.add_argument('-pd','--path-distance',default=False,type=bool,help="Slower execution, but needed for higher curvature membranes to assign the domain to only one membrane part")
     parser.add_argument('-pdP','--path-distance-percentile',default=100.0,type=float,help="Manipulates neighbors in path distance, tests have shown that 2 works well")
 
