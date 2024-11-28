@@ -79,8 +79,8 @@ TS2CG SOL -h
 ```
 
 ## Quick references
-[About TS2CG](https://github.com/weria-pezeshkian/TS2CG1.2/wiki/About-TS2CG) \
-[New Updates](https://github.com/weria-pezeshkian/TS2CG1.2/wiki/Updates-of-this-version)\
-[Tutorials for version 1.2](https://github.com/weria-pezeshkian/TS2CG1.2/wiki/Tutorial)\
+[About TS2CG](https://github.com/weria-pezeshkian/TS2CG-v2.0/wiki/About-TS2CG) \
+[New Updates](https://github.com/weria-pezeshkian/TS2CG-v2.0/wiki/Updates-of-this-version)\
+[Tutorials for version 2.0](https://github.com/weria-pezeshkian/TS2CG-v2.0/wiki/Tutorial)\
 [Tutorials 1.1](https://cgmartini.nl/docs/tutorials/Martini3/TS2CG/)
 
