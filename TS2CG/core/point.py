@@ -307,7 +307,7 @@ class Point:
     def _parse_box_line(self, line: str) -> tuple:
         """Parse box dimensions from header line."""
         parts = line.split()
-        return [float(x) for x in parts[1:4]]
+        return np.array([float(x) for x in parts[1:4]])
 
     def _load_modification_file(self, filename: str) -> Optional[np.ndarray]:
         """Load modification (inclusion/exclusion) file."""

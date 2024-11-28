@@ -5,6 +5,7 @@ from importlib.metadata import version
 
 from TS2CG.tools.domain_placer import DOP
 from TS2CG.tools.circular_domains import DAI
+from TS2CG.tools.inclusion_updater import INU
 from .cpp import PCG, PLM, SOL
 
 
@@ -22,6 +23,8 @@ def run_python_module(module_name, args):
         DOP(args)
     elif module_name == 'DAI':
         DAI(args)
+    elif module_name == 'INU':
+        INU(args)
     else:
         print(f"Unknown Python module: {module_name}")
 
@@ -53,7 +56,7 @@ def main():
     cpp_modules = ['SOL', 'PLM', 'PCG']
 
     # define the python based modules
-    python_modules = ['DOP', 'DAI']
+    python_modules = ['DOP', 'DAI', 'INU']
 
     # parse arguments before a calling module
     parser = argparse.ArgumentParser(
