@@ -1,0 +1,19 @@
+; lipidnname ratio_up ratio_down  APL
+[Lipids List]
+POPC 1  1  0.64 ;Not necessary in this step but shouldn´t be removed.   
+End
+ [Shape Data]
+ ShapeType 1D_PBC_Fourier
+ Box 30 10 20
+ WallRange 0 1 0 1
+ Density 3 1
+ Thickness 4
+ Mode 1.5    1   0
+ Mode 2.5    2   0
+ End
+
+
+
+
+
+

@@ -1,2 +1,0 @@
-[console_scripts]
-TS2CG = TS2CG.wrapper:main

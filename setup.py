@@ -31,6 +31,8 @@ class CMakeBuild(build_ext):
         build_args = ['--config', 'Release', '--', f'-j{num_cores}']
 
         os.chdir(build_temp)
+        print(sourcedir, cmake_args)
+
         self.spawn(['cmake', sourcedir] + cmake_args)
         if not self.dry_run:
             self.spawn(['cmake', '--build', '.'] + build_args)
@@ -40,17 +42,19 @@ class CMakeBuild(build_ext):
 setup(
     name='TS2CG',
     version='1.2.2',
-    packages=find_packages(),
+    packages=find_packages(include=['TS2CG']),
     ext_modules=[CMakeExtension('TS2CG')],
     cmdclass={'build_ext': CMakeBuild},
     package_data={
         'TS2CG': ['SOL', 'PLM', 'PCG', 'CMakeLists.txt',
-                  'Solvate/*', 'Pointillism/*', 'MembraneBuilder/*'],
+                  'PointUpdaterClass/*'],
     },
     include_package_data=True,
+    python_requires='>=3.6',
+    install_requires=['numpy'],
     entry_points={
         'console_scripts': [
-            'TS2CG=TS2CG.wrapper:main',
+            'TS2CG=TS2CG.run_modules:main',
         ],
     },
 )

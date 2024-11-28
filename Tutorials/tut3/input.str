@@ -1,0 +1,12 @@
+[Lipids List]
+Domain  0  
+POPC    1  1  0.64
+End
+
+Domain  1  
+DOPC    1  1  0.64
+End
+
+Domain  2  
+POPE    1  1  0.64
+End
