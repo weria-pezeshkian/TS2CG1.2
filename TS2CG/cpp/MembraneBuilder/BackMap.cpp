@@ -165,7 +165,7 @@ BackMap::BackMap(Argument *pArgu)
     if((pWall->GetWallPoint()).size()>0 && pWall->GetState()==true)
     {
         PDBFile pdb;
-        std::string pdbfile = "wall.pdb";
+        std::string pdbfile = "Wall.pdb";
         pdb.WritePDBFile(pdbfile, pWall->GetWallPoint());
     }
     else if(pWall->GetState()==true)
