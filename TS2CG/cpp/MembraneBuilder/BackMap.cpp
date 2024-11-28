@@ -488,7 +488,7 @@ bool BackMap::FindProteinList(std::string filename)
     }
     else
     {
-    std::cout<<"---> warnning: the str file does not contain any information about proteins "<<"\n";
+    std::cout<<"---> warning: the str file does not contain any information about proteins "<<"\n";
         m_Warning++;
     }
     strfile.close();
