@@ -81,8 +81,11 @@ std::vector<point> ReadDTSFolder::ReadPointObjects(std::string file, int lay)
     if(lay==1)
     int readafile =  fscanf(fdtspoins,"%s%f%f%f",str2,&Lx,&Ly,&Lz);
 
-    int readafile = fscanf(fdtspoins,"%s%s%s%d%s",str2,str2,str2,&NoPoints,str2);
-
+    int readafile = fscanf(fdtspoins,"%s%s%s%d",str2,str2,str2,&NoPoints);
+    if (readafile != 4 || NoPoints <= 0 ) {
+        printf("---> error: Failed to read the number of inclusions. Setting number of inclusions to 0.\n");
+        NoPoints = 0; // Set NoPoints to 0 if fscanf fails
+    }
     m_Box(0) = Lx;
     m_Box(1) = Ly;
     m_Box(2) = Lz;
@@ -143,14 +146,17 @@ std::vector<inclusion> ReadDTSFolder::ReadInclusionObjects(std::string file)
     fdtspoins = fopen(file.c_str(), "r");
     char layer[256];
     float Lx,Ly,Lz;
-    int NoPoints;
+    int NoPoints = 0;
 
     if (fdtspoins == NULL){
         printf(" Error: Could not open file %s",file.c_str());
     }
 
-    int readafile = fscanf(fdtspoins,"%s%s%s%d%s",str2,str2,str2,&NoPoints,str2);
-
+    int readafile = fscanf(fdtspoins,"%s%s%s%d",str2,str2,str2,&NoPoints);
+    if (readafile != 4 || NoPoints <= 0 ) {
+        printf("---> error: Failed to read the number of inclusions. Setting number of inclusions to 0.\n");
+        NoPoints = 0; // Set NoPoints to 0 if fscanf fails
+    }
     bool  check = fgets(str1, sizeof(str1), fdtspoins);
     check = fgets(str1, sizeof(str1), fdtspoins);
 
@@ -187,13 +193,19 @@ std::vector<exclusion> ReadDTSFolder::ReadExclusionObjects(std::string file)
 
     FILE *fdtspoins;
     fdtspoins = fopen(file.c_str(), "r");
-    int NoPoints;
+    int NoPoints = 0;
 
     if (fdtspoins == NULL){
         printf(" Error: Could not open file %s",file.c_str());
     }
 
-    int readafile = fscanf(fdtspoins,"%s%s%s%d%s",str2,str2,str2,&NoPoints,str2);
+    int readafile = fscanf(fdtspoins,"%s%s%s%d",str2,str2,str2,&NoPoints);
+    if (readafile != 4 || NoPoints <= 0) {
+        printf("---> error: Failed to read the number of exclusion. Setting number of exclusion to 0.\n");
+        NoPoints = 0; // Set NoPoints to 0 if fscanf fails
+    }
+    
+    
     bool  check = fgets(str1, sizeof(str1), fdtspoins);
     check = fgets(str1, sizeof(str1), fdtspoins);
     ///
