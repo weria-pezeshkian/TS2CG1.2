@@ -1,6 +1,6 @@
 <img width="261" alt="Screenshot 2023-03-03 at 12 31 28" src="https://user-images.githubusercontent.com/47776510/222710874-316a7a7a-5401-4e1c-8082-e786fbb5f206.png">
 
-# TS2CG version 1.2
+# TS2CG version 2.0
 
 TS2CG converts triangulated surfaces (TS) to coarse-grained membrane models for molecular
 simulation.
@@ -44,12 +44,12 @@ pip3 install TS2CG
 ```
 #### Directly from GitHub
 ```console
-pip3 install git+https://github.com/weria-pezeshkian/TS2CG1.2
+pip3 install git+https://github.com/weria-pezeshkian/TS2CG-v2.0
 ```
 #### From source
 ```console
-git clone https://github.com/weria-pezeshkian/TS2CG1.2
-cd TS2CG1.2
+git clone https://github.com/weria-pezeshkian/TS2CG-v2.0
+cd TS2CG-v2.0
 python3 -m venv venv && source venv/bin/activate # Not required, but often convenient.
 pip3 install .
 ```
@@ -79,8 +79,8 @@ TS2CG SOL -h
 ```
 
 ## Quick references
-[About TS2CG](https://github.com/weria-pezeshkian/TS2CG1.2/wiki/About-TS2CG) \
-[New Updates](https://github.com/weria-pezeshkian/TS2CG1.2/wiki/Updates-of-this-version)\
-[Tutorials for version 1.2](https://github.com/weria-pezeshkian/TS2CG1.2/wiki/Tutorial)\
+[About TS2CG](https://github.com/weria-pezeshkian/TS2CG-v2.0/wiki/About-TS2CG) \
+[New Updates](https://github.com/weria-pezeshkian/TS2CG-v2.0/wiki/Updates-of-this-version)\
+[Tutorials for version 2.0](https://github.com/weria-pezeshkian/TS2CG-v2.0/wiki/Tutorial)\
 [Tutorials 1.1](https://cgmartini.nl/docs/tutorials/Martini3/TS2CG/)
 

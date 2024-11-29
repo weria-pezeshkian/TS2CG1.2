@@ -153,10 +153,18 @@ void Curvature::SurfVertexCurvature(vertex * pvertex)
 
 
     double size=sqrt(q*q+(c1-p)*(c1-p));                   // The Eigenvectors can be calculated using this equation LSV*R=c1*R
+
+        
+        if(size == 0.0){
+            size = 1;
+            q = 1;
+        }
+
     if(size == 0.0){
         size = 1;
         q = 1;
     }
+
     EigenvMat(0,0)=q/size;                                  // only one of them needs to be calculated, one is normal vector and the other is perpendicular to first one
     EigenvMat(1,0)=(c1-p)/size;
     EigenvMat(0,1)=-EigenvMat(1,0);
@@ -171,6 +179,13 @@ void Curvature::SurfVertexCurvature(vertex * pvertex)
         ///  this is correct, We can check by applying transpose(E)*t1 = (1,0,0)
         
      Tensor2 TransferMatLG=Hous*EigenvMat;   /// This matrix transfers vectors from local coordinate to global coordinate
+        
+       /* std::cout<<"===============\n";
+        std::cout<<TransferMatLG(0,0)<<" "<<TransferMatLG(0,1)<<" "<<TransferMatLG(0,2)<<" \n";
+        std::cout<<TransferMatLG(1,0)<<" "<<TransferMatLG(1,1)<<" "<<TransferMatLG(1,2)<<" \n";
+        std::cout<<TransferMatLG(2,0)<<" "<<TransferMatLG(2,1)<<" "<<TransferMatLG(2,2)<<" \n";
+        */
+
      Tensor2 TransferMatGL=TransferMatLG.Transpose(TransferMatLG);   /// This matrix transfers vectors from Global coordinate to local coordinate
         
         m_pVertex->UpdateL2GTransferMatrix(TransferMatLG);
