@@ -141,6 +141,7 @@ std::vector<inclusion> ReadDTSFolder::ReadInclusionObjects(std::string file)
     //  char str = new str[1000];
     char str1[256];
     char str2[256];
+    std::vector<inclusion>  AllInc;
 
     FILE *fdtspoins;
     fdtspoins = fopen(file.c_str(), "r");
@@ -155,13 +156,12 @@ std::vector<inclusion> ReadDTSFolder::ReadInclusionObjects(std::string file)
     int readafile = fscanf(fdtspoins,"%s%s%s%d",str2,str2,str2,&NoPoints);
     if (readafile != 4 || NoPoints <= 0 ) {
         printf("---> error: Failed to read the number of inclusions. Setting number of inclusions to 0.\n");
-        NoPoints = 0; // Set NoPoints to 0 if fscanf fails
+        return AllInc;
     }
     bool  check = fgets(str1, sizeof(str1), fdtspoins);
     check = fgets(str1, sizeof(str1), fdtspoins);
 
 
-    std::vector<inclusion>  AllInc;
 
 
     float x,y,z;
@@ -184,6 +184,7 @@ std::vector<exclusion> ReadDTSFolder::ReadExclusionObjects(std::string file)
 {
     //    exclusion(int id, int pointid, double radius );
 
+    std::vector<exclusion>  AllExc;
 
     //  char str = new str[1000];
 
@@ -197,12 +198,13 @@ std::vector<exclusion> ReadDTSFolder::ReadExclusionObjects(std::string file)
 
     if (fdtspoins == NULL){
         printf(" Error: Could not open file %s",file.c_str());
+        return AllExc;
     }
 
     int readafile = fscanf(fdtspoins,"%s%s%s%d",str2,str2,str2,&NoPoints);
     if (readafile != 4 || NoPoints <= 0) {
         printf("---> error: Failed to read the number of exclusion. Setting number of exclusion to 0.\n");
-        NoPoints = 0; // Set NoPoints to 0 if fscanf fails
+        return AllExc;
     }
     
     
@@ -210,7 +212,6 @@ std::vector<exclusion> ReadDTSFolder::ReadExclusionObjects(std::string file)
     check = fgets(str1, sizeof(str1), fdtspoins);
     ///
 
-    std::vector<exclusion>  AllExc;
 
 
     float r;
