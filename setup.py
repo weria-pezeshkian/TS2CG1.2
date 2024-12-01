@@ -42,8 +42,13 @@ class CMakeBuild(build_ext):
 setup(
     name='TS2CG',
     version='1.2.2',
+    packages=find_packages(include=['TS2CG']),
     ext_modules=[CMakeExtension('TS2CG')],
     cmdclass={'build_ext': CMakeBuild},
+    package_data={
+        'TS2CG': ['SOL', 'PLM', 'PCG', 'CMakeLists.txt',
+                  'core/*', 'tools/*'],
+    },
     include_package_data=True,
     python_requires='>=3.6',
     install_requires=['numpy'],
