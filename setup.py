@@ -47,7 +47,7 @@ setup(
     cmdclass={'build_ext': CMakeBuild},
     package_data={
         'TS2CG': ['SOL', 'PLM', 'PCG', 'CMakeLists.txt',
-                  'core/*', 'tools/*'],
+                  'core/*', 'tools/*', 'cpp/*'],
     },
     include_package_data=True,
     python_requires='>=3.6',
