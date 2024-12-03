@@ -120,7 +120,6 @@ def VIS(args) -> None:
     try:
         membrane = Point(args.point_dir)
         pointids=_get_centers(membrane,args.color1,args.color2,args.color3)
-        print(args.step)
         draw_folder(membrane=membrane,layer=args.leaflet,pointid=pointids,domain=args.Domain,save=filename,step=args.step,Proteins=args.Protein)
 
 
