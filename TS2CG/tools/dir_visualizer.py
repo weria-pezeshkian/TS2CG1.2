@@ -45,7 +45,10 @@ def draw_folder(membrane: Point, pointid: list, domain: bool, layer: str = "both
                 reduced=layer.get_points_by_domain(domain_id=k)
                 if not reduced.size == 0:
                     x,y,z=reduced[:,0],reduced[:,1],reduced[:,2]
-                    ax.scatter(x[::step],y[::step],z[::step],s=50,label=f"Domain {k}",c=colorblind_2[k])
+                    if not second_run:
+                        ax.scatter(x[::step],y[::step],z[::step],s=50,label=f"Domain {k}",c=colorblind_2[k])
+                    else:
+                        ax.scatter(x[::step],y[::step],z[::step],s=50,c=colorblind_2[k])
 
 
         labels=["c1","c2","c3"]
