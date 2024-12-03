@@ -123,10 +123,11 @@ class Point:
             """Calculate mean curvature for all points."""
             return (self.curvature['c1'] + self.curvature['c2']) / 2
 
-        @property
+
         def gaussian_curvature(self) -> np.ndarray:
             """Calculate Gaussian curvature for all points."""
             return self.curvature['c1'] * self.curvature['c2']
+
 
         def get_points_by_domain(self, domain_id: int) -> np.ndarray:
             """Get coordinates of all points in a specific domain."""
