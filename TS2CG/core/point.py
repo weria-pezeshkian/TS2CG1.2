@@ -234,7 +234,6 @@ class Point:
             """
             point = {
                 'id': len(self.points),
-                'type_id': 0,
                 'point_id': point_id,
                 'radius': radius
             }
@@ -443,7 +442,7 @@ class Point:
         if self.exclusions.points:
             data = np.zeros((3, len(self.exclusions.points)))
             for i, point in enumerate(self.exclusions.points):
-                data[0:3, i] = [point['id'], point['type_id'], point['radius']]
+                data[0:3, i] = [point['id'], point['point_id'], point['radius']]
 
             header = f"< Exclusion NoExc {len(self.exclusions.points)} >\n"
             header += "< id typeid radius >"
