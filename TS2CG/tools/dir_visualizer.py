@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 import logging
 import matplotlib.pyplot as plt
+import matplotlib
 from mpl_toolkits.mplot3d import Axes3D
 from ..core.point import Point
 
