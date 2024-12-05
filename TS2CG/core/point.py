@@ -146,7 +146,8 @@ class Point:
             """Process inclusion data."""
             if data is None or len(data) == 0:
                 return
-
+            if len(data.shape)==1:
+                data.shape = (4,1)
             for i in range(data.shape[1]):
                 point = {
                     'id': int(data[0, i]),
@@ -204,12 +205,13 @@ class Point:
             """Process exclusion data."""
             if data is None or len(data) == 0:
                 return
-
+            if len(data.shape)==1:
+                data.shape = (3,1)
             for i in range(data.shape[1]):
                 point = {
-                    'id': int(data[0, i]),
-                    'type_id': int(data[1, i]),
-                    'radius': float(data[2, i])
+                    'id': int(data[0,i]),
+                    'point_id': int(data[1,i]),
+                    'radius': float(data[2,i])
                 }
                 self.points.append(point)
 
