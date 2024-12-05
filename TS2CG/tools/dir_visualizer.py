@@ -12,6 +12,31 @@ from ..core.point import Point
 
 logger = logging.getLogger(__name__)
 
+
+def make_fullscreen():
+    """Make the Matplotlib figure full screen universally across platforms."""
+    backend = matplotlib.get_backend()
+    manager = plt.get_current_fig_manager()
+
+    if backend == 'TkAgg':
+        # For TkAgg backend (Linux, Windows, or macOS with Tkinter)
+        manager.window.state('zoomed')  # Maximize window
+    elif backend == 'Qt5Agg' or backend == 'QtAgg':
+        # For Qt5Agg or QtAgg backend (requires PyQt5 or PyQt4)
+        manager.window.showMaximized()
+    elif backend == 'WXAgg':
+        # For WXAgg backend
+        manager.frame.Maximize(True)
+    elif backend == 'MacOSX':
+        # For MacOSX backend (native macOS backend)
+        manager.full_screen_toggle()
+    else:
+        # Default: Manually set figure size to full screen
+        fig = plt.gcf()
+        fig.set_size_inches(16, 9)  # Adjust as needed for your resolution
+        dpi = plt.rcParams['figure.dpi']
+        fig.set_size_inches(1920 / dpi, 1080 / dpi)  # Example for 1920x1080
+
 def draw_folder(membrane: Point, pointid: list, domain: bool, layer: str = "both",save=None,step=1,Proteins=False) -> None:
     """Assign lipids to domains based on curvature preferences"""
     layers = [membrane.outer]
@@ -88,7 +113,7 @@ def draw_folder(membrane: Point, pointid: list, domain: bool, layer: str = "both
     if save is not None:
         plt.savefig(save)
     else:
-        plt.get_current_fig_manager().window.showMaximized()
+        make_fullscreen()
         plt.show()
 
 def _get_centers(membrane,color1,color2,color3):
